@@ -69,15 +69,16 @@
                           orientation="0deg 0deg 0deg"
                           shadow-intensity=".9"
                           ar auto-rotate
-                          camera-controls>
+                          camera-controls
+                          aria-label="Visualizador de modelo 3D texturizado">
             </model-viewer>
         </div>
 
         <div class="modelviewer-panel-button-container">
-            <div id="appearance-button" class="modelviewer-panel-button small checked" onclick="showTexture()">
+            <div id="appearance-button" class="modelviewer-panel-button small checked" onclick="showTexture()" aria-label="Mostrar textura">
                 Appearance
             </div>
-            <div id="geometry-button" class="modelviewer-panel-button small" onclick="hideTexture()">Geometry</div>
+            <div id="geometry-button" class="modelviewer-panel-button small" onclick="hideTexture()" aria-label="Mostrar geometria">Geometry</div>
         </div>
     </div>
 </div>

@@ -225,7 +225,7 @@ def _gen_shape(
         output_type='mesh'
     )
     time_meta['shape generation'] = time.time() - start_time
-    logger.info("---Shape generation takes %s seconds ---" % (time.time() - start_time))
+    logger.info(f"[req_id={get_request_id()}] ---Shape generation takes %s seconds ---" % (time.time() - start_time))
 
     tmp_start = time.time()
     mesh = export_to_trimesh(outputs)[0]
@@ -280,12 +280,12 @@ def generation_all(
 
     tmp_time = time.time()
     mesh = face_reduce_worker(mesh)
-    logger.info("---Face Reduction takes %s seconds ---" % (time.time() - tmp_time))
+    logger.info(f"[req_id={get_request_id()}] ---Face Reduction takes %s seconds ---" % (time.time() - tmp_time))
     stats['time']['face reduction'] = time.time() - tmp_time
 
     tmp_time = time.time()
     textured_mesh = texgen_worker(mesh, image)
-    logger.info("---Texture Generation takes %s seconds ---" % (time.time() - tmp_time))
+    logger.info(f"[req_id={get_request_id()}] ---Texture Generation takes %s seconds ---" % (time.time() - tmp_time))
     stats['time']['texture generation'] = time.time() - tmp_time
     stats['time']['total'] = time.time() - start_time_0
 

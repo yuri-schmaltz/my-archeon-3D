@@ -17,6 +17,7 @@ import importlib
 import inspect
 import os
 from typing import List, Optional, Union
+import time
 
 import numpy as np
 import torch
@@ -768,3 +769,17 @@ class Hunyuan3DDiTFlowMatchingPipeline(Hunyuan3DDiTPipeline):
             box_v, mc_level, num_chunks, octree_resolution, mc_algo,
             enable_pbar=enable_pbar,
         )
+
+
+# Instrumentação de benchmark para pipeline principal
+class Benchmark:
+    def __init__(self, name):
+        self.name = name
+        self.start = None
+        self.end = None
+    def __enter__(self):
+        self.start = time.time()
+        return self
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.end = time.time()
+        print(f"[BENCHMARK] {self.name}: {self.end - self.start:.2f}s")

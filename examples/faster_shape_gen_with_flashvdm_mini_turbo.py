@@ -1,3 +1,8 @@
+# Troubleshooting
+# Se ocorrer erro de arquivo não encontrado, verifique se o caminho da imagem está correto e se o arquivo existe em 'assets/'.
+# Para problemas de exportação, confira permissões de escrita na pasta de destino.
+# Para dependências, execute: pip install -r requirements.txt
+
 # HY3DGEN_DEBUG=1 USE_SAGEATTN=1 python3 examples/faster_shape_gen_with_flashvdm_mini_turbo.py
 # HY3DGEN_DEBUG=1 USE_SAGEATTN=0 python3 examples/faster_shape_gen_with_flashvdm_mini_turbo.py
 

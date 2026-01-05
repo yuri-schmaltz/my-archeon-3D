@@ -7,6 +7,11 @@ from hy3dgen.rembg import BackgroundRemover
 from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
 from hy3dgen.texgen import Hunyuan3DPaintPipeline
 
+# Troubleshooting
+# Se ocorrer erro de arquivo não encontrado, verifique se o caminho da imagem está correto e se o arquivo existe em 'assets/'.
+# Para problemas de exportação, confira permissões de escrita na pasta de destino.
+# Para dependências, execute: pip install -r requirements.txt
+
 images = {
     "front": "assets/example_mv_images/1/front.png",
     "left": "assets/example_mv_images/1/left.png",

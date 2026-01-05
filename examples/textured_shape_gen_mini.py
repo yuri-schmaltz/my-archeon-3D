@@ -7,6 +7,11 @@ from hy3dgen.rembg import BackgroundRemover
 from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
 from hy3dgen.texgen import Hunyuan3DPaintPipeline
 
+# Troubleshooting
+# Se ocorrer erro de arquivo não encontrado, verifique se o caminho da imagem está correto e se o arquivo existe em 'assets/'.
+# Para problemas de exportação, confira permissões de escrita na pasta de destino.
+# Para dependências, execute: pip install -r requirements.txt
+
 image_path = 'assets/demo.png'
 image = Image.open(image_path).convert("RGBA")
 if image.mode == 'RGB':

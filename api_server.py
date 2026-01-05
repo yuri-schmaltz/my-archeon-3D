@@ -153,7 +153,7 @@ class ModelWorker:
         self.model_path = model_path
         self.worker_id = worker_id
         self.device = device
-        logger.info(f"Loading the model {model_path} on worker {worker_id} ...")
+        logger.info(f"[req_id={get_request_id()}] Loading the model {model_path} on worker {worker_id} ...")
 
         self.rembg = BackgroundRemover()
         self.pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
@@ -210,7 +210,7 @@ class ModelWorker:
             import time
             start_time = time.time()
             mesh = self.pipeline(**params)[0]
-            logger.info("--- %s seconds ---" % (time.time() - start_time))
+            logger.info(f"[req_id={get_request_id()}] --- %s seconds ---" % (time.time() - start_time))
 
         if params.get('texture', False):
             mesh = FloaterRemover()(mesh)
@@ -241,9 +241,21 @@ app.add_middleware(
 )
 
 
+# Utilitário para gerar ID de correlação por requisição
+import contextvars
+request_id_var = contextvars.ContextVar('request_id', default=None)
+
+def get_request_id():
+    rid = request_id_var.get()
+    if rid is None:
+        rid = str(uuid.uuid4())
+        request_id_var.set(rid)
+    return rid
+
+
 @app.post("/generate")
 async def generate(request: Request):
-    logger.info("Worker generating...")
+    logger.info(f"[req_id={get_request_id()}] Worker generating...")
     params = await request.json()
     uid = uuid.uuid4()
     try:
@@ -276,7 +288,7 @@ async def generate(request: Request):
 
 @app.post("/send")
 async def generate(request: Request):
-    logger.info("Worker send...")
+    logger.info(f"[req_id={get_request_id()}] Worker send...")
     params = await request.json()
     uid = uuid.uuid4()
     threading.Thread(target=worker.generate, args=(uid, params,)).start()
@@ -307,7 +319,7 @@ if __name__ == "__main__":
     parser.add_argument("--limit-model-concurrency", type=int, default=5)
     parser.add_argument('--enable_tex', action='store_true')
     args = parser.parse_args()
-    logger.info(f"args: {args}")
+    logger.info(f"[req_id={get_request_id()}] args: {args}")
 
     model_semaphore = asyncio.Semaphore(args.limit_model_concurrency)
 

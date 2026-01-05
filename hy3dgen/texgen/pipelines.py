@@ -19,7 +19,7 @@ import os
 import torch
 from PIL import Image
 from typing import List, Union, Optional
-
+import time
 
 from .differentiable_renderer.mesh_render import MeshRender
 from .utils.dehighlight_utils import Light_Shadow_Remover
@@ -28,6 +28,22 @@ from .utils.imagesuper_utils import Image_Super_Net
 from .utils.uv_warp_utils import mesh_uv_wrap
 
 logger = logging.getLogger(__name__)
+
+
+# Instrumentação de benchmark para pipeline de textura
+class Benchmark:
+    def __init__(self, name):
+        self.name = name
+        self.start = None
+        self.end = None
+
+    def __enter__(self):
+        self.start = time.time()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print(f"[BENCHMARK] {self.name}: {self.end - self.start:.2f}s")
+        self.end = time.time()
 
 
 class Hunyuan3DTexGenConfig:
@@ -188,53 +204,53 @@ class Hunyuan3DPaintPipeline:
 
     @torch.no_grad()
     def __call__(self, mesh, image):
+        with Benchmark("Hunyuan3DPaintPipeline.__call__"):  # INSTRUMENTAÇÃO
+            if not isinstance(image, List):
+                image = [image]
 
-        if not isinstance(image, List):
-            image = [image]
+            images_prompt = []
+            for i in range(len(image)):
+                if isinstance(image[i], str):
+                    image_prompt = Image.open(image[i])
+                else:
+                    image_prompt = image[i]
+                images_prompt.append(image_prompt)
+                
+            images_prompt = [self.recenter_image(image_prompt) for image_prompt in images_prompt]
 
-        images_prompt = []
-        for i in range(len(image)):
-            if isinstance(image[i], str):
-                image_prompt = Image.open(image[i])
-            else:
-                image_prompt = image[i]
-            images_prompt.append(image_prompt)
-            
-        images_prompt = [self.recenter_image(image_prompt) for image_prompt in images_prompt]
+            images_prompt = [self.models['delight_model'](image_prompt) for image_prompt in images_prompt]
 
-        images_prompt = [self.models['delight_model'](image_prompt) for image_prompt in images_prompt]
+            mesh = mesh_uv_wrap(mesh)
 
-        mesh = mesh_uv_wrap(mesh)
+            self.render.load_mesh(mesh)
 
-        self.render.load_mesh(mesh)
+            selected_camera_elevs, selected_camera_azims, selected_view_weights = \
+                self.config.candidate_camera_elevs, self.config.candidate_camera_azims, self.config.candidate_view_weights
 
-        selected_camera_elevs, selected_camera_azims, selected_view_weights = \
-            self.config.candidate_camera_elevs, self.config.candidate_camera_azims, self.config.candidate_view_weights
+            normal_maps = self.render_normal_multiview(
+                selected_camera_elevs, selected_camera_azims, use_abs_coor=True)
+            position_maps = self.render_position_multiview(
+                selected_camera_elevs, selected_camera_azims)
 
-        normal_maps = self.render_normal_multiview(
-            selected_camera_elevs, selected_camera_azims, use_abs_coor=True)
-        position_maps = self.render_position_multiview(
-            selected_camera_elevs, selected_camera_azims)
+            camera_info = [(((azim // 30) + 9) % 12) // {-20: 1, 0: 1, 20: 1, -90: 3, 90: 3}[
+                elev] + {-20: 0, 0: 12, 20: 24, -90: 36, 90: 40}[elev] for azim, elev in
+                           zip(selected_camera_azims, selected_camera_elevs)]
+            multiviews = self.models['multiview_model'](images_prompt, normal_maps + position_maps, camera_info)
 
-        camera_info = [(((azim // 30) + 9) % 12) // {-20: 1, 0: 1, 20: 1, -90: 3, 90: 3}[
-            elev] + {-20: 0, 0: 12, 20: 24, -90: 36, 90: 40}[elev] for azim, elev in
-                       zip(selected_camera_azims, selected_camera_elevs)]
-        multiviews = self.models['multiview_model'](images_prompt, normal_maps + position_maps, camera_info)
+            for i in range(len(multiviews)):
+                # multiviews[i] = self.models['super_model'](multiviews[i])
+                multiviews[i] = multiviews[i].resize(
+                    (self.config.render_size, self.config.render_size))
 
-        for i in range(len(multiviews)):
-            # multiviews[i] = self.models['super_model'](multiviews[i])
-            multiviews[i] = multiviews[i].resize(
-                (self.config.render_size, self.config.render_size))
+            texture, mask = self.bake_from_multiview(multiviews,
+                                                     selected_camera_elevs, selected_camera_azims, selected_view_weights,
+                                                     method=self.config.merge_method)
 
-        texture, mask = self.bake_from_multiview(multiviews,
-                                                 selected_camera_elevs, selected_camera_azims, selected_view_weights,
-                                                 method=self.config.merge_method)
+            mask_np = (mask.squeeze(-1).cpu().numpy() * 255).astype(np.uint8)
 
-        mask_np = (mask.squeeze(-1).cpu().numpy() * 255).astype(np.uint8)
+            texture = self.texture_inpaint(texture, mask_np)
 
-        texture = self.texture_inpaint(texture, mask_np)
+            self.render.set_texture(texture)
+            textured_mesh = self.render.save_mesh()
 
-        self.render.set_texture(texture)
-        textured_mesh = self.render.save_mesh()
-
-        return textured_mesh
+            return textured_mesh

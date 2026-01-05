@@ -1,3 +1,8 @@
+# Troubleshooting
+# Se ocorrer erro de arquivo não encontrado, verifique se o caminho da imagem está correto e se o arquivo existe em 'assets/'.
+# Para problemas de exportação, confira permissões de escrita na pasta de destino.
+# Para dependências, execute: pip install -r requirements.txt
+
 import time
 
 import torch

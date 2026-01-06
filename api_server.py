@@ -259,7 +259,8 @@ async def generate(request: Request):
     params = await request.json()
     uid = uuid.uuid4()
     try:
-        file_path, uid = worker.generate(uid, params)
+        loop = asyncio.get_running_loop()
+        file_path, uid = await loop.run_in_executor(None, worker.generate, uid, params)
         return FileResponse(file_path)
     except ValueError as e:
         traceback.print_exc()

@@ -67,12 +67,13 @@ def gen_save_folder(max_size=200):
     # 获取所有文件夹路径
     dirs = [f for f in Path(SAVE_DIR).iterdir() if f.is_dir()]
 
-    # 如果文件夹数量超过 max_size，删除创建时间最久的文件夹
-    if len(dirs) >= max_size:
-        # 按创建时间排序，最久的排在前面
-        oldest_dir = min(dirs, key=lambda x: x.stat().st_ctime)
-        shutil.rmtree(oldest_dir)
-        print(f"Removed the oldest folder: {oldest_dir}")
+    # If folder count exceeds max_size, delete the oldest folder
+    # [PATCH] Disabled to prevent data loss
+    # if len(dirs) >= max_size:
+    #     # Sort by creation time, oldest first
+    #     oldest_dir = min(dirs, key=lambda x: x.stat().st_ctime)
+    #     shutil.rmtree(oldest_dir)
+    #     print(f"Removed the oldest folder: {oldest_dir}")
 
     # 生成一个新的 uuid 文件夹名称
     new_folder = os.path.join(SAVE_DIR, str(uuid.uuid4()))

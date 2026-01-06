@@ -34,97 +34,25 @@ import uvicorn
 from PIL import Image
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, FileResponse
+from pydantic import BaseModel, Field
+from typing import Optional, Union
 
 from hy3dgen.rembg import BackgroundRemover
 from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline, FloaterRemover, DegenerateFaceRemover, FaceReducer, \
     MeshSimplifier
 from hy3dgen.texgen import Hunyuan3DPaintPipeline
+from hy3dgen.texgen import Hunyuan3DPaintPipeline
 from hy3dgen.text2image import HunyuanDiTPipeline
+from hy3dgen.manager import PriorityRequestManager, PrioritizedItem
+
 
 LOGDIR = '.'
 
+from hy3dgen.shapegen.utils import get_logger
+logger = get_logger("api_server")
+
 server_error_msg = "**NETWORK ERROR DUE TO HIGH TRAFFIC. PLEASE REGENERATE OR REFRESH THIS PAGE.**"
 moderation_msg = "YOUR INPUT VIOLATES OUR CONTENT MODERATION GUIDELINES. PLEASE TRY AGAIN."
-
-handler = None
-
-
-def build_logger(logger_name, logger_filename):
-    global handler
-
-    formatter = logging.Formatter(
-        fmt="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
-    # Set the format of root handlers
-    if not logging.getLogger().handlers:
-        logging.basicConfig(level=logging.INFO)
-    logging.getLogger().handlers[0].setFormatter(formatter)
-
-    # Redirect stdout and stderr to loggers
-    stdout_logger = logging.getLogger("stdout")
-    stdout_logger.setLevel(logging.INFO)
-    sl = StreamToLogger(stdout_logger, logging.INFO)
-    sys.stdout = sl
-
-    stderr_logger = logging.getLogger("stderr")
-    stderr_logger.setLevel(logging.ERROR)
-    sl = StreamToLogger(stderr_logger, logging.ERROR)
-    sys.stderr = sl
-
-    # Get logger
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.INFO)
-
-    # Add a file handler for all loggers
-    if handler is None:
-        os.makedirs(LOGDIR, exist_ok=True)
-        filename = os.path.join(LOGDIR, logger_filename)
-        handler = logging.handlers.TimedRotatingFileHandler(
-            filename, when='D', utc=True, encoding='UTF-8')
-        handler.setFormatter(formatter)
-
-        for name, item in logging.root.manager.loggerDict.items():
-            if isinstance(item, logging.Logger):
-                item.addHandler(handler)
-
-    return logger
-
-
-class StreamToLogger(object):
-    """
-    Fake file-like stream object that redirects writes to a logger instance.
-    """
-
-    def __init__(self, logger, log_level=logging.INFO):
-        self.terminal = sys.stdout
-        self.logger = logger
-        self.log_level = log_level
-        self.linebuf = ''
-
-    def __getattr__(self, attr):
-        return getattr(self.terminal, attr)
-
-    def write(self, buf):
-        temp_linebuf = self.linebuf + buf
-        self.linebuf = ''
-        for line in temp_linebuf.splitlines(True):
-            # From the io.TextIOWrapper docs:
-            #   On output, if newline is None, any '\n' characters written
-            #   are translated to the system default line separator.
-            # By default sys.stdout.write() expects '\n' newlines and then
-            # translates them so this is still cross platform.
-            if line[-1] == '\n':
-                self.logger.log(self.log_level, line.rstrip())
-            else:
-                self.linebuf += line
-
-    def flush(self):
-        if self.linebuf != '':
-            self.logger.log(self.log_level, self.linebuf.rstrip())
-        self.linebuf = ''
-
 
 def pretty_print_semaphore(semaphore):
     if semaphore is None:
@@ -136,7 +64,7 @@ SAVE_DIR = 'gradio_cache'
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 worker_id = str(uuid.uuid4())[:6]
-logger = build_logger("controller", f"{SAVE_DIR}/controller.log")
+
 
 
 def load_image_from_base64(image):
@@ -253,14 +181,28 @@ def get_request_id():
     return rid
 
 
+class GenerateRequest(BaseModel):
+    image: Optional[str] = Field(None, description="Base64 encoded image")
+    text: Optional[str] = Field(None, description="Text prompt for T2I")
+    mesh: Optional[str] = Field(None, description="Base64 encoded mesh (glb)")
+    seed: int = Field(1234, description="Random seed")
+    octree_resolution: int = Field(128, description="Octree resolution")
+    num_inference_steps: int = Field(5, description="Inference steps")
+    guidance_scale: float = Field(5.0, description="Guidance scale")
+    texture: bool = Field(False, description="Generate texture")
+    face_count: int = Field(40000, description="Target face count for reduction")
+    type: str = Field("glb", description="Output file format (glb, obj)")
+
+
 @app.post("/generate")
-async def generate(request: Request):
+async def generate(request: GenerateRequest):
     logger.info(f"[req_id={get_request_id()}] Worker generating...")
-    params = await request.json()
+    params = request.model_dump()
+    uid = uuid.uuid4()
     uid = uuid.uuid4()
     try:
-        loop = asyncio.get_running_loop()
-        file_path, uid = await loop.run_in_executor(None, worker.generate, uid, params)
+        # Submit to Priority Queue (high priority = lower number, using default 10)
+        file_path, uid = await request_manager.submit(params, priority=10)
         return FileResponse(file_path)
     except ValueError as e:
         traceback.print_exc()
@@ -288,11 +230,16 @@ async def generate(request: Request):
 
 
 @app.post("/send")
-async def generate(request: Request):
+async def generate_send(request: GenerateRequest):
     logger.info(f"[req_id={get_request_id()}] Worker send...")
-    params = await request.json()
+    params = request.model_dump()
     uid = uuid.uuid4()
-    threading.Thread(target=worker.generate, args=(uid, params,)).start()
+    # Send is async background, so we just acknowledge receipt. 
+    # To properly track it, we should probably submit it to the queue in a fire-and-forget manner
+    # But for now, let's keep the existing behavior but routed through manager or just separate thread?
+    # The original was threading.Thread. Let's redirect to manager but without awaiting.
+    asyncio.create_task(request_manager.submit(params, priority=10))
+    
     ret = {"uid": str(uid)}
     return JSONResponse(ret, status_code=200)
 
@@ -322,8 +269,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger.info(f"[req_id={get_request_id()}] args: {args}")
 
-    model_semaphore = asyncio.Semaphore(args.limit_model_concurrency)
-
     worker = ModelWorker(model_path=args.model_path, device=args.device, enable_tex=args.enable_tex,
                          tex_model_path=args.tex_model_path)
+                         
+    # Initialize Manager
+    request_manager = PriorityRequestManager(worker, max_concurrency=args.limit_model_concurrency)
+    
+    @app.on_event("startup")
+    async def startup_event():
+        await request_manager.start()
+
+    @app.on_event("shutdown")
+    async def shutdown_event():
+        await request_manager.stop()
+
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")

@@ -12,7 +12,7 @@ MOCK_MODULES = [
     'fastapi.responses', 'fastapi.middleware.cors', 'uvicorn', 'yaml',
     'safetensors', 'safetensors.torch', 'skimage', 'skimage.measure', 'scipy', 'pandas',
     'torchvision', 'torchvision.transforms', 'pymeshlab', 'xatlas', 'pygltflib',
-    'cv2', 'numpy.core', 'numpy.core.multiarray'
+    'cv2', 'numpy.core', 'numpy.core.multiarray', 'pydantic'
 ]
 
 for mod_name in MOCK_MODULES:
@@ -39,6 +39,37 @@ class TestSanity(unittest.TestCase):
             print("\n[SUCCESS] gradio_app imported successfully.")
         except Exception as e:
             self.fail(f"Unexpected error importing gradio_app: {e}")
+
+    def test_manager_import(self):
+        """Test that PriorityRequestManager can be imported and initialized."""
+        try:
+            from hy3dgen.manager import PriorityRequestManager
+            print("\n[SUCCESS] PriorityRequestManager imported successfully.")
+            
+            # Basic instantiation test with mock worker
+            mock_worker = MagicMock()
+            manager = PriorityRequestManager(mock_worker)
+            self.assertIsNotNone(manager)
+        except Exception as e:
+            self.fail(f"Failed to verify PriorityRequestManager: {e}")
+
+    def test_manager_components(self):
+        """Test that ModelManager and PriorityRequestManager are correctly structured."""
+        try:
+            from hy3dgen.manager import PriorityRequestManager, ModelManager
+            
+            mock_worker = MagicMock()
+            model_mgr = ModelManager(mock_worker)
+            self.assertTrue(hasattr(model_mgr, 'lock'))
+            self.assertTrue(hasattr(model_mgr, 'lru_order'))
+            self.assertEqual(model_mgr.lru_order, ["primary"])
+            
+            req_mgr = PriorityRequestManager(mock_worker)
+            self.assertTrue(hasattr(req_mgr, 'model_manager'))
+            
+            print("\n[SUCCESS] Manager components verified.")
+        except Exception as e:
+            self.fail(f"Failed to verify manager components: {e}")
 
 if __name__ == '__main__':
     unittest.main()

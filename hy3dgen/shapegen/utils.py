@@ -26,7 +26,84 @@ def get_logger(name):
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
 
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+import json
+import time
+
+class JsonFormatter(logging.Formatter):
+    """
+    Formatter that outputs JSON strings after parsing the LogRecord.
+
+    @param dict fmt_dict: Key: logging format attribute pairs. Defaults to {"message": "message"}.
+    @param str time_format: time.strftime() format string. Default: "%Y-%m-%dT%H:%M:%S"
+    @param str msec_format: Microsecond formatting. Appended at the end. Default: "%s.%03dZ"
+    """
+    def __init__(self, fmt_dict: dict = None, time_format: str = "%Y-%m-%dT%H:%M:%S", msec_format: str = "%s.%03dZ"):
+        self.fmt_dict = fmt_dict if fmt_dict is not None else {"message": "message"}
+        self.default_time_format = time_format
+        self.default_msec_format = msec_format
+        self.datefmt = None
+
+    def usesTime(self):
+        return "asctime" in self.fmt_dict.values()
+
+    def formatMessage(self, record):
+        """
+        Overridden to return a clean dictionary.
+        """
+        return record.message
+
+    def format(self, record):
+        """
+        Formats a log record and serializes to json
+        """
+        record.message = record.getMessage()
+        if self.usesTime():
+            record.asctime = self.formatTime(record, self.datefmt)
+
+        message_dict = {}
+        for fmt, field in self.fmt_dict.items():
+            message_dict[fmt] = getattr(record, field, None)
+            
+        # Add extra context if it exists
+        if record.exc_info:
+            message_dict["exc_info"] = self.formatException(record.exc_info)
+        
+        return json.dumps(message_dict, default=str)
+
+    def formatTime(self, record, datefmt=None):
+        """
+        Overridden to allow custom time formatting.
+        """
+        ct = self.converter(record.created)
+        if datefmt:
+            s = time.strftime(datefmt, ct)
+        else:
+            t = time.strftime(self.default_time_format, ct)
+            s = self.default_msec_format % (t, record.msecs)
+        return s
+
+def get_logger(name):
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    
+    # Check if a handler is already added to avoid duplicates if get_logger is called multiple times
+    if logger.hasHandlers():
+        return logger
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+
+    # Use JSON Formatter for structured logs
+    json_fmt = {
+        "ts": "asctime",
+        "level": "levelname",
+        "logger": "name",
+        "msg": "message",
+        "file": "filename",
+        "line": "lineno"
+    }
+    formatter = JsonFormatter(json_fmt)
+    
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     return logger

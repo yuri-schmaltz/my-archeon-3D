@@ -6,6 +6,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PATH="/opt/venv/bin:$PATH"
+# Fix to avoid "list index out of range" when building without GPU visibility
+ENV TORCH_CUDA_ARCH_LIST="7.0 7.5 8.0 8.6+PTX"
 
 # Install system dependencies for building
 RUN apt-get update && apt-get install -y --no-install-recommends \

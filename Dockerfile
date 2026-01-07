@@ -68,4 +68,5 @@ WORKDIR /app
 EXPOSE 8080 8081
 
 # Default command
-CMD ["python3", "api_server.py", "--host", "0.0.0.0", "--port", "8080"]
+# CMD ["python3", "api_server.py", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["bash", "scripts/start.sh"]

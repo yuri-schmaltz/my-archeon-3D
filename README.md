@@ -185,6 +185,11 @@ Check status with:
 python3 check_health.py
 ``` 
 
+### 4. Security
+- **API Authentication**: The API server now supports HTTP Basic Authentication.
+  Set `API_USERNAME` and `API_PASSWORD` environment variables to enable it. 
+  Default: `admin` / `admin`.
+
 ## 🤗 Get Started with Hunyuan3D 2.0
 
 Hunyuan3D 2.0 supports Macos, Windows, Linux. You may follow the next steps to use Hunyuan3D 2.0 via:

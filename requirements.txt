@@ -34,7 +34,11 @@ accelerate
 gradio
 fastapi
 uvicorn
-rembg
 onnxruntime
+pytest
+httpx
+pydantic
+prometheus-client
+ruff
 #gevent
 #geventhttpclient

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 # Mock dependencies
 sys.modules['torch'] = MagicMock()
+sys.modules['torch'].cuda.CudaError = Exception # Fix for except clause
 sys.modules['trimesh'] = MagicMock()
 sys.modules['rembg'] = MagicMock()
 sys.modules['diffusers'] = MagicMock()

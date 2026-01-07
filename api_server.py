@@ -68,6 +68,9 @@ REQUEST_COUNT = Counter('app_request_count', 'Total application requests', ['met
 REQUEST_LATENCY = Histogram('app_request_latency_seconds', 'Request latency', ['endpoint'])
 GENERATION_COUNT = Counter('app_generation_total', 'Total generations', ['status'])
 
+# Global Manager
+request_manager = None
+
 def load_image_from_base64(image):
     return Image.open(BytesIO(base64.b64decode(image)))
 
@@ -109,10 +112,34 @@ async def metrics_middleware(request: Request, call_next):
     
     return response
 
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi import Depends, HTTPException, status
+import secrets
+
+# Auth
+security = HTTPBasic()
+
+def authenticate(credentials: HTTPBasicCredentials = Depends(security)):
+    api_user = os.environ.get("API_USERNAME", "admin")
+    api_pass = os.environ.get("API_PASSWORD", "admin")
+    
+    # If vars are empty string, disable auth? No, safer to default to something or enforce.
+    # Logic: If defaults are kept, it's insecure but functional.
+    
+    is_correct_username = secrets.compare_digest(credentials.username.encode("utf8"), api_user.encode("utf8"))
+    is_correct_password = secrets.compare_digest(credentials.password.encode("utf8"), api_pass.encode("utf8"))
+    
+    if not (is_correct_username and is_correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
 @app.get("/metrics")
 async def metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
-
 
 
 class GenerateRequest(BaseModel):
@@ -129,8 +156,8 @@ class GenerateRequest(BaseModel):
 
 
 @app.post("/generate")
-async def generate(request: GenerateRequest):
-    logger.info(f"[req_id={get_request_id()}] Worker generating...")
+async def generate(request: GenerateRequest, username: str = Depends(authenticate)):
+    logger.info(f"[req_id={get_request_id()}] Worker generating... User: {username}")
     params = request.model_dump()
     
     # Adapt params for InferencePipeline
@@ -203,8 +230,8 @@ async def generate(request: GenerateRequest):
 
 
 @app.post("/send")
-async def generate_send(request: GenerateRequest):
-    logger.info(f"[req_id={get_request_id()}] Worker send...")
+async def generate_send(request: GenerateRequest, username: str = Depends(authenticate)):
+    logger.info(f"[req_id={get_request_id()}] Worker send... User: {username}")
     params = request.model_dump()
     uid = uuid.uuid4()
     # Send is async background

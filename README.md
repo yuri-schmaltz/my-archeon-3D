@@ -160,6 +160,31 @@ Hunyuan3D-2 Series
 | Hunyuan3D-Paint-v2-0-Turbo | Distillation Texure Model   | 2025-04-01 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo) |
 | Hunyuan3D-Delight-v2-0     | Image Delight Model         | 2025-01-21 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-delight-v2-0)     | 
 
+## 🛠️ System Improvements (Community Edition)
+
+We have enhanced this repository with **unified resource management** and **observability** features:
+
+### 1. Lazy Loading & Resource Management
+- **ModelManager**: Models are now loaded lazily (only when requested), significantly reducing VRAM usage at startup.
+- **LRU Eviction**: Unused models are automatically offloaded to make room for active ones.
+- **Priority Queue**: Request management handles concurrent users fairly.
+
+### 2. Observability
+The API server now exposes Prometheus-compatible metrics at `/metrics`.
+- `app_request_count`
+- `app_request_latency_seconds`
+- `app_generation_total`
+
+### 3. Testing
+We have added a comprehensive test suite.
+```bash
+bash run_tests.sh
+```
+Check status with:
+```bash
+python3 check_health.py
+``` 
+
 ## 🤗 Get Started with Hunyuan3D 2.0
 
 Hunyuan3D 2.0 supports Macos, Windows, Linux. You may follow the next steps to use Hunyuan3D 2.0 via:

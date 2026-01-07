@@ -19,10 +19,10 @@ services:
               count: 1
               capabilities: [gpu]
 
-  # Optional: Prometheus for metrics (requires middleware in app)
-  # prometheus:
-  #   image: prom/prometheus
-  #   volumes:
-  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
-  #   ports:
-  #     - "9090:9090"
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus
+    # volumes:
+    #   - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"

@@ -25,7 +25,7 @@ RUN python3.10 -m venv /opt/venv
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir pytest httpx pydantic
+    pip install --no-cache-dir pytest httpx pydantic prometheus-client
 
 # Install the package in editable mode (or standard mode)
 COPY . /app

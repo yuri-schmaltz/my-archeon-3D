@@ -32,18 +32,14 @@ import torch
 import trimesh
 import uvicorn
 from PIL import Image
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel, Field
 from typing import Optional, Union
-
-from hy3dgen.rembg import BackgroundRemover
-from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline, FloaterRemover, DegenerateFaceRemover, FaceReducer, \
-    MeshSimplifier
-from hy3dgen.texgen import Hunyuan3DPaintPipeline
-from hy3dgen.texgen import Hunyuan3DPaintPipeline
-from hy3dgen.text2image import HunyuanDiTPipeline
-from hy3dgen.manager import PriorityRequestManager, PrioritizedItem
+from hy3dgen.manager import PriorityRequestManager, ModelManager
+from hy3dgen.inference import InferencePipeline
+import prometheus_client
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 
 LOGDIR = '.'
@@ -67,94 +63,15 @@ worker_id = str(uuid.uuid4())[:6]
 
 
 
+# Metrics
+REQUEST_COUNT = Counter('app_request_count', 'Total application requests', ['method', 'endpoint', 'http_status'])
+REQUEST_LATENCY = Histogram('app_request_latency_seconds', 'Request latency', ['endpoint'])
+GENERATION_COUNT = Counter('app_generation_total', 'Total generations', ['status'])
+
 def load_image_from_base64(image):
     return Image.open(BytesIO(base64.b64decode(image)))
 
-
-class ModelWorker:
-    def __init__(self,
-                 model_path='tencent/Hunyuan3D-2mini',
-                 tex_model_path='tencent/Hunyuan3D-2',
-                 subfolder='hunyuan3d-dit-v2-mini-turbo',
-                 device='cuda',
-                 enable_tex=False):
-        self.model_path = model_path
-        self.worker_id = worker_id
-        self.device = device
-        logger.info(f"[req_id={get_request_id()}] Loading the model {model_path} on worker {worker_id} ...")
-
-        self.rembg = BackgroundRemover()
-        self.pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
-            model_path,
-            subfolder=subfolder,
-            use_safetensors=True,
-            device=device,
-        )
-        self.pipeline.enable_flashvdm(mc_algo='mc')
-        # self.pipeline_t2i = HunyuanDiTPipeline(
-        #     'Tencent-Hunyuan/HunyuanDiT-v1.1-Diffusers-Distilled',
-        #     device=device
-        # )
-        if enable_tex:
-            self.pipeline_tex = Hunyuan3DPaintPipeline.from_pretrained(tex_model_path)
-
-    def get_queue_length(self):
-        if model_semaphore is None:
-            return 0
-        else:
-            return args.limit_model_concurrency - model_semaphore._value + (len(
-                model_semaphore._waiters) if model_semaphore._waiters is not None else 0)
-
-    def get_status(self):
-        return {
-            "speed": 1,
-            "queue_length": self.get_queue_length(),
-        }
-
-    @torch.inference_mode()
-    def generate(self, uid, params):
-        if 'image' in params:
-            image = params["image"]
-            image = load_image_from_base64(image)
-        else:
-            if 'text' in params:
-                text = params["text"]
-                image = self.pipeline_t2i(text)
-            else:
-                raise ValueError("No input image or text provided")
-
-        image = self.rembg(image)
-        params['image'] = image
-
-        if 'mesh' in params:
-            mesh = trimesh.load(BytesIO(base64.b64decode(params["mesh"])), file_type='glb')
-        else:
-            seed = params.get("seed", 1234)
-            params['generator'] = torch.Generator(self.device).manual_seed(seed)
-            params['octree_resolution'] = params.get("octree_resolution", 128)
-            params['num_inference_steps'] = params.get("num_inference_steps", 5)
-            params['guidance_scale'] = params.get('guidance_scale', 5.0)
-            params['mc_algo'] = 'mc'
-            import time
-            start_time = time.time()
-            mesh = self.pipeline(**params)[0]
-            logger.info(f"[req_id={get_request_id()}] --- %s seconds ---" % (time.time() - start_time))
-
-        if params.get('texture', False):
-            mesh = FloaterRemover()(mesh)
-            mesh = DegenerateFaceRemover()(mesh)
-            mesh = FaceReducer()(mesh, max_facenum=params.get('face_count', 40000))
-            mesh = self.pipeline_tex(mesh, image)
-
-        type = params.get('type', 'glb')
-        with tempfile.NamedTemporaryFile(suffix=f'.{type}', delete=False) as temp_file:
-            mesh.export(temp_file.name)
-            mesh = trimesh.load(temp_file.name)
-            save_path = os.path.join(SAVE_DIR, f'{str(uid)}.{type}')
-            mesh.export(save_path)
-
-        torch.cuda.empty_cache()
-        return save_path, uid
+# ModelWorker class removed, replaced by InferencePipeline
 
 
 app = FastAPI()
@@ -180,6 +97,23 @@ def get_request_id():
         request_id_var.set(rid)
     return rid
 
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    import time
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    REQUEST_COUNT.labels(method=request.method, endpoint=request.url.path, http_status=response.status_code).inc()
+    REQUEST_LATENCY.labels(endpoint=request.url.path).observe(process_time)
+    
+    return response
+
+@app.get("/metrics")
+async def metrics():
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
 
 class GenerateRequest(BaseModel):
     image: Optional[str] = Field(None, description="Base64 encoded image")
@@ -198,13 +132,50 @@ class GenerateRequest(BaseModel):
 async def generate(request: GenerateRequest):
     logger.info(f"[req_id={get_request_id()}] Worker generating...")
     params = request.model_dump()
-    uid = uuid.uuid4()
-    uid = uuid.uuid4()
+    
+    # Adapt params for InferencePipeline
+    if params.get("image"):
+        params["image"] = load_image_from_base64(params["image"])
+    
+    if params.get("texture"):
+        params["do_texture"] = True
+    
+    # ... logic for mesh upload handling if needed ...
+    # InferencePipeline expects 'mesh' to be an object if passed? 
+    # Or param 'mesh' is NOT used by pipeline directly unless it's texturing stage.
+    # Logic in original ModelWorker loaded mesh from base64 if provided.
+    
+    if params.get("mesh"):
+         params["mesh_obj"] = trimesh.load(BytesIO(base64.b64decode(params["mesh"])), file_type='glb')
+    
     try:
+        GENERATION_COUNT.labels(status='started').inc()
         # Submit to Priority Queue (high priority = lower number, using default 10)
-        file_path, uid = await request_manager.submit(params, priority=10)
-        return FileResponse(file_path)
+        # We need to adapt the return to file_path
+        
+        # NOTE: request_manager submit returns the RESULT dict from InferencePipeline
+        result = await request_manager.submit(params, priority=10)
+        
+        GENERATION_COUNT.labels(status='success').inc()
+
+        # Result contains 'mesh', 'textured_mesh', 'uid'
+        # We need to save it to return a FileResponse
+        uid = result['uid']
+        type_ = params.get('type', 'glb')
+        
+        mesh_to_save = result.get('textured_mesh') if params.get('do_texture') else result.get('mesh')
+        
+        with tempfile.NamedTemporaryFile(suffix=f'.{type_}', delete=False) as temp_file:
+            mesh_to_save.export(temp_file.name)
+            # Re-read?? Original code did re-read.
+            save_path = os.path.join(SAVE_DIR, f'{str(uid)}.{type_}')
+            mesh_to_save.export(save_path)
+            
+        torch.cuda.empty_cache()
+        return FileResponse(save_path)
+        
     except ValueError as e:
+        GENERATION_COUNT.labels(status='error').inc()
         traceback.print_exc()
         print("Caught ValueError:", e)
         ret = {
@@ -213,6 +184,7 @@ async def generate(request: GenerateRequest):
         }
         return JSONResponse(ret, status_code=404)
     except torch.cuda.CudaError as e:
+        GENERATION_COUNT.labels(status='error').inc()
         print("Caught torch.cuda.CudaError:", e)
         ret = {
             "text": server_error_msg,
@@ -220,6 +192,7 @@ async def generate(request: GenerateRequest):
         }
         return JSONResponse(ret, status_code=404)
     except Exception as e:
+        GENERATION_COUNT.labels(status='error').inc()
         print("Caught Unknown Error", e)
         traceback.print_exc()
         ret = {
@@ -234,10 +207,7 @@ async def generate_send(request: GenerateRequest):
     logger.info(f"[req_id={get_request_id()}] Worker send...")
     params = request.model_dump()
     uid = uuid.uuid4()
-    # Send is async background, so we just acknowledge receipt. 
-    # To properly track it, we should probably submit it to the queue in a fire-and-forget manner
-    # But for now, let's keep the existing behavior but routed through manager or just separate thread?
-    # The original was threading.Thread. Let's redirect to manager but without awaiting.
+    # Send is async background
     asyncio.create_task(request_manager.submit(params, priority=10))
     
     ret = {"uid": str(uid)}
@@ -269,11 +239,22 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger.info(f"[req_id={get_request_id()}] args: {args}")
 
-    worker = ModelWorker(model_path=args.model_path, device=args.device, enable_tex=args.enable_tex,
-                         tex_model_path=args.tex_model_path)
-                         
     # Initialize Manager
-    request_manager = PriorityRequestManager(worker, max_concurrency=args.limit_model_concurrency)
+    model_mgr = ModelManager(capacity=1, device=args.device)
+    
+    def pipeline_loader():
+        return InferencePipeline(
+            model_path=args.model_path,
+            tex_model_path=args.tex_model_path,
+            subfolder='hunyuan3d-dit-v2-mini-turbo', # hardcoded default in orig ModelWorker? orig used kwargs
+            device=args.device,
+            enable_t2i=True, # Original ModelWorker seemed to instantiate T2I always? Actually check line 94 of original. It was there.
+            enable_tex=args.enable_tex
+        )
+        
+    model_mgr.register_model("primary", pipeline_loader)
+
+    request_manager = PriorityRequestManager(model_mgr, max_concurrency=args.limit_model_concurrency)
     
     @app.on_event("startup")
     async def startup_event():

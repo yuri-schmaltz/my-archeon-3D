@@ -2,8 +2,9 @@ import asyncio
 import logging
 import uuid
 import time
+import torch
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Callable
 from hy3dgen.shapegen.utils import get_logger
 
 logger = get_logger("manager")
@@ -19,23 +20,24 @@ class PrioritizedItem:
 class ModelManager:
     """
     Wraps ModelWorkers to provide thread safety, VRAM management, and LRU caching.
+    Supports lazy loading of models.
     """
-    def __init__(self, primary_worker, capacity: int = 1):
-        # In this simplified version, we primarily wrap a single worker
-        # but structured to allow switching if we had multiple model paths.
-        self.workers = {}
-        self.primary_worker = primary_worker
+    def __init__(self, capacity: int = 1, device: str = 'cuda'):
+        self.workers = {}  # key -> model_instance
+        self.loaders = {}  # key -> loader_function
         self.capacity = capacity
+        self.device = device
         self.lock = asyncio.Lock()
-        
-        # Initialize with the primary worker
-        self.workers["primary"] = primary_worker
-        self.lru_order = ["primary"]
+        self.lru_order = []  # List of keys, most recently used at the end
+
+    def register_model(self, key: str, loader: Callable[[], Any]):
+        """Register a model loader without loading it immediately."""
+        self.loaders[key] = loader
+        logger.info(f"Registered model loader for: {key}")
 
     async def get_worker(self, model_key: str):
         """
-        Retrieves a worker for the given key. Evicts old ones if needed.
-        (Currently supports 'primary' only, but extensible).
+        Retrieves a worker for the given key. Loads it if necessary, evicting others.
         """
         if model_key in self.workers:
             # Move to end (most recently used)
@@ -44,22 +46,63 @@ class ModelManager:
             self.lru_order.append(model_key)
             return self.workers[model_key]
         
-        # Logic to load new model would go here...
-        # For now, default to primary
-        logger.warning(f"Model key '{model_key}' not found, falling back to primary.")
-        return self.primary_worker
+        # Check if we have a loader
+        if model_key not in self.loaders:
+            raise ValueError(f"No loader registered for model: {model_key}")
+
+        logger.info(f"Loading model '{model_key}'...")
+        
+        # Check capacity/eviction
+        if len(self.workers) >= self.capacity:
+            await self.offload_lru_model()
+
+        # Load the model
+        # Execute loader. Warning: This is synchronous blocking code if loader is not async.
+        # Since standard torch loading is blocking, we might want to run in executor if necessary, 
+        # but for simplicity here we assume it's acceptable or wrapped.
+        start_time = time.time()
+        try:
+            self.workers[model_key] = self.loaders[model_key]()
+            self.lru_order.append(model_key)
+            logger.info(f"Model '{model_key}' loaded in {time.time() - start_time:.2f}s")
+        except Exception as e:
+            logger.error(f"Failed to load model '{model_key}': {e}")
+            raise
+
+        return self.workers[model_key]
+
+    async def offload_lru_model(self):
+        """Offload the least recently used model."""
+        if not self.lru_order:
+            return
+
+        lru_key = self.lru_order.pop(0)
+        logger.info(f"Offloading model: {lru_key}")
+        
+        if lru_key in self.workers:
+            model = self.workers[lru_key]
+            del self.workers[lru_key]
+            # Explicit cleanup hint
+            del model
+            
+            if self.device == 'cuda':
+                torch.cuda.empty_cache()
+                logger.info("VRAM cleared.")
 
     async def generate_safe(self, uid, params, loop):
         """
         Executes generation ensuring thread safety and VRAM management.
         """
         async with self.lock:
-            # Determine which model to use (could be passed in params)
+            # Determine which model to use. Default to 'primary' if not configured.
             model_key = params.get("model_key", "primary")
+            
+            # Retrieve (load) worker
             worker = await self.get_worker(model_key)
             
-            logger.info(f"Using worker for model: {model_key}")
+            # logger.info(f"Using worker for model: {model_key}")
             
+            # Run generation in executor to avoid blocking the async loop
             result = await loop.run_in_executor(
                 None, 
                 worker.generate, 
@@ -67,16 +110,20 @@ class ModelManager:
                 params
             )
             
-            # Explicit garbage collection if VRAM is tight
-            # import torch; torch.cuda.empty_cache()  <-- already done in worker
+            # Optional: Aggressive cleanup if low vram mode is enforced externally
+            # but usually we rely on LRU eviction when next model is needed.
             return result
 
 class PriorityRequestManager:
-    def __init__(self, worker_instance, max_concurrency: int = 1):
-        self.model_manager = ModelManager(worker_instance)
+    def __init__(self, model_manager: ModelManager = None, max_concurrency: int = 1):
+        if model_manager is None:
+            # Default empty manager if none provided
+            self.model_manager = ModelManager()
+        else:
+            self.model_manager = model_manager
+            
         self.queue = asyncio.PriorityQueue()
         self.max_concurrency = max_concurrency
-        self.active_workers = 0
         self.running = False
         self.workers = []
 

@@ -59,10 +59,10 @@ class TestSanity(unittest.TestCase):
             from hy3dgen.manager import PriorityRequestManager, ModelManager
             
             mock_worker = MagicMock()
-            model_mgr = ModelManager(mock_worker)
+            model_mgr = ModelManager(capacity=1) # mock_worker removed from init
             self.assertTrue(hasattr(model_mgr, 'lock'))
             self.assertTrue(hasattr(model_mgr, 'lru_order'))
-            self.assertEqual(model_mgr.lru_order, ["primary"])
+            self.assertEqual(model_mgr.lru_order, []) # Should be empty initially
             
             req_mgr = PriorityRequestManager(mock_worker)
             self.assertTrue(hasattr(req_mgr, 'model_manager'))

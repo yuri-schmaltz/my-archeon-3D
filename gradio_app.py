@@ -14,8 +14,8 @@
 
 import os
 import random
+import asyncio
 import shutil
-import time
 from glob import glob
 from pathlib import Path
 
@@ -28,6 +28,11 @@ from fastapi.staticfiles import StaticFiles
 import uuid
 
 from hy3dgen.shapegen.utils import logger
+from hy3dgen.manager import PriorityRequestManager, ModelManager
+from hy3dgen.inference import InferencePipeline
+
+# Global Manager
+request_manager = None
 
 MAX_SEED = int(1e7)
 
@@ -133,7 +138,7 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
     """
 
 
-def _gen_shape(
+async def shape_generation(
     caption=None,
     image=None,
     mv_image_front=None,
@@ -150,162 +155,64 @@ def _gen_shape(
 ):
     if not MV_MODE and image is None and caption is None:
         raise gr.Error("Please provide either a caption or an image.")
+    
+    mv_images = {}
     if MV_MODE:
         if mv_image_front is None and mv_image_back is None and mv_image_left is None and mv_image_right is None:
             raise gr.Error("Please provide at least one view image.")
-        image = {}
-        if mv_image_front:
-            image['front'] = mv_image_front
-        if mv_image_back:
-            image['back'] = mv_image_back
-        if mv_image_left:
-            image['left'] = mv_image_left
-        if mv_image_right:
-            image['right'] = mv_image_right
+        if mv_image_front: mv_images['front'] = mv_image_front
+        if mv_image_back: mv_images['back'] = mv_image_back
+        if mv_image_left: mv_images['left'] = mv_image_left
+        if mv_image_right: mv_images['right'] = mv_image_right
 
     seed = int(randomize_seed_fn(seed, randomize_seed))
-
     octree_resolution = int(octree_resolution)
-    if caption: print('prompt is', caption)
-    save_folder = gen_save_folder()
-    stats = {
-        'model': {
-            'shapegen': f'{args.model_path}/{args.subfolder}',
-            'texgen': f'{args.texgen_model_path}',
-        },
-        'params': {
-            'caption': caption,
-            'steps': steps,
-            'guidance_scale': guidance_scale,
-            'seed': seed,
-            'octree_resolution': octree_resolution,
-            'check_box_rembg': check_box_rembg,
-            'num_chunks': num_chunks,
-        }
+    
+    params = {
+        "text": caption,
+        "image": image,
+        "mv_images": mv_images if MV_MODE else None,
+        "num_inference_steps": steps,
+        "guidance_scale": guidance_scale,
+        "seed": seed,
+        "octree_resolution": octree_resolution,
+        "do_rembg": check_box_rembg,
+        "num_chunks": num_chunks,
+        "do_texture": False
     }
-    time_meta = {}
 
-    if image is None:
-        start_time = time.time()
-        try:
-            image = t2i_worker(caption)
-        except Exception as e:
-            raise gr.Error(f"Text to 3D is disable. Please enable it by `python gradio_app.py --enable_t23d`.")
-        time_meta['text2image'] = time.time() - start_time
+    # Submit to manager
+    try:
+        result = await request_manager.submit(params)
+    except Exception as e:
+        logger.error(f"Generation failed: {e}")
+        raise gr.Error(f"Generation failed: {e}")
 
-    # remove disk io to make responding faster, uncomment at your will.
-    # image.save(os.path.join(save_folder, 'input.png'))
-    if MV_MODE:
-        start_time = time.time()
-        for k, v in image.items():
-            if check_box_rembg or v.mode == "RGB":
-                img = rmbg_worker(v.convert('RGB'))
-                image[k] = img
-        time_meta['remove background'] = time.time() - start_time
-    else:
-        if check_box_rembg or image.mode == "RGB":
-            start_time = time.time()
-            image = rmbg_worker(image.convert('RGB'))
-            time_meta['remove background'] = time.time() - start_time
-
-    # remove disk io to make responding faster, uncomment at your will.
-    # image.save(os.path.join(save_folder, 'rembg.png'))
-
-    # image to white model
-    start_time = time.time()
-
-    generator = torch.Generator()
-    generator = generator.manual_seed(int(seed))
-    outputs = i23d_worker(
-        image=image,
-        num_inference_steps=steps,
-        guidance_scale=guidance_scale,
-        generator=generator,
-        octree_resolution=octree_resolution,
-        num_chunks=num_chunks,
-        output_type='mesh'
-    )
-    time_meta['shape generation'] = time.time() - start_time
-    logger.info(f"[req_id={get_request_id()}] ---Shape generation takes %s seconds ---" % (time.time() - start_time))
-
-    tmp_start = time.time()
-    mesh = export_to_trimesh(outputs)[0]
-    time_meta['export to trimesh'] = time.time() - tmp_start
-
+    # Process result
+    mesh = result["mesh"]
+    stats = result["stats"]
+    out_image = result["image"]
+    
+    # Save (reusing local helpers)
+    save_folder = gen_save_folder()
+    
+    # Stats update
     stats['number_of_faces'] = mesh.faces.shape[0]
     stats['number_of_vertices'] = mesh.vertices.shape[0]
+    mesh.metadata['extras'] = stats
 
-    stats['time'] = time_meta
-    main_image = image if not MV_MODE else image['front']
-    return mesh, main_image, save_folder, stats, seed
-
-
-def generation_all(
-    caption=None,
-    image=None,
-    mv_image_front=None,
-    mv_image_back=None,
-    mv_image_left=None,
-    mv_image_right=None,
-    steps=50,
-    guidance_scale=7.5,
-    seed=1234,
-    octree_resolution=256,
-    check_box_rembg=False,
-    num_chunks=200000,
-    randomize_seed: bool = False,
-):
-    start_time_0 = time.time()
-    mesh, image, save_folder, stats, seed = _gen_shape(
-        caption,
-        image,
-        mv_image_front=mv_image_front,
-        mv_image_back=mv_image_back,
-        mv_image_left=mv_image_left,
-        mv_image_right=mv_image_right,
-        steps=steps,
-        guidance_scale=guidance_scale,
-        seed=seed,
-        octree_resolution=octree_resolution,
-        check_box_rembg=check_box_rembg,
-        num_chunks=num_chunks,
-        randomize_seed=randomize_seed,
-    )
     path = export_mesh(mesh, save_folder, textured=False)
-
-    # tmp_time = time.time()
-    # mesh = floater_remove_worker(mesh)
-    # mesh = degenerate_face_remove_worker(mesh)
-    # logger.info("---Postprocessing takes %s seconds ---" % (time.time() - tmp_time))
-    # stats['time']['postprocessing'] = time.time() - tmp_time
-
-    tmp_time = time.time()
-    mesh = face_reduce_worker(mesh)
-    logger.info(f"[req_id={get_request_id()}] ---Face Reduction takes %s seconds ---" % (time.time() - tmp_time))
-    stats['time']['face reduction'] = time.time() - tmp_time
-
-    tmp_time = time.time()
-    textured_mesh = texgen_worker(mesh, image)
-    logger.info(f"[req_id={get_request_id()}] ---Texture Generation takes %s seconds ---" % (time.time() - tmp_time))
-    stats['time']['texture generation'] = time.time() - tmp_time
-    stats['time']['total'] = time.time() - start_time_0
-
-    textured_mesh.metadata['extras'] = stats
-    path_textured = export_mesh(textured_mesh, save_folder, textured=True)
-    model_viewer_html_textured = build_model_viewer_html(save_folder, height=HTML_HEIGHT, width=HTML_WIDTH,
-                                                         textured=True)
-    if args.low_vram_mode:
-        torch.cuda.empty_cache()
+    model_viewer_html = build_model_viewer_html(save_folder, height=HTML_HEIGHT, width=HTML_WIDTH)
+    
     return (
         gr.update(value=path),
-        gr.update(value=path_textured),
-        model_viewer_html_textured,
+        model_viewer_html,
         stats,
         seed,
     )
 
 
-def shape_generation(
+async def generation_all(
     caption=None,
     image=None,
     mv_image_front=None,
@@ -320,32 +227,60 @@ def shape_generation(
     num_chunks=200000,
     randomize_seed: bool = False,
 ):
-    start_time_0 = time.time()
-    mesh, image, save_folder, stats, seed = _gen_shape(
-        caption,
-        image,
-        mv_image_front=mv_image_front,
-        mv_image_back=mv_image_back,
-        mv_image_left=mv_image_left,
-        mv_image_right=mv_image_right,
-        steps=steps,
-        guidance_scale=guidance_scale,
-        seed=seed,
-        octree_resolution=octree_resolution,
-        check_box_rembg=check_box_rembg,
-        num_chunks=num_chunks,
-        randomize_seed=randomize_seed,
-    )
-    stats['time']['total'] = time.time() - start_time_0
-    mesh.metadata['extras'] = stats
+    # Same setup
+    if not MV_MODE and image is None and caption is None:
+        raise gr.Error("Please provide either a caption or an image.")
+        
+    mv_images = {}
+    if MV_MODE:
+       if mv_image_front: mv_images['front'] = mv_image_front
+       if mv_image_back: mv_images['back'] = mv_image_back
+       if mv_image_left: mv_images['left'] = mv_image_left
+       if mv_image_right: mv_images['right'] = mv_image_right
+       if not mv_images: raise gr.Error("Please provide at least one view image.")
+
+    seed = int(randomize_seed_fn(seed, randomize_seed))
+    octree_resolution = int(octree_resolution)
+    
+    params = {
+        "text": caption,
+        "image": image,
+        "mv_images": mv_images if MV_MODE else None,
+        "num_inference_steps": steps,
+        "guidance_scale": guidance_scale,
+        "seed": seed,
+        "octree_resolution": octree_resolution,
+        "do_rembg": check_box_rembg,
+        "num_chunks": num_chunks,
+        "do_texture": True # Request Texture
+    }
+
+    try:
+        result = await request_manager.submit(params)
+    except Exception as e:
+        logger.error(f"Generation failed: {e}")
+        raise gr.Error(f"Generation failed: {e}")
+
+    mesh = result["mesh"]
+    textured_mesh = result["textured_mesh"]
+    stats = result["stats"]
+    out_image = result["image"]
+    
+    save_folder = gen_save_folder()
+    
+    stats['number_of_faces'] = mesh.faces.shape[0]
+    stats['number_of_vertices'] = mesh.vertices.shape[0]
+    textured_mesh.metadata['extras'] = stats
 
     path = export_mesh(mesh, save_folder, textured=False)
-    model_viewer_html = build_model_viewer_html(save_folder, height=HTML_HEIGHT, width=HTML_WIDTH)
-    if args.low_vram_mode:
-        torch.cuda.empty_cache()
+    path_textured = export_mesh(textured_mesh, save_folder, textured=True)
+    
+    model_viewer_html_textured = build_model_viewer_html(save_folder, height=HTML_HEIGHT, width=HTML_WIDTH, textured=True)
+
     return (
         gr.update(value=path),
-        model_viewer_html,
+        gr.update(value=path_textured),
+        model_viewer_html_textured,
         stats,
         seed,
     )
@@ -688,58 +623,35 @@ if __name__ == '__main__':
     example_ts = get_example_txt_list()
     example_mvs = get_example_mv_list()
 
-    SUPPORTED_FORMATS = ['glb', 'obj', 'ply', 'stl']
+    # Remove global initialization
+    # HAS_T2I handled via params logic
+    HAS_TEXTUREGEN = not args.disable_tex
 
-    HAS_TEXTUREGEN = False
-    if not args.disable_tex:
-        try:
-            from hy3dgen.texgen import Hunyuan3DPaintPipeline
-
-            texgen_worker = Hunyuan3DPaintPipeline.from_pretrained(args.texgen_model_path)
-            if args.low_vram_mode:
-                texgen_worker.enable_model_cpu_offload()
-            # Not help much, ignore for now.
-            # if args.compile:
-            #     texgen_worker.models['delight_model'].pipeline.unet.compile()
-            #     texgen_worker.models['delight_model'].pipeline.vae.compile()
-            #     texgen_worker.models['multiview_model'].pipeline.unet.compile()
-            #     texgen_worker.models['multiview_model'].pipeline.vae.compile()
-            HAS_TEXTUREGEN = True
-        except Exception as e:
-            print(e)
-            print("Failed to load texture generator.")
-            print('Please try to install requirements by following README.md')
-            HAS_TEXTUREGEN = False
-
-    HAS_T2I = True
-    if args.enable_t23d:
-        from hy3dgen.text2image import HunyuanDiTPipeline
-
-        t2i_worker = HunyuanDiTPipeline('Tencent-Hunyuan/HunyuanDiT-v1.1-Diffusers-Distilled', device=args.device)
-        HAS_T2I = True
-
-    from hy3dgen.shapegen import FaceReducer, FloaterRemover, DegenerateFaceRemover, MeshSimplifier, \
-        Hunyuan3DDiTFlowMatchingPipeline
-    from hy3dgen.shapegen.pipelines import export_to_trimesh
-    from hy3dgen.rembg import BackgroundRemover
-
-    rmbg_worker = BackgroundRemover()
-    i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
-        args.model_path,
-        subfolder=args.subfolder,
-        use_safetensors=True,
-        device=args.device,
-    )
-    if args.enable_flashvdm:
-        mc_algo = 'mc' if args.device in ['cpu', 'mps'] else args.mc_algo
-        i23d_worker.enable_flashvdm(mc_algo=mc_algo)
-    if args.compile:
-        i23d_worker.compile()
-
-    floater_remove_worker = FloaterRemover()
-    degenerate_face_remove_worker = DegenerateFaceRemover()
-    face_reduce_worker = FaceReducer()
-
+    # Create Manager and Start
+    model_mgr = ModelManager(capacity=1 if args.low_vram_mode else 3, device=args.device)
+    
+    # Register Loader
+    def pipeline_loader():
+        return InferencePipeline(
+            model_path=args.model_path,
+            tex_model_path=args.texgen_model_path,
+            subfolder=args.subfolder,
+            device=args.device,
+            enable_t2i=args.enable_t23d,
+            enable_tex=not args.disable_tex,
+            use_flashvdm=args.enable_flashvdm,
+            mc_algo=args.mc_algo
+        )
+        
+    model_mgr.register_model("primary", pipeline_loader)
+    
+    request_manager = PriorityRequestManager(model_mgr, max_concurrency=1)
+    
+    # Start Manager Loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.create_task(request_manager.start())
+    
     # https://discuss.huggingface.co/t/how-to-serve-an-html-file/33921/2
     # create a FastAPI app
     app = FastAPI()

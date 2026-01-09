@@ -35,7 +35,51 @@ from hy3dgen.inference import InferencePipeline
 request_manager = None
 
 MAX_SEED = int(1e7)
+SAVE_DIR = 'gradio_cache'
+HAS_T2I = False
+TURBO_MODE = True
+HAS_TEXTUREGEN = True
+SUPPORTED_FORMATS = ['glb', 'obj']
 
+MODEL_VIEWER_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <style>
+        body { margin: 0; background-color: #ffffff; }
+        model-viewer { width: 100%; height: #height#px; --progress-bar-color: transparent; }
+    </style>
+</head>
+<body>
+    <model-viewer src="#src#" 
+                  alt="Hunyuan3D Model" 
+                  auto-rotate 
+                  camera-controls 
+                  shadow-intensity="1" 
+                  exposure="1" 
+                  interaction-prompt="auto">
+    </model-viewer>
+</body>
+</html>
+"""
+
+HTML_OUTPUT_PLACEHOLDER = """
+<div style='height: 650px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px; display: flex; justify-content: center; align-items: center;'>
+  <div style='text-align: center; font-size: 16px; color: #6b7280;'>
+    <p style="color: #8d8d8d;">Welcome to Hunyuan3D!</p>
+    <p style="color: #8d8d8d;">No mesh here.</p>
+  </div>
+</div>
+"""
+
+INPUT_MESH_HTML = """
+<div style='height: 490px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px;'>
+</div>
+"""
+
+HTML_HEIGHT = 650
+HTML_WIDTH = 500
 
 def get_example_img_list():
     return []
@@ -90,23 +134,20 @@ def randomize_seed_fn(seed: int, randomize_seed: bool) -> int:
 
 
 def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
-    # Remove first folder from path to make relative path
     if textured:
         related_path = f"./textured_mesh.glb"
-        template_name = './assets/modelviewer-textured-template.html'
         output_html_path = os.path.join(save_folder, f'textured_mesh.html')
     else:
         related_path = f"./white_mesh.glb"
-        template_name = './assets/modelviewer-template.html'
         output_html_path = os.path.join(save_folder, f'white_mesh.html')
+    
     offset = 50 if textured else 10
-    with open(os.path.join(CURRENT_DIR, template_name), 'r', encoding='utf-8') as f:
-        template_html = f.read()
-
+    template_html = MODEL_VIEWER_TEMPLATE
+    
     with open(output_html_path, 'w', encoding='utf-8') as f:
         template_html = template_html.replace('#height#', f'{height - offset}')
         template_html = template_html.replace('#width#', f'{width}')
-        template_html = template_html.replace('#src#', f'{related_path}/')
+        template_html = template_html.replace('#src#', f'{related_path}')
         f.write(template_html)
 
     rel_path = os.path.relpath(output_html_path, SAVE_DIR)
@@ -461,6 +502,7 @@ def build_app():
         btn.click(
             shape_generation,
             inputs=[
+                model_key,
                 caption,
                 image,
                 mv_image_front,
@@ -488,6 +530,7 @@ def build_app():
         btn_all.click(
             generation_all,
             inputs=[
+                model_key,
                 caption,
                 image,
                 mv_image_front,
@@ -581,6 +624,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser()
+    # ... args definition ...
     parser.add_argument("--model_path", type=str, default='tencent/Hunyuan3D-2mini')
     parser.add_argument("--subfolder", type=str, default='hunyuan3d-dit-v2-mini-turbo')
     parser.add_argument("--texgen_model_path", type=str, default='tencent/Hunyuan3D-2')
@@ -599,28 +643,12 @@ if __name__ == '__main__':
     SAVE_DIR = args.cache_path
     os.makedirs(SAVE_DIR, exist_ok=True)
 
-    HAS_T2I = args.enable_t23d
-    TURBO_MODE = True # Default for unified app
-    HTML_WIDTH = 500
-    HTML_OUTPUT_PLACEHOLDER = """
-    <div style='height: 650px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px; display: flex; justify-content: center; align-items: center;'>
-      <div style='text-align: center; font-size: 16px; color: #6b7280;'>
-        <p style="color: #8d8d8d;">Welcome to Hunyuan3D!</p>
-        <p style="color: #8d8d8d;">No mesh here.</p>
-      </div>
-    </div>
-    """
-
-    INPUT_MESH_HTML = """
-    <div style='height: 490px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px;'>
-    </div>
-    """
     example_is = get_example_img_list()
     example_ts = get_example_txt_list()
     example_mvs = get_example_mv_list()
 
-    # Remove global initialization
-    # HAS_T2I handled via params logic
+    HAS_T2I = args.enable_t23d
+    TURBO_MODE = True # Default for unified app
     HAS_TEXTUREGEN = not args.disable_tex
 
     # Create Manager and Start
@@ -650,17 +678,18 @@ if __name__ == '__main__':
     asyncio.set_event_loop(loop)
     loop.create_task(request_manager.start())
     
-    # https://discuss.huggingface.co/t/how-to-serve-an-html-file/33921/2
-    # create a FastAPI app
+    # FastAPI app for serving static files
     app = FastAPI()
-    # create a static directory to store the static files
     static_dir = Path(SAVE_DIR).absolute()
     static_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
-    shutil.copytree('./assets/env_maps', os.path.join(static_dir, 'env_maps'), dirs_exist_ok=True)
+    
+    if os.path.exists('./assets/env_maps'):
+        shutil.copytree('./assets/env_maps', os.path.join(static_dir, 'env_maps'), dirs_exist_ok=True)
 
     if args.low_vram_mode:
         torch.cuda.empty_cache()
+    
     demo = build_app()
     app = gr.mount_gradio_app(app, demo, path="/")
     uvicorn.run(app, host=args.host, port=args.port, workers=1)

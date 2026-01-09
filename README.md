@@ -1,20 +1,11 @@
-
-
-
-<p align="center"> 
-  <img src="https://github.com/user-attachments/assets/efb402a1-0b09-41e0-a6cb-259d442e76aa">
-
-</p>
+# Hunyuan3D 2.0
 
 <div align="center">
-  <a href=https://3d.hunyuan.tencent.com target="_blank"><img src=https://img.shields.io/badge/Official%20Site-333399.svg?logo=homepage height=22px></a>
-  <a href=https://huggingface.co/spaces/tencent/Hunyuan3D-2  target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Demo-276cb4.svg height=22px></a>
-  <a href=https://huggingface.co/tencent/Hunyuan3D-2 target="_blank"><img src=https://img.shields.io/badge/%F0%9F%A4%97%20Models-d96902.svg height=22px></a>
-  <a href=https://3d-models.hunyuan.tencent.com/ target="_blank"><img src= https://img.shields.io/badge/Page-bb8a2e.svg?logo=github height=22px></a>
-  <a href=https://discord.gg/dNBrdrGGMa target="_blank"><img src= https://img.shields.io/badge/Discord-white.svg?logo=discord height=22px></a>
-  <a href=https://arxiv.org/abs/2501.12202 target="_blank"><img src=https://img.shields.io/badge/Report-b5212f.svg?logo=arxiv height=22px></a>
-  <a href=https://x.com/TencentHunyuan target="_blank"><img src=https://img.shields.io/badge/Hunyuan-black.svg?logo=x height=22px></a>
- <a href="#community-resources" target="_blank"><img src=https://img.shields.io/badge/Community-lavender.svg?logo=homeassistantcommunitystore height=22px></a>
+  <a href=https://3d.hunyuan.tencent.com target="_blank">Official Site</a> |
+  <a href=https://huggingface.co/spaces/tencent/Hunyuan3D-2  target="_blank">HF Demo</a> |
+  <a href=https://huggingface.co/tencent/Hunyuan3D-2 target="_blank">HF Models</a> |
+  <a href=https://arxiv.org/abs/2501.12202 target="_blank">Technical Report</a> |
+  <a href=https://discord.gg/dNBrdrGGMa target="_blank">Discord</a>
 </div>
 
 [//]: # (  <a href=# target="_blank"><img src=https://img.shields.io/badge/Report-b5212f.svg?logo=arxiv height=22px></a>)
@@ -29,7 +20,7 @@
 “ Living out everyone’s imagination on creating and manipulating 3D assets.”
 </p>
 
-https://github.com/user-attachments/assets/a2cbc5b8-be22-49d7-b1c3-7aa2b20ba460
+
 
 
 ## 🔥 News
@@ -45,6 +36,7 @@ https://github.com/user-attachments/assets/a2cbc5b8-be22-49d7-b1c3-7aa2b20ba460
 - Feb 3, 2025: 🐎
   Release [Hunyuan3D-DiT-v2-0-Fast](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-fast), our
   guidance distillation model that could half the dit inference time.
+- Jan 9, 2026: 🚀 Release **Hunyuan3D-2 Pro Generator** for Blender 5.0! Includes connection diagnostics, smart object integration, and enhanced UI.
 - Jan 27, 2025: 🛠️ Release Blender addon for Hunyuan3D 2.0, Check it out [here](#blender-addon).
 - Jan 23, 2025: 💬 We thank community members for
   creating [Windows installation tool](https://github.com/YanWenKun/Hunyuan3D-2-WinPortable), ComfyUI support
@@ -57,11 +49,9 @@ https://github.com/user-attachments/assets/a2cbc5b8-be22-49d7-b1c3-7aa2b20ba460
   via [huggingface space](https://huggingface.co/spaces/tencent/Hunyuan3D-2) and
   our [official site](https://3d.hunyuan.tencent.com)!
 
-> Join our **[Wechat](#)** and **[Discord](https://discord.gg/dNBrdrGGMa)** group to discuss and find help from us.
+> Join our **[Discord](https://discord.gg/dNBrdrGGMa)** group to discuss and find help from us.
 
-| Wechat Group                                     | Xiaohongshu                                           | X                                           | Discord                                           |
-|--------------------------------------------------|-------------------------------------------------------|---------------------------------------------|---------------------------------------------------|
-| <img src="assets/qrcode/wechat.png"  height=140> | <img src="assets/qrcode/xiaohongshu.png"  height=140> | <img src="assets/qrcode/x.png"  height=140> | <img src="assets/qrcode/discord.png"  height=140> |        
+
 
 
 
@@ -85,8 +75,7 @@ e.t.c.
 
 
 <p align="center">
-  <img src="assets/images/system.jpg">
-</p>
+
 
 ## ☯️ **Hunyuan3D 2.0**
 
@@ -97,8 +86,7 @@ synthesis of a texture map for that mesh. This strategy is effective for decoupl
 texture generation and also provides flexibility for texturing either generated or handcrafted meshes.
 
 <p align="left">
-  <img src="assets/images/arch.jpg">
-</p>
+
 
 ### Performance
 
@@ -115,10 +103,7 @@ and the condition following ability.
 | Hunyuan3D 2.0           | **3.193** | **49.165**  | **282.429** | **0.809**     |
 
 Generation results of Hunyuan3D 2.0:
-<p align="left">
-  <img src="assets/images/e2e-1.gif"  height=250>
-  <img src="assets/images/e2e-2.gif"  height=250>
-</p>
+
 
 ## 🎁 Models Zoo
 
@@ -202,7 +187,7 @@ You could assess **Hunyuan3D-DiT** via:
 from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
 
 pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained('tencent/Hunyuan3D-2')
-mesh = pipeline(image='assets/demo.png')[0]
+mesh = pipeline(image='path/to/your/image.png')[0]
 ```
 
 The output mesh is a [trimesh object](https://trimesh.org/trimesh.html), which you could save to glb/obj (or other format) file.
@@ -235,31 +220,47 @@ python3 gradio_app.py --model_path tencent/Hunyuan3D-2 --subfolder hunyuan3d-dit
 
 ### API Server
 
-You could launch an API server locally, which you could post web request for Image/Text to 3D, Texturing existing mesh,
-and e.t.c.
+You could launch an API server locally, which you could post web request for Image/Text to 3D, Texturing existing mesh, and e.t.c.
 
 ```bash
-python api_server.py --host 0.0.0.0 --port 8080
+# Default port changed to 8081 for better coexistence
+python api_server.py --host 0.0.0.0 --port 8081
 ```
 
-A demo post request for image to 3D without texture.
+#### Features
+- **Security**: Basic Auth enabled (Default: `admin` / `admin`). Configure via `API_USERNAME` and `API_PASSWORD` env vars.
+- **Diagnostics**: `/health` endpoint for connection and worker status.
+- **Metrics**: Prometheus metrics available at `/metrics`.
+
+#### Usage Example
+
+A demo post request for image to 3D using basic authentication:
 
 ```bash
-img_b64_str=$(base64 -i assets/demo.png)
-curl -X POST "http://localhost:8080/generate" \
+img_b64_str=$(base64 -w 0 your_image.png)
+curl -X POST "http://localhost:8081/generate" \
+     -u admin:admin \
      -H "Content-Type: application/json" \
      -d '{
            "image": "'"$img_b64_str"'",
+           "texture": false
          }' \
-     -o test2.glb
+     -o output.glb
 ```
 
 ### Blender Addon
 
-With an API server launched, you could also directly use Hunyuan3D 2.0 in your blender with
-our [Blender Addon](blender_addon.py). Please follow our tutorial to install and use.
+With an API server launched, you can use our **Hunyuan3D-2 Pro (v1.2)** addon for a seamless 3D workflow inside Blender.
 
-https://github.com/user-attachments/assets/8230bfb5-32b1-4e48-91f4-a977c54a4f3e
+- **Download**: [scripts/blender_addon.py](scripts/blender_addon.py)
+- **Compatibility**: Fully compatible with **Blender 5.0** and earlier versions.
+- **Pro Features**:
+  - **Connection Diagnostics**: Test API reachability directly from the panel.
+  - **Smart Context**: Automatically switches between *Generation* and *Texturing* based on object selection.
+  - **Transform Sync**: Inherit position/rotation/scale from existing scene objects.
+  - **Auto-Organization**: Collections for keeping your workspace clean.
+
+
 
 ### Official Site
 

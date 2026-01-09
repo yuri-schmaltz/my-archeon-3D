@@ -38,32 +38,15 @@ MAX_SEED = int(1e7)
 
 
 def get_example_img_list():
-    print('Loading example img list ...')
-    return sorted(glob('./assets/example_images/**/*.png', recursive=True))
+    return []
 
 
 def get_example_txt_list():
-    print('Loading example txt list ...')
-    txt_list = list()
-    for line in open('./assets/example_prompts.txt', encoding='utf-8'):
-        txt_list.append(line.strip())
-    return txt_list
+    return []
 
 
 def get_example_mv_list():
-    print('Loading example mv list ...')
-    mv_list = list()
-    root = './assets/example_mv_images'
-    for mv_dir in os.listdir(root):
-        view_list = []
-        for view in ['front', 'back', 'left', 'right']:
-            path = os.path.join(root, mv_dir, f'{view}.png')
-            if os.path.exists(path):
-                view_list.append(path)
-            else:
-                view_list.append(None)
-        mv_list.append(view_list)
-    return mv_list
+    return []
 
 
 def gen_save_folder(max_size=200):

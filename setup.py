@@ -16,11 +16,10 @@ from setuptools import setup, find_packages
 
 setup(
     name="hy3dgen",
-    version="2.0.2",
+    version="2.1.0-pro",
     url="https://github.com/Tencent/Hunyuan3D-2",
     packages=find_packages(),
     include_package_data=True,
-    package_data={"hy3dgen": ["assets/*", "assets/**/*"]},
     install_requires=[
         'gradio',
         "tqdm>=4.66.3",

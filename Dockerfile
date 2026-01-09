@@ -25,8 +25,7 @@ RUN python3.10 -m venv /opt/venv
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir pytest httpx pydantic prometheus-client ruff
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
 COPY . /app

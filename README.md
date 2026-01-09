@@ -205,8 +205,13 @@ Hunyuan3D 2.0 supports Macos, Windows, Linux. You may follow the next steps to u
 Please install Pytorch via the [official](https://pytorch.org/) site. Then install the other requirements via
 
 ```bash
+# Production dependencies
 pip install -r requirements.txt
 pip install -e .
+
+# Development dependencies (optional, for testing and linting)
+pip install -r requirements-dev.txt
+
 # for texture
 cd hy3dgen/texgen/custom_rasterizer
 python3 setup.py install

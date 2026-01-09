@@ -21,13 +21,10 @@ xatlas
 # Training
 accelerate
 
-# Demo only
+# Demo and API Server
 gradio
 fastapi
 uvicorn
 onnxruntime
-pytest
-httpx
 pydantic
 prometheus-client
-ruff

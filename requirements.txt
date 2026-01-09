@@ -8,12 +8,8 @@ numpy
 torch
 transformers
 torchvision
-#taming-transformers-rom1504
-#ConfigArgParse
-#ipdb
 omegaconf
 
-#sentencepiece
 tqdm
 
 # Mesh Processing
@@ -21,14 +17,9 @@ trimesh
 pymeshlab
 pygltflib
 xatlas
-#kornia
-#facexlib
 
 # Training
 accelerate
-#pytorch_lightning
-#scikit-learn
-#scikit-image
 
 # Demo only
 gradio
@@ -40,5 +31,3 @@ httpx
 pydantic
 prometheus-client
 ruff
-#gevent
-#geventhttpclient

@@ -37,7 +37,6 @@ setup(
         'pygltflib',
         'xatlas',
         'accelerate',
-        'gradio',
         'fastapi',
         'uvicorn',
         'rembg',

@@ -1,5 +1,8 @@
-[中文阅读](README_zh_cn.md)
-[日本語で読む](README_ja_jp.md)
+<!-- Translations temporarily removed due to significant content gaps -->
+<!-- Chinese translation was -37% content | Japanese translation was -48% content -->
+<!-- We welcome complete, maintained translations via Pull Requests -->
+<!-- Please see CONTRIBUTING.md for translation guidelines -->
+
 
 <p align="center"> 
   <img src="https://github.com/user-attachments/assets/efb402a1-0b09-41e0-a6cb-259d442e76aa">

@@ -26,6 +26,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import uuid
+import webbrowser
 
 from hy3dgen.shapegen.utils import logger
 from hy3dgen.manager import PriorityRequestManager, ModelManager
@@ -628,8 +629,8 @@ if __name__ == '__main__':
     parser.add_argument("--model_path", type=str, default='tencent/Hunyuan3D-2mini')
     parser.add_argument("--subfolder", type=str, default='hunyuan3d-dit-v2-mini-turbo')
     parser.add_argument("--texgen_model_path", type=str, default='tencent/Hunyuan3D-2')
-    parser.add_argument('--port', type=int, default=8081)
-    parser.add_argument('--host', type=str, default='0.0.0.0')
+    parser.add_argument('--port', type=int, default=7860)
+    parser.add_argument('--host', type=str, default='127.0.0.1')
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--mc_algo', type=str, default='mc')
     parser.add_argument('--cache-path', type=str, default='gradio_cache')
@@ -692,4 +693,15 @@ if __name__ == '__main__':
     
     demo = build_app()
     app = gr.mount_gradio_app(app, demo, path="/")
+    
+    url = f"http://{args.host}:{args.port}"
+    print(f"\n" + "="*50)
+    print(f"Hunyuan3D-2 Pro Unified is running at: {url}")
+    print("="*50 + "\n")
+    
+    try:
+        webbrowser.open(url)
+    except:
+        pass
+        
     uvicorn.run(app, host=args.host, port=args.port, workers=1)

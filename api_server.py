@@ -82,14 +82,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 你可以指定允许的来源
+    allow_origins=["*"],  # You can specify allowed origins
     allow_credentials=True,
-    allow_methods=["*"],  # 允许所有方法
-    allow_headers=["*"],  # 允许所有头部
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
 )
 
 
-# Utilitário para gerar ID de correlação por requisição
+# Utility to generate correlation ID per request
 import contextvars
 request_id_var = contextvars.ContextVar('request_id', default=None)
 

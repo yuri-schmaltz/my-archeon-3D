@@ -69,7 +69,7 @@ def get_example_mv_list():
 def gen_save_folder(max_size=200):
     os.makedirs(SAVE_DIR, exist_ok=True)
 
-    # 获取所有文件夹路径
+    # Get all folder paths
     dirs = [f for f in Path(SAVE_DIR).iterdir() if f.is_dir()]
 
     # If folder count exceeds max_size, delete the oldest folder
@@ -80,7 +80,7 @@ def gen_save_folder(max_size=200):
     #     shutil.rmtree(oldest_dir)
     #     print(f"Removed the oldest folder: {oldest_dir}")
 
-    # 生成一个新的 uuid 文件夹名称
+    # Generate a new uuid folder name
     new_folder = os.path.join(SAVE_DIR, str(uuid.uuid4()))
     os.makedirs(new_folder, exist_ok=True)
     print(f"Created new folder: {new_folder}")
@@ -616,7 +616,7 @@ if __name__ == '__main__':
 
     INPUT_MESH_HTML = """
     <div style='height: 490px; width: 100%; border-radius: 8px; 
-    border-color: #e5e7eb; order-style: solid; border-width: 1px;'>
+    border-color: #e5e7eb; border-style: solid; border-width: 1px;'>
     </div>
     """
     example_is = get_example_img_list()

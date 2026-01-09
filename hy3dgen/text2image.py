@@ -40,21 +40,18 @@ class HunyuanDiTPipeline:
             enable_pag=True,
             pag_applied_layers=["blocks.(16|17|18|19)"]
         ).to(device)
-        self.pos_txt = ",白色背景,3D风格,最佳质量"
-        self.neg_txt = "文本,特写,裁剪,出框,最差质量,低质量,JPEG伪影,PGLY,重复,病态," \
-                       "残缺,多余的手指,变异的手,画得不好的手,画得不好的脸,变异,畸形,模糊,脱水,糟糕的解剖学," \
-                       "糟糕的比例,多余的肢体,克隆的脸,毁容,恶心的比例,畸形的肢体,缺失的手臂,缺失的腿," \
-                       "额外的手臂,额外的腿,融合的手指,手指太多,长脖子"
+        self.pos_txt = ", white background, 3D style, best quality"
+        self.neg_txt = "lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
 
     def compile(self):
-        # accelarate hunyuan-dit transformer,first inference will cost long time
+        # accelerate hunyuan-dit transformer, first inference will cost long time
         torch.set_float32_matmul_precision('high')
         self.pipe.transformer = torch.compile(self.pipe.transformer, fullgraph=True)
         # self.pipe.vae.decode = torch.compile(self.pipe.vae.decode, fullgraph=True)
         generator = torch.Generator(device=self.pipe.device)  # infer once for hot-start
         out_img = self.pipe(
-            prompt='美少女战士',
-            negative_prompt='模糊',
+            prompt='Sailor Moon',
+            negative_prompt='blurry',
             num_inference_steps=25,
             pag_scale=1.3,
             width=1024,

@@ -771,7 +771,7 @@ class Hunyuan3DDiTFlowMatchingPipeline(Hunyuan3DDiTPipeline):
         )
 
 
-# Instrumentação de benchmark para pipeline principal
+# Main pipeline benchmark instrumentation
 class Benchmark:
     def __init__(self, name):
         self.name = name

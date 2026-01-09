@@ -1,7 +1,4 @@
-<!-- Translations temporarily removed due to significant content gaps -->
-<!-- Chinese translation was -37% content | Japanese translation was -48% content -->
-<!-- We welcome complete, maintained translations via Pull Requests -->
-<!-- Please see CONTRIBUTING.md for translation guidelines -->
+
 
 
 <p align="center"> 
@@ -40,15 +37,14 @@ https://github.com/user-attachments/assets/a2cbc5b8-be22-49d7-b1c3-7aa2b20ba460
 - July 26, 2025: 🤗 We release the first open-source, simulation-capable, immersive 3D world generation model, [HunyuanWorld-1.0](https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0)!
 - June 23, 2025: 📄 Release the system technical report of [Hunyuan3D 2.5](https://arxiv.org/abs/2506.16504).
 - June 13, 2025: 🤗 Release [Hunyuan3D-2.1](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1), fully open-sourced with new PBR model, VAE encoder, and all training code. 
-- Apr 1, 2025: 🤗 Release turbo paint model [Hunyuan3D-Paint-v2-0-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo), and multiview texture generation pipeline, try it [here](examples/fast_texture_gen_multiview.py)! Stay tuned for our new texture generation model [RomanTex](https://github.com/oakshy/RomanTex) and PBR material generation [MaterialMVP](https://github.com/ZebinHe/MaterialMVP/)! 
+- Apr 1, 2025: 🤗 Release turbo paint model [Hunyuan3D-Paint-v2-0-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo), and multiview texture generation pipeline! Stay tuned for our new texture generation model [RomanTex](https://github.com/oakshy/RomanTex) and PBR material generation [MaterialMVP](https://github.com/ZebinHe/MaterialMVP/)! 
 - Mar 19, 2025: 🤗 Release turbo model [Hunyuan3D-2-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/), [Hunyuan3D-2mini-Turbo](https://huggingface.co/tencent/Hunyuan3D-2mini/) and [FlashVDM](https://github.com/Tencent/FlashVDM).
 - Mar 18, 2025: 🤗 Release multiview shape model [Hunyuan3D-2mv](https://huggingface.co/tencent/Hunyuan3D-2mv) and 0.6B
   shape model [Hunyuan3D-2mini](https://huggingface.co/tencent/Hunyuan3D-2mini).
-- Feb 14, 2025: 🛠️ Release texture enhancement module, please obtain high-definition textures
-  via [here](minimal_demo.py)!
+- Feb 14, 2025: 🛠️ Release texture enhancement module!
 - Feb 3, 2025: 🐎
   Release [Hunyuan3D-DiT-v2-0-Fast](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-fast), our
-  guidance distillation model that could half the dit inference time, see [here](minimal_demo.py) for usage.
+  guidance distillation model that could half the dit inference time.
 - Jan 27, 2025: 🛠️ Release Blender addon for Hunyuan3D 2.0, Check it out [here](#blender-addon).
 - Jan 23, 2025: 💬 We thank community members for
   creating [Windows installation tool](https://github.com/YanWenKun/Hunyuan3D-2-WinPortable), ComfyUI support
@@ -163,39 +159,9 @@ Hunyuan3D-2 Series
 | Hunyuan3D-Paint-v2-0-Turbo | Distillation Texure Model   | 2025-04-01 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo) |
 | Hunyuan3D-Delight-v2-0     | Image Delight Model         | 2025-01-21 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-delight-v2-0)     | 
 
-## 🛠️ System Improvements (Community Edition)
-
-We have enhanced this repository with **unified resource management** and **observability** features:
-
-### 1. Lazy Loading & Resource Management
-- **ModelManager**: Models are now loaded lazily (only when requested), significantly reducing VRAM usage at startup.
-- **LRU Eviction**: Unused models are automatically offloaded to make room for active ones.
-- **Priority Queue**: Request management handles concurrent users fairly.
-
-### 2. Observability
-The API server now exposes Prometheus-compatible metrics at `/metrics`.
-- `app_request_count`
-- `app_request_latency_seconds`
-- `app_generation_total`
-
-### 3. Testing
-We have added a comprehensive test suite.
-```bash
-bash run_tests.sh
-```
-Check status with:
-```bash
-python3 check_health.py
-``` 
-
-### 4. Security
-- **API Authentication**: The API server now supports HTTP Basic Authentication.
-  Set `API_USERNAME` and `API_PASSWORD` environment variables to enable it. 
-  Default: `admin` / `admin`.
-
 ## 🤗 Get Started with Hunyuan3D 2.0
 
-Hunyuan3D 2.0 supports Macos, Windows, Linux. You may follow the next steps to use Hunyuan3D 2.0 via:
+Hunyuan3D 2.0 supports MacOS, Windows, Linux. You may follow the next steps to use Hunyuan3D 2.0 via:
 
 - [Code](#code-usage)
 - [Gradio App](#gradio-app)
@@ -205,36 +171,13 @@ Hunyuan3D 2.0 supports Macos, Windows, Linux. You may follow the next steps to u
 
 ### Install Requirements
 
-Please install Pytorch via the [official](https://pytorch.org/) site. Then install the other requirements via
+### Install Requirements
 
-#### Basic Installation (Package Only)
+Please install Pytorch via the [official](https://pytorch.org/) site. Then install the other requirements via:
+
 ```bash
 pip install -r requirements.txt
 pip install -e .
-```
-
-#### With API Server Support
-```bash
-pip install -r requirements.txt
-pip install -e .[api]  # Includes fastapi, uvicorn, pydantic, prometheus-client
-```
-
-#### Development Setup
-```bash
-# Production dependencies
-pip install -r requirements.txt
-pip install -e .
-
-# Development dependencies (optional, for testing and linting)
-pip install -r requirements-dev.txt
-# OR via extras:
-pip install -e .[dev]  # Includes pytest, httpx, ruff, coverage
-```
-
-#### Complete Installation (All Features)
-```bash
-pip install -r requirements.txt
-pip install -e .[all]  # Includes both [api] and [dev] dependencies
 ```
 
 #### Texture Generation Extensions
@@ -247,22 +190,6 @@ cd hy3dgen/texgen/differentiable_renderer
 python3 setup.py install
 ```
 
-## Testing
-
-### Run all core tests
-```bash
-bash run_tests.sh
-```
-
-### Run integration tests (requires GPU)
-```bash
-pytest tests/test_integration_gpu.py -v
-```
-
-### Skip GPU tests explicitly
-```bash
-pytest tests/ -k "not integration"
-```
 
 ### Code Usage
 
@@ -278,26 +205,7 @@ pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained('tencent/Hunyuan3D-2
 mesh = pipeline(image='assets/demo.png')[0]
 ```
 
-The output mesh is a [trimesh object](https://trimesh.org/trimesh.html), which you could save to glb/obj (or other
-format) file.
-
-For **Hunyuan3D-Paint**, do the following:
-
-```python
-from hy3dgen.texgen import Hunyuan3DPaintPipeline
-from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
-
-# let's generate a mesh first
-pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained('tencent/Hunyuan3D-2')
-mesh = pipeline(image='assets/demo.png')[0]
-
-pipeline = Hunyuan3DPaintPipeline.from_pretrained('tencent/Hunyuan3D-2')
-mesh = pipeline(mesh, image='assets/demo.png')
-```
-
-Please visit [examples](examples) folder for more advanced usage, such as **multiview image to 3D generation** and *
-*texture generation
-for handcrafted mesh**.
+The output mesh is a [trimesh object](https://trimesh.org/trimesh.html), which you could save to glb/obj (or other format) file.
 
 ### Gradio App
 
@@ -407,7 +315,7 @@ Thanks for the contributions of community members, here we have these great exte
 - [ComfyUI-3D-Pack](https://github.com/MrForExample/ComfyUI-3D-Pack)
 - [ComfyUI-Hunyuan3DWrapper](https://github.com/kijai/ComfyUI-Hunyuan3DWrapper)
 - [Hunyuan3D-2-for-windows](https://github.com/sdbds/Hunyuan3D-2-for-windows)
-- [📦 A bundle for running on Windows | 整合包](https://github.com/YanWenKun/Hunyuan3D-2-WinPortable)
+- [📦 A bundle for running on Windows](https://github.com/YanWenKun/Hunyuan3D-2-WinPortable)
 - [Hunyuan3D-2GP](https://github.com/deepbeepmeep/Hunyuan3D-2GP)
 - [Kaggle Notebook](https://github.com/darkon12/Hunyuan3D-2GP_Kaggle)
 

@@ -63,10 +63,10 @@ def pymeshlab2trimesh(mesh: pymeshlab.MeshSet):
     with tempfile.NamedTemporaryFile(suffix='.ply', delete=False) as temp_file:
         mesh.save_current_mesh(temp_file.name)
         mesh = trimesh.load(temp_file.name)
-    # 检查加载的对象类型
+    # Check loaded object type
     if isinstance(mesh, trimesh.Scene):
         combined_mesh = trimesh.Trimesh()
-        # 如果是Scene，遍历所有的geometry并合并
+        # If Scene, iterate through all geometry and merge
         for geom in mesh.geometry.values():
             combined_mesh = trimesh.util.concatenate([combined_mesh, geom])
         mesh = combined_mesh

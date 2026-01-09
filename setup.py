@@ -38,30 +38,14 @@ setup(
         'xatlas',
         'accelerate',
         'rembg',
-        'onnxruntime'
+        'onnxruntime',
+        'fastapi',
+        'uvicorn',
+        'pydantic',
+        'prometheus-client',
+        'pytest',
+        'httpx',
+        'ruff',
+        'coverage'
     ],
-    extras_require={
-        'api': [
-            'fastapi',
-            'uvicorn',
-            'pydantic',
-            'prometheus-client',
-        ],
-        'dev': [
-            'pytest',
-            'httpx',
-            'ruff',
-            'coverage',
-        ],
-        'all': [
-            'fastapi',
-            'uvicorn',
-            'pydantic',
-            'prometheus-client',
-            'pytest',
-            'httpx',
-            'ruff',
-            'coverage',
-        ],
-    }
 )

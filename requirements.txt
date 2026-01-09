@@ -1,6 +1,5 @@
 ninja
 pybind11
-
 diffusers
 einops
 opencv-python
@@ -9,7 +8,6 @@ torch
 transformers
 torchvision
 omegaconf
-
 tqdm
 
 # Mesh Processing
@@ -28,3 +26,30 @@ uvicorn
 onnxruntime
 pydantic
 prometheus-client
+rembg
+
+# Development and Testing
+pytest
+httpx
+ruff
+coverage
+
+# Documentation
+myst-parser
+sphinx-rtd-theme
+furo
+sphinx-copybutton
+sphinx-inline-tabs
+nbsphinx
+nbsphinx_link
+linkify-it-py
+linkify
+ipython
+imageio
+scikit_image
+matplotlib
+munch
+cvxpy
+tensorboardX
+termcolor
+huggingface_hub

@@ -30,7 +30,7 @@ from .utils.uv_warp_utils import mesh_uv_wrap
 logger = logging.getLogger(__name__)
 
 
-# Instrumentação de benchmark para pipeline de textura
+# Texture pipeline benchmark instrumentation
 class Benchmark:
     def __init__(self, name):
         self.name = name
@@ -204,7 +204,7 @@ class Hunyuan3DPaintPipeline:
 
     @torch.no_grad()
     def __call__(self, mesh, image):
-        with Benchmark("Hunyuan3DPaintPipeline.__call__"):  # INSTRUMENTAÇÃO
+        with Benchmark("Hunyuan3DPaintPipeline.__call__"):
             if not isinstance(image, List):
                 image = [image]
 

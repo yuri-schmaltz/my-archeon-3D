@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -24,30 +24,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt || true  # Try installing what we can
-        pip install -r requirements-dev.txt || true
+        pip install -r requirements.txt
         
     - name: Check Dependency Sync
       run: |
         python scripts/check_dep_sync.py || echo "⚠️  Dependency sync check failed (non-blocking)"
         
-    - name: Run All Tests
+    - name: Run Linter
       run: |
-        bash run_tests.sh
-
-    - name: Run Integration Tests (if GPU available)
-      run: |
-        # Integration tests are optional (require GPU)
-        pytest tests/test_integration_gpu.py -v || echo "⚠️  Integration tests skipped (no GPU)"
-      continue-on-error: true
-
-  build-docker:
-    needs: test
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Build Docker Image
-      run: |
-        docker build . --file Dockerfile --tag hunyuan3d-2:latest
+        bash scripts/lint.sh

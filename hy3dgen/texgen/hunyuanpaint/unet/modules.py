@@ -330,11 +330,11 @@ def compute_voxel_grid_mask(position, grid_resolution=8):
     grid_position = grid_position.permute(0,1,4,2,3)
     grid_position = rearrange(grid_position, 'b n c h w -> b n (h w) c')
 
-    grid_position_expanded_1 = grid_position.unsqueeze(2).unsqueeze(4)  # 形状变为 B, N, 1, L, 1, 3
-    grid_position_expanded_2 = grid_position.unsqueeze(1).unsqueeze(3)  # 形状变为 B, 1, N, 1, L, 3
+    grid_position_expanded_1 = grid_position.unsqueeze(2).unsqueeze(4)  # Shape becomes B, N, 1, L, 1, 3
+    grid_position_expanded_2 = grid_position.unsqueeze(1).unsqueeze(3)  # Shape becomes B, 1, N, 1, L, 3
 
-    # 计算欧氏距离
-    distances = torch.norm(grid_position_expanded_1 - grid_position_expanded_2, dim=-1)  # 形状为 B, N, N, L, L
+    # Calculate Euclidean distance
+    distances = torch.norm(grid_position_expanded_1 - grid_position_expanded_2, dim=-1)  # Shape is B, N, N, L, L
 
     weights = distances
     grid_distance = 1.73/grid_resolution

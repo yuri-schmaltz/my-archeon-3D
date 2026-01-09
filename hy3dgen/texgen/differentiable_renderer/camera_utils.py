@@ -74,18 +74,18 @@ def get_mv_matrix(elev, azim, camera_distance, center=None):
 def get_orthographic_projection_matrix(
     left=-1, right=1, bottom=-1, top=1, near=0, far=2):
     """
-    计算正交投影矩阵。
+    Calculate orthographic projection matrix.
 
-    参数:
-        left (float): 投影区域左侧边界。
-        right (float): 投影区域右侧边界。
-        bottom (float): 投影区域底部边界。
-        top (float): 投影区域顶部边界。
-        near (float): 投影区域近裁剪面距离。
-        far (float): 投影区域远裁剪面距离。
+    Args:
+        left (float): Left boundary of the projection area.
+        right (float): Right boundary of the projection area.
+        bottom (float): Bottom boundary of the projection area.
+        top (float): Top boundary of the projection area.
+        near (float): Distance to the near clipping plane.
+        far (float): Distance to the far clipping plane.
 
-    返回:
-        numpy.ndarray: 正交投影矩阵。
+    Returns:
+        numpy.ndarray: Orthographic projection matrix.
     """
     ortho_matrix = np.eye(4, dtype=np.float32)
     ortho_matrix[0, 0] = 2 / (right - left)

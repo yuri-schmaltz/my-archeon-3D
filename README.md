@@ -247,6 +247,23 @@ cd hy3dgen/texgen/differentiable_renderer
 python3 setup.py install
 ```
 
+## Testing
+
+### Run all core tests
+```bash
+bash run_tests.sh
+```
+
+### Run integration tests (requires GPU)
+```bash
+pytest tests/test_integration_gpu.py -v
+```
+
+### Skip GPU tests explicitly
+```bash
+pytest tests/ -k "not integration"
+```
+
 ### Code Usage
 
 We designed a diffusers-like API to use our shape generation model - Hunyuan3D-DiT and texture synthesis model -

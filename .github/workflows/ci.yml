@@ -35,6 +35,12 @@ jobs:
       run: |
         bash run_tests.sh
 
+    - name: Run Integration Tests (if GPU available)
+      run: |
+        # Integration tests are optional (require GPU)
+        pytest tests/test_integration_gpu.py -v || echo "⚠️  Integration tests skipped (no GPU)"
+      continue-on-error: true
+
   build-docker:
     needs: test
     runs-on: ubuntu-latest

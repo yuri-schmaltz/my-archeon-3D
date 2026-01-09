@@ -157,6 +157,7 @@ class GenerateRequest(BaseModel):
     guidance_scale: float = Field(5.0, description="Guidance scale")
     texture: bool = Field(False, description="Generate texture")
     face_count: int = Field(40000, description="Target face count for reduction")
+    model: str = Field("Normal", description="Model category: Normal, Small, Multiview")
     type: str = Field("glb", description="Output file format (glb, obj)")
 
 
@@ -164,6 +165,7 @@ class GenerateRequest(BaseModel):
 async def generate(request: GenerateRequest, username: str = Depends(authenticate)):
     logger.info(f"[req_id={get_request_id()}] Worker generating... User: {username}")
     params = request.model_dump()
+    params["model_key"] = params.pop("model")
     
     # Adapt params for InferencePipeline
     if params.get("image"):
@@ -238,6 +240,7 @@ async def generate(request: GenerateRequest, username: str = Depends(authenticat
 async def generate_send(request: GenerateRequest, username: str = Depends(authenticate)):
     logger.info(f"[req_id={get_request_id()}] Worker send... User: {username}")
     params = request.model_dump()
+    params["model_key"] = params.pop("model")
     uid = uuid.uuid4()
     # Send is async background
     asyncio.create_task(request_manager.submit(params, priority=10))
@@ -274,17 +277,20 @@ if __name__ == "__main__":
     # Initialize Manager
     model_mgr = ModelManager(capacity=1, device=args.device)
     
-    def pipeline_loader():
-        return InferencePipeline(
-            model_path=args.model_path,
+    # Register Model Loaders
+    def get_loader(model_path, subfolder):
+        return lambda: InferencePipeline(
+            model_path=model_path,
             tex_model_path=args.tex_model_path,
-            subfolder='hunyuan3d-dit-v2-mini-turbo', # hardcoded default in orig ModelWorker? orig used kwargs
+            subfolder=subfolder,
             device=args.device,
-            enable_t2i=True, # Original ModelWorker seemed to instantiate T2I always? Actually check line 94 of original. It was there.
+            enable_t2i=True,
             enable_tex=args.enable_tex
         )
-        
-    model_mgr.register_model("primary", pipeline_loader)
+
+    model_mgr.register_model("Normal", get_loader("tencent/Hunyuan3D-2", "hunyuan3d-dit-v2-0-turbo"))
+    model_mgr.register_model("Small", get_loader("tencent/Hunyuan3D-2mini", "hunyuan3d-dit-v2-mini-turbo"))
+    model_mgr.register_model("Multiview", get_loader("tencent/Hunyuan3D-2mv", "hunyuan3d-dit-v2-mv-turbo"))
 
     request_manager = PriorityRequestManager(model_mgr, max_concurrency=args.limit_model_concurrency)
     

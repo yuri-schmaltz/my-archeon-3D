@@ -15,7 +15,7 @@
 bl_info = {
     "name": "Hunyuan3D-2 Pro Generator",
     "author": "Tencent Hunyuan3D & Antigravity Editor",
-    "version": (1, 2),
+    "version": (1, 3),
     "blender": (5, 0, 0),
     "location": "View3D > Sidebar > Hunyuan3D-2",
     "description": "Professional 3D generation with Blender 5.0 compatibility",
@@ -126,6 +126,16 @@ class Hunyuan3DProperties(bpy.types.PropertyGroup):
         description="Import models into this collection",
         default="Hunyuan3D_Output"
     )
+    model_category: bpy.props.EnumProperty(
+        name="Model",
+        description="Select the engine capacity",
+        items=[
+            ('Normal', 'Normal (1.1B)', 'Standard balanced model'),
+            ('Small', 'Small (0.6B)', 'Lightweight fast model'),
+            ('Multiview', 'Multiview (1.1B)', 'Specialized multiview model'),
+        ],
+        default='Normal'
+    )
 
 
 class Hunyuan3DTestConnectionOperator(bpy.types.Operator):
@@ -169,6 +179,7 @@ class Hunyuan3DOperator(bpy.types.Operator):
     guidance_scale = 5.5
     texture = False  # New property
     selected_mesh_base64 = ""
+    model_category = "Normal"
     selected_mesh = None  # New property, for storing selected mesh
 
     thread = None
@@ -217,6 +228,7 @@ class Hunyuan3DOperator(bpy.types.Operator):
         self.num_inference_steps = props.num_inference_steps
         self.guidance_scale = props.guidance_scale
         self.texture = props.texture
+        self.model_category = props.model_category
         
         # Import settings
         self.auto_center = props.auto_center
@@ -269,7 +281,8 @@ class Hunyuan3DOperator(bpy.types.Operator):
                 "octree_resolution": self.octree_resolution,
                 "num_inference_steps": self.num_inference_steps,
                 "guidance_scale": self.guidance_scale,
-                "texture": self.texture
+                "texture": self.texture,
+                "model": self.model_category
             }
             
             if self.selected_mesh_base64:
@@ -402,6 +415,7 @@ class Hunyuan3DPanel(bpy.types.Panel):
         # --- Settings Section ---
         box = layout.box()
         box.label(text="Generation Settings", icon='MODIFIER')
+        box.prop(props, "model_category")
         box.prop(props, "texture", icon='TEXTURE')
         
         col = box.column(align=True)

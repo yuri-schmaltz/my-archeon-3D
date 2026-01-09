@@ -122,6 +122,7 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
 
 
 async def shape_generation(
+    model_key,
     caption=None,
     image=None,
     mv_image_front=None,
@@ -136,11 +137,12 @@ async def shape_generation(
     num_chunks=200000,
     randomize_seed: bool = False,
 ):
-    if not MV_MODE and image is None and caption is None:
+    mv_mode = model_key == "Multiview"
+    if not mv_mode and image is None and caption is None:
         raise gr.Error("Please provide either a caption or an image.")
     
     mv_images = {}
-    if MV_MODE:
+    if mv_mode:
         if mv_image_front is None and mv_image_back is None and mv_image_left is None and mv_image_right is None:
             raise gr.Error("Please provide at least one view image.")
         if mv_image_front: mv_images['front'] = mv_image_front
@@ -152,9 +154,10 @@ async def shape_generation(
     octree_resolution = int(octree_resolution)
     
     params = {
+        "model_key": model_key,
         "text": caption,
         "image": image,
-        "mv_images": mv_images if MV_MODE else None,
+        "mv_images": mv_images if mv_mode else None,
         "num_inference_steps": steps,
         "guidance_scale": guidance_scale,
         "seed": seed,
@@ -185,7 +188,8 @@ async def shape_generation(
     mesh.metadata['extras'] = stats
 
     path = export_mesh(mesh, save_folder, textured=False)
-    model_viewer_html = build_model_viewer_html(save_folder, height=HTML_HEIGHT, width=HTML_WIDTH)
+    html_height = 690 if mv_mode else 650
+    model_viewer_html = build_model_viewer_html(save_folder, height=html_height, width=HTML_WIDTH)
     
     return (
         gr.update(value=path),
@@ -196,6 +200,7 @@ async def shape_generation(
 
 
 async def generation_all(
+    model_key,
     caption=None,
     image=None,
     mv_image_front=None,
@@ -210,12 +215,13 @@ async def generation_all(
     num_chunks=200000,
     randomize_seed: bool = False,
 ):
+    mv_mode = model_key == "Multiview"
     # Same setup
-    if not MV_MODE and image is None and caption is None:
+    if not mv_mode and image is None and caption is None:
         raise gr.Error("Please provide either a caption or an image.")
         
     mv_images = {}
-    if MV_MODE:
+    if mv_mode:
        if mv_image_front: mv_images['front'] = mv_image_front
        if mv_image_back: mv_images['back'] = mv_image_back
        if mv_image_left: mv_images['left'] = mv_image_left
@@ -226,9 +232,10 @@ async def generation_all(
     octree_resolution = int(octree_resolution)
     
     params = {
+        "model_key": model_key,
         "text": caption,
         "image": image,
-        "mv_images": mv_images if MV_MODE else None,
+        "mv_images": mv_images if mv_mode else None,
         "num_inference_steps": steps,
         "guidance_scale": guidance_scale,
         "seed": seed,
@@ -258,7 +265,8 @@ async def generation_all(
     path = export_mesh(mesh, save_folder, textured=False)
     path_textured = export_mesh(textured_mesh, save_folder, textured=True)
     
-    model_viewer_html_textured = build_model_viewer_html(save_folder, height=HTML_HEIGHT, width=HTML_WIDTH, textured=True)
+    html_height = 690 if mv_mode else 650
+    model_viewer_html_textured = build_model_viewer_html(save_folder, height=html_height, width=HTML_WIDTH, textured=True)
 
     return (
         gr.update(value=path),
@@ -270,11 +278,7 @@ async def generation_all(
 
 
 def build_app():
-    title = 'Hunyuan3D-2: High Resolution Textured 3D Assets Generation'
-    if MV_MODE:
-        title = 'Hunyuan3D-2mv: Image to 3D Generation with 1-4 Views'
-    if 'mini' in args.subfolder:
-        title = 'Hunyuan3D-2mini: Strong 0.6B Image to Shape Generator'
+    title = 'Hunyuan3D-2 Pro: High Resolution Textured 3D Assets Generation'
     if TURBO_MODE:
         title = title.replace(':', '-Turbo: Fast ')
 
@@ -313,15 +317,21 @@ def build_app():
 
         with gr.Row():
             with gr.Column(scale=3):
+                model_key = gr.Dropdown(
+                    label="Model Category",
+                    choices=["Normal", "Small", "Multiview"],
+                    value="Normal"
+                )
+                
                 with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
-                    with gr.Tab('Image Prompt', id='tab_img_prompt', visible=not MV_MODE) as tab_ip:
+                    with gr.Tab('Image Prompt', id='tab_img_prompt') as tab_ip:
                         image = gr.Image(label='Image', type='pil', image_mode='RGBA', height=290)
 
-                    with gr.Tab('Text Prompt', id='tab_txt_prompt', visible=HAS_T2I and not MV_MODE) as tab_tp:
+                    with gr.Tab('Text Prompt', id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
                         caption = gr.Textbox(label='Text Prompt',
                                              placeholder='HunyuanDiT will be used to generate image.',
                                              info='Example: A 3D model of a cute cat, white background')
-                    with gr.Tab('MultiView Prompt', visible=MV_MODE) as tab_mv:
+                    with gr.Tab('MultiView Prompt', id='tab_mv_prompt', visible=False) as tab_mv_p:
                         # gr.Label('Please upload at least one front image.')
                         with gr.Row():
                             mv_image_front = gr.Image(label='Front', type='pil', image_mode='RGBA', height=140,
@@ -399,28 +409,24 @@ def build_app():
                     with gr.Tab('Mesh Statistic', id='stats_panel'):
                         stats = gr.Json({}, label='Mesh Stats')
 
-            with gr.Column(scale=3 if MV_MODE else 2):
+            with gr.Column(scale=3):
                 with gr.Tabs(selected='tab_img_gallery') as gallery:
-                    with gr.Tab('Image to 3D Gallery', id='tab_img_gallery', visible=not MV_MODE) as tab_gi:
+                    with gr.Tab('Image to 3D Gallery', id='tab_img_gallery') as tab_gi:
                         with gr.Row():
                             gr.Examples(examples=example_is, inputs=[image],
                                         label=None, examples_per_page=18)
 
-                    with gr.Tab('Text to 3D Gallery', id='tab_txt_gallery', visible=HAS_T2I and not MV_MODE) as tab_gt:
+                    with gr.Tab('Text to 3D Gallery', id='tab_txt_gallery', visible=HAS_T2I) as tab_gt:
                         with gr.Row():
                             gr.Examples(examples=example_ts, inputs=[caption],
                                         label=None, examples_per_page=18)
-                    with gr.Tab('MultiView to 3D Gallery', id='tab_mv_gallery', visible=MV_MODE) as tab_mv:
+                    with gr.Tab('MultiView to 3D Gallery', id='tab_mv_gallery', visible=False) as tab_gmv:
                         with gr.Row():
                             gr.Examples(examples=example_mvs,
                                         inputs=[mv_image_front, mv_image_back, mv_image_left, mv_image_right],
                                         label=None, examples_per_page=6)
 
         gr.HTML(f"""
-        <div align="center">
-        Activated Model - Shape Generation ({args.model_path}/{args.subfolder}) ; Texture Generation ({'Hunyuan3D-2' if HAS_TEXTUREGEN else 'Unavailable'})
-        </div>
-        """)
         if not HAS_TEXTUREGEN:
             gr.HTML("""
             <div style="margin-top: 5px;"  align="center">
@@ -429,17 +435,30 @@ def build_app():
                  please install requirements following <a href="https://github.com/Tencent/Hunyuan3D-2?tab=readme-ov-file#install-requirements">README.md</a>to activate it.
             </div>
             """)
-        if not args.enable_t23d:
-            gr.HTML("""
-            <div style="margin-top: 5px;"  align="center">
-                <b>Warning: </b>
-                Text to 3D is disable. To activate it, please run `python gradio_app.py --enable_t23d`.
-            </div>
-            """)
+
+        def on_model_key_change(key):
+            is_mv = key == "Multiview"
+            return (
+                gr.update(visible=not is_mv), # tab_ip
+                gr.update(visible=HAS_T2I and not is_mv), # tab_tp
+                gr.update(visible=is_mv), # tab_mv_p
+                gr.update(selected='tab_mv_prompt' if is_mv else 'tab_img_prompt'), # tabs_prompt
+                gr.update(visible=not is_mv), # tab_gi
+                gr.update(visible=HAS_T2I and not is_mv), # tab_gt
+                gr.update(visible=is_mv), # tab_gmv
+                gr.update(selected='tab_mv_gallery' if is_mv else 'tab_img_gallery'), # gallery
+            )
+
+        model_key.change(
+            on_model_key_change, 
+            inputs=[model_key], 
+            outputs=[tab_ip, tab_tp, tab_mv_p, tabs_prompt, tab_gi, tab_gt, tab_gmv, gallery]
+        )
 
         tab_ip.select(fn=lambda: gr.update(selected='tab_img_gallery'), outputs=gallery)
         if HAS_T2I:
             tab_tp.select(fn=lambda: gr.update(selected='tab_txt_gallery'), outputs=gallery)
+        tab_mv_p.select(fn=lambda: gr.update(selected='tab_mv_gallery'), outputs=gallery)
 
         btn.click(
             shape_generation,
@@ -567,7 +586,7 @@ if __name__ == '__main__':
     parser.add_argument("--model_path", type=str, default='tencent/Hunyuan3D-2mini')
     parser.add_argument("--subfolder", type=str, default='hunyuan3d-dit-v2-mini-turbo')
     parser.add_argument("--texgen_model_path", type=str, default='tencent/Hunyuan3D-2')
-    parser.add_argument('--port', type=int, default=8080)
+    parser.add_argument('--port', type=int, default=8081)
     parser.add_argument('--host', type=str, default='0.0.0.0')
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--mc_algo', type=str, default='mc')
@@ -582,11 +601,8 @@ if __name__ == '__main__':
     SAVE_DIR = args.cache_path
     os.makedirs(SAVE_DIR, exist_ok=True)
 
-    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    MV_MODE = 'mv' in args.model_path
-    TURBO_MODE = 'turbo' in args.subfolder
-
-    HTML_HEIGHT = 690 if MV_MODE else 650
+    HAS_T2I = args.enable_t23d
+    TURBO_MODE = True # Default for unified app
     HTML_WIDTH = 500
     HTML_OUTPUT_PLACEHOLDER = f"""
     <div style='height: {650}px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px; display: flex; justify-content: center; align-items: center;'>
@@ -613,20 +629,22 @@ if __name__ == '__main__':
     # Create Manager and Start
     model_mgr = ModelManager(capacity=1 if args.low_vram_mode else 3, device=args.device)
     
-    # Register Loader
-    def pipeline_loader():
-        return InferencePipeline(
-            model_path=args.model_path,
+    # Register Model Loaders
+    def get_loader(model_path, subfolder):
+        return lambda: InferencePipeline(
+            model_path=model_path,
             tex_model_path=args.texgen_model_path,
-            subfolder=args.subfolder,
+            subfolder=subfolder,
             device=args.device,
             enable_t2i=args.enable_t23d,
             enable_tex=not args.disable_tex,
             use_flashvdm=args.enable_flashvdm,
             mc_algo=args.mc_algo
         )
-        
-    model_mgr.register_model("primary", pipeline_loader)
+
+    model_mgr.register_model("Normal", get_loader("tencent/Hunyuan3D-2", "hunyuan3d-dit-v2-0-turbo"))
+    model_mgr.register_model("Small", get_loader("tencent/Hunyuan3D-2mini", "hunyuan3d-dit-v2-mini-turbo"))
+    model_mgr.register_model("Multiview", get_loader("tencent/Hunyuan3D-2mv", "hunyuan3d-dit-v2-mv-turbo"))
     
     request_manager = PriorityRequestManager(model_mgr, max_concurrency=1)
     

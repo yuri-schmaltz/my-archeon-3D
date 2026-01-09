@@ -156,8 +156,6 @@ Hunyuan3D 2.0 supports MacOS, Windows, Linux. You may follow the next steps to u
 
 ### Install Requirements
 
-### Install Requirements
-
 Please install Pytorch via the [official](https://pytorch.org/) site. Then install the other requirements via:
 
 ```bash
@@ -191,31 +189,13 @@ mesh = pipeline(image='path/to/your/image.png')[0]
 ```
 
 The output mesh is a [trimesh object](https://trimesh.org/trimesh.html), which you could save to glb/obj (or other format) file.
-
 ### Gradio App
 
-You could also host a [Gradio](https://www.gradio.app/) App in your own computer via:
-
-Standard Version
+You can now launch a single unified app and select the model (Normal, Small, Multiview) directly from the UI:
 
 ```bash
-# Hunyuan3D-2mini
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2mini --subfolder hunyuan3d-dit-v2-mini --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode
-# Hunyuan3D-2mv
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2mv --subfolder hunyuan3d-dit-v2-mv --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode
-# Hunyuan3D-2
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2 --subfolder hunyuan3d-dit-v2-0 --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode
-```
-
-Turbo Version
-
-```bash
-# Hunyuan3D-2mini
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2mini --subfolder hunyuan3d-dit-v2-mini-turbo --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode --enable_flashvdm
-# Hunyuan3D-2mv
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2mv --subfolder hunyuan3d-dit-v2-mv-turbo --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode --enable_flashvdm
-# Hunyuan3D-2
-python3 gradio_app.py --model_path tencent/Hunyuan3D-2 --subfolder hunyuan3d-dit-v2-0-turbo --texgen_model_path tencent/Hunyuan3D-2 --low_vram_mode --enable_flashvdm
+# Safe default (loads models on demand)
+python3 gradio_app.py --low_vram_mode
 ```
 
 ### API Server
@@ -243,14 +223,15 @@ curl -X POST "http://localhost:8081/generate" \
      -H "Content-Type: application/json" \
      -d '{
            "image": "'"$img_b64_str"'",
-           "texture": false
+           "texture": false,
+           "model": "Normal"
          }' \
      -o output.glb
 ```
 
 ### Blender Addon
 
-With an API server launched, you can use our **Hunyuan3D-2 Pro (v1.2)** addon for a seamless 3D workflow inside Blender.
+With an API server launched, you can use our **Hunyuan3D-2 Pro (v1.3)** addon for a seamless 3D workflow inside Blender.
 
 - **Download**: [scripts/blender_addon.py](scripts/blender_addon.py)
 - **Compatibility**: Fully compatible with **Blender 5.0** and earlier versions.

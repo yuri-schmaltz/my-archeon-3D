@@ -37,9 +37,31 @@ setup(
         'pygltflib',
         'xatlas',
         'accelerate',
-        'fastapi',
-        'uvicorn',
         'rembg',
         'onnxruntime'
-    ]
+    ],
+    extras_require={
+        'api': [
+            'fastapi',
+            'uvicorn',
+            'pydantic',
+            'prometheus-client',
+        ],
+        'dev': [
+            'pytest',
+            'httpx',
+            'ruff',
+            'coverage',
+        ],
+        'all': [
+            'fastapi',
+            'uvicorn',
+            'pydantic',
+            'prometheus-client',
+            'pytest',
+            'httpx',
+            'ruff',
+            'coverage',
+        ],
+    }
 )

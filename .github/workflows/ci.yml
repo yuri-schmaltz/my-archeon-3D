@@ -27,6 +27,10 @@ jobs:
         pip install -r requirements.txt || true  # Try installing what we can
         pip install -r requirements-dev.txt || true
         
+    - name: Check Dependency Sync
+      run: |
+        python scripts/check_dep_sync.py || echo "⚠️  Dependency sync check failed (non-blocking)"
+        
     - name: Run All Tests
       run: |
         bash run_tests.sh

@@ -1,6 +1,9 @@
 [Read in English](README.md)
 [日本語で読む](README_ja_jp.md)
 
+> 📅 **Last synchronized**: 2026-01-09 | [English version](README.md) is always most up-to-date
+
+
 <p align="center">
   <img src="./assets/images/teaser.jpg">
 

@@ -142,6 +142,11 @@ async def metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok", "worker_id": worker_id}
+
+
 class GenerateRequest(BaseModel):
     image: Optional[str] = Field(None, description="Base64 encoded image")
     text: Optional[str] = Field(None, description="Text prompt for T2I")

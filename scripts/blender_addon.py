@@ -13,12 +13,12 @@
 # by Tencent in accordance with TENCENT HUNYUAN COMMUNITY LICENSE AGREEMENT.
 
 bl_info = {
-    "name": "Hunyuan3D-2 Generator",
-    "author": "Tencent Hunyuan3D",
-    "version": (1, 0),
-    "blender": (3, 0, 0),
-    "location": "View3D > Sidebar > Hunyuan3D-2 3D Generator",
-    "description": "Generate/Texturing 3D models from text descriptions or images",
+    "name": "Hunyuan3D-2 Pro Generator",
+    "author": "Tencent Hunyuan3D & Antigravity Editor",
+    "version": (1, 2),
+    "blender": (5, 0, 0),
+    "location": "View3D > Sidebar > Hunyuan3D-2",
+    "description": "Professional 3D generation with Blender 5.0 compatibility",
     "category": "3D View",
 }
 import base64
@@ -27,7 +27,11 @@ import tempfile
 import threading
 
 import bpy
-import requests
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
 from bpy.props import StringProperty, BoolProperty, IntProperty, FloatProperty
 
 
@@ -40,7 +44,25 @@ class Hunyuan3DProperties(bpy.types.PropertyGroup):
     api_url: StringProperty(
         name="API URL",
         description="URL of the Text-to-3D API service",
-        default="http://localhost:8080"
+        default="http://localhost:8081"
+    )
+    api_username: StringProperty(
+        name="Username",
+        description="API Basic Auth Username",
+        default="admin"
+    )
+    api_password: StringProperty(
+        name="Password",
+        description="API Basic Auth Password",
+        default="admin",
+        subtype='PASSWORD'
+    )
+    api_timeout: IntProperty(
+        name="Timeout (s)",
+        description="Timeout for API requests",
+        default=300,
+        min=10,
+        max=3600
     )
     is_processing: BoolProperty(
         name="Processing",
@@ -88,6 +110,49 @@ class Hunyuan3DProperties(bpy.types.PropertyGroup):
         description="Whether to generate texture for the 3D model",
         default=False
     )
+    # Advanced Import Options
+    auto_center: BoolProperty(
+        name="Auto Center",
+        description="Automatically center the imported mesh",
+        default=True
+    )
+    match_transform: BoolProperty(
+        name="Match Selected",
+        description="Match location/rotation/scale of selected object",
+        default=True
+    )
+    import_collection: StringProperty(
+        name="Collection",
+        description="Import models into this collection",
+        default="Hunyuan3D_Output"
+    )
+
+
+class Hunyuan3DTestConnectionOperator(bpy.types.Operator):
+    bl_idname = "object.hunyuan3d_test_connection"
+    bl_label = "Test Connection"
+    bl_description = "Check if the API server is reachable"
+
+    def execute(self, context):
+        props = context.scene.gen_3d_props
+        base_url = props.api_url.rstrip('/')
+        auth = (props.api_username, props.api_password)
+        
+        try:
+            # We try the /health endpoint first
+            response = requests.get(f"{base_url}/health", auth=auth, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                self.report({'INFO'}, f"Connected! Worker: {data.get('worker_id', 'unknown')}")
+                props.status_message = "Connection: OK"
+            else:
+                self.report({'ERROR'}, f"Auth failed or endpoint missing (Status: {response.status_code})")
+                props.status_message = f"Connection Error: {response.status_code}"
+        except Exception as e:
+            self.report({'ERROR'}, f"Connection failed: {str(e)}")
+            props.status_message = "Connection: Failed"
+        
+        return {'FINISHED'}
 
 
 class Hunyuan3DOperator(bpy.types.Operator):
@@ -108,192 +173,189 @@ class Hunyuan3DOperator(bpy.types.Operator):
 
     thread = None
     task_finished = False
+    error_occurred = False
+    error_message = ""
 
     def modal(self, context, event):
         if event.type in {'RIGHTMOUSE', 'ESC'}:
+            props = context.scene.gen_3d_props
+            props.is_processing = False
+            props.status_message = "Cancelled by user"
             return {'CANCELLED'}
 
         if self.task_finished:
-            print("Threaded task completed")
             self.task_finished = False
             props = context.scene.gen_3d_props
             props.is_processing = False
+            
+            if self.error_occurred:
+                self.report({'ERROR'}, f"Hunyuan3D Error: {self.error_message}")
+                props.status_message = f"Error: {self.error_message}"
+            else:
+                self.report({'INFO'}, "Hunyuan3D: Generation completed successfully")
+                props.status_message = "Status: Completed"
+            
+            return {'FINISHED'}
 
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
-        # Start thread
         props = context.scene.gen_3d_props
+        
+        # Pre-flight checks
+        if props.prompt == "" and props.image_path == "":
+            self.report({'WARNING'}, "Please provide at least a text prompt or an image.")
+            return {'CANCELLED'}
+            
+        # Capture parameters
+        self.api_url = props.api_url.rstrip('/')
+        self.auth = (props.api_username, props.api_password)
+        self.timeout = props.api_timeout
         self.prompt = props.prompt
-        self.api_url = props.api_url
-        self.image_path = props.image_path
+        self.image_path = bpy.path.abspath(props.image_path)
         self.octree_resolution = props.octree_resolution
         self.num_inference_steps = props.num_inference_steps
         self.guidance_scale = props.guidance_scale
-        self.texture = props.texture  # Get texture property value
+        self.texture = props.texture
+        
+        # Import settings
+        self.auto_center = props.auto_center
+        self.match_transform = props.match_transform
+        self.collection_name = props.import_collection
 
-        if self.prompt == "" and self.image_path == "":
-            self.report({'WARNING'}, "Please enter some text or select an image first.")
-            return {'FINISHED'}
-
-        # Save selected mesh object reference
-        for obj in context.selected_objects:
-            if obj.type == 'MESH':
-                self.selected_mesh = obj
-                break
+        # Context detection
+        self.selected_mesh = context.active_object if context.active_object and context.active_object.type == 'MESH' else None
+        self.selected_mesh_base64 = ""
 
         if self.selected_mesh:
-            temp_glb_file = tempfile.NamedTemporaryFile(delete=False, suffix=".glb")
-            temp_glb_file.close()
-            bpy.ops.export_scene.gltf(filepath=temp_glb_file.name, use_selection=True)
-            with open(temp_glb_file.name, "rb") as file:
-                mesh_data = file.read()
-            mesh_b64_str = base64.b64encode(mesh_data).decode()
-            os.unlink(temp_glb_file.name)
-            self.selected_mesh_base64 = mesh_b64_str
+            try:
+                temp_glb = tempfile.NamedTemporaryFile(delete=False, suffix=".glb")
+                temp_glb.close()
+                
+                # Robust export for newer Blender versions
+                if hasattr(bpy.ops.export_scene, "gltf"):
+                    bpy.ops.export_scene.gltf(filepath=temp_glb.name, use_selection=True)
+                elif hasattr(bpy.ops.wm, "gltf_export"):
+                    bpy.ops.wm.gltf_export(filepath=temp_glb.name, export_selected=True)
+                else:
+                    raise Exception("No glTF exporter found in this Blender version")
+
+                with open(temp_glb.name, "rb") as f:
+                    self.selected_mesh_base64 = base64.b64encode(f.read()).decode()
+                os.unlink(temp_glb.name)
+            except Exception as e:
+                self.report({'ERROR'}, f"Failed to export selected mesh: {str(e)}")
+                return {'CANCELLED'}
 
         props.is_processing = True
+        self.task_finished = False
+        self.error_occurred = False
+        
+        # Update status
+        mode_str = "Texturing" if (self.selected_mesh and self.texture) else "Generating"
+        input_str = "Image" if self.image_path else "Text"
+        props.status_message = f"Status: {mode_str} from {input_str}..."
 
-        # Convert relative path to absolute path relative to the Blender file directory
-        blend_file_dir = os.path.dirname(bpy.data.filepath)
-        self.report({'INFO'}, f"blend_file_dir {blend_file_dir}")
-        self.report({'INFO'}, f"image_path {self.image_path}")
-        if self.image_path.startswith('//'):
-            self.image_path = self.image_path[2:]
-            self.image_path = os.path.join(blend_file_dir, self.image_path)
-
-        if self.selected_mesh and self.texture:
-            props.status_message = "Texturing Selected Mesh...\n" \
-                                   "This may take several minutes depending \n on your GPU power."
-        else:
-            mesh_type = 'Textured Mesh' if self.texture else 'White Mesh'
-            prompt_type = 'Text Prompt' if self.prompt else 'Image'
-            props.status_message = f"Generating {mesh_type} with {prompt_type}...\n" \
-                                   "This may take several minutes depending \n on your GPU power."
-
-        self.thread = threading.Thread(target=self.generate_model, args=[context])
+        # Start thread
+        self.thread = threading.Thread(target=self.work_thread, args=[context])
         self.thread.start()
 
-        wm = context.window_manager
-        wm.modal_handler_add(self)
+        context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
-    def generate_model(self, context):
-        self.report({'INFO'}, f"Generation Start")
-        base_url = self.api_url.rstrip('/')
-
+    def work_thread(self, context):
         try:
-            if self.selected_mesh_base64 and self.texture:
-                # Texturing the selected mesh
-                if self.image_path and os.path.exists(self.image_path):
-                    self.report({'INFO'}, f"Post Texturing with Image")
-                    # Open image file and read in binary mode
-                    with open(self.image_path, "rb") as file:
-                        # Read file content
-                        image_data = file.read()
-                    # Base64 encode image data
-                    img_b64_str = base64.b64encode(image_data).decode()
-                    response = requests.post(
-                        f"{base_url}/generate",
-                        json={
-                            "mesh": self.selected_mesh_base64,
-                            "image": img_b64_str,
-                            "octree_resolution": self.octree_resolution,
-                            "num_inference_steps": self.num_inference_steps,
-                            "guidance_scale": self.guidance_scale,
-                            "texture": self.texture  # Pass texture parameter
-                        },
-                    )
-                else:
-                    self.report({'INFO'}, f"Post Texturing with Text")
-                    response = requests.post(
-                        f"{base_url}/generate",
-                        json={
-                            "mesh": self.selected_mesh_base64,
-                            "text": self.prompt,
-                            "octree_resolution": self.octree_resolution,
-                            "num_inference_steps": self.num_inference_steps,
-                            "guidance_scale": self.guidance_scale,
-                            "texture": self.texture  # Pass texture parameter
-                        },
-                    )
-            else:
-                if self.image_path:
-                    if not os.path.exists(self.image_path):
-                        self.report({'ERROR'}, f"Image path does not exist {self.image_path}")
-                        raise Exception(f'Image path does not exist {self.image_path}')
-                    self.report({'INFO'}, f"Post Start Image to 3D")
-                    # Open image file and read in binary mode
-                    with open(self.image_path, "rb") as file:
-                        # Read file content
-                        image_data = file.read()
-                    # Base64 encode image data
-                    img_b64_str = base64.b64encode(image_data).decode()
-                    response = requests.post(
-                        f"{base_url}/generate",
-                        json={
-                            "image": img_b64_str,
-                            "octree_resolution": self.octree_resolution,
-                            "num_inference_steps": self.num_inference_steps,
-                            "guidance_scale": self.guidance_scale,
-                            "texture": self.texture  # Pass texture parameter
-                        },
-                    )
-                else:
-                    self.report({'INFO'}, f"Post Start Text to 3D")
-                    response = requests.post(
-                        f"{base_url}/generate",
-                        json={
-                            "text": self.prompt,
-                            "octree_resolution": self.octree_resolution,
-                            "num_inference_steps": self.num_inference_steps,
-                            "guidance_scale": self.guidance_scale,
-                            "texture": self.texture  # Pass texture parameter
-                        },
-                    )
-            self.report({'INFO'}, f"Post Done")
-            self.task_finished = True
-            props = context.scene.gen_3d_props
-            props.is_processing = False
+            payload = {
+                "octree_resolution": self.octree_resolution,
+                "num_inference_steps": self.num_inference_steps,
+                "guidance_scale": self.guidance_scale,
+                "texture": self.texture
+            }
+            
+            if self.selected_mesh_base64:
+                payload["mesh"] = self.selected_mesh_base64
+            
+            if self.image_path and os.path.exists(self.image_path):
+                with open(self.image_path, "rb") as f:
+                    payload["image"] = base64.b64encode(f.read()).decode()
+            
+            if self.prompt:
+                payload["text"] = self.prompt
 
+            response = requests.post(
+                f"{self.api_url}/generate",
+                json=payload,
+                auth=self.auth,
+                timeout=self.timeout
+            )
+            
             if response.status_code != 200:
-                self.report({'ERROR'}, f"Generation failed: {response.text}")
+                self.error_occurred = True
+                self.error_message = f"HTTP {response.status_code}: {response.text}"
                 return
 
-            # Decode base64 and save to temporary file
-            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".glb")
-            temp_file.write(response.content)
-            temp_file.close()
+            # Save result to temp file
+            temp_result = tempfile.NamedTemporaryFile(delete=False, suffix=".glb")
+            temp_result.write(response.content)
+            temp_result.close()
 
-            # Import the GLB file in the main thread
-            def import_handler():
-                bpy.ops.import_scene.gltf(filepath=temp_file.name)
-                os.unlink(temp_file.name)
+            # Schedule import in main thread
+            def import_callback():
+                try:
+                    # Handle Collection
+                    col = bpy.data.collections.get(self.collection_name)
+                    if not col:
+                        col = bpy.data.collections.new(self.collection_name)
+                        bpy.context.scene.collection.children.link(col)
+                    
+                    # Set active collection to target
+                    layer_col = bpy.context.view_layer.layer_collection.children.get(self.collection_name)
+                    if layer_col:
+                        bpy.context.view_layer.active_layer_collection = layer_col
 
-                # Get newly imported mesh
-                new_obj = bpy.context.selected_objects[0] if bpy.context.selected_objects else None
-                if new_obj and self.selected_mesh and self.texture:
-                    # Apply position, rotation and scale of the selected mesh
-                    new_obj.location = self.selected_mesh.location
-                    new_obj.rotation_euler = self.selected_mesh.rotation_euler
-                    new_obj.scale = self.selected_mesh.scale
+                    # Robust import for newer Blender versions
+                    if hasattr(bpy.ops.import_scene, "gltf"):
+                        bpy.ops.import_scene.gltf(filepath=temp_result.name)
+                    elif hasattr(bpy.ops.wm, "gltf_import"):
+                        bpy.ops.wm.gltf_import(filepath=temp_result.name)
+                    else:
+                        raise Exception("No glTF importer found in this Blender version")
 
-                    # Hide the original mesh
-                    self.selected_mesh.hide_set(True)
-                    self.selected_mesh.hide_render = True
+                    # Force update for Blender 5.0 scene graph
+                    bpy.context.view_layer.update()
+                    
+                    imported_objs = [obj for obj in bpy.context.selected_objects]
+                    
+                    if imported_objs:
+                        new_obj = imported_objs[0]
+                        
+                        # Smart transformation
+                        if self.match_transform and self.selected_mesh:
+                            new_obj.location = self.selected_mesh.location
+                            new_obj.rotation_euler = self.selected_mesh.rotation_euler
+                            new_obj.scale = self.selected_mesh.scale
+                            
+                            # Hide original
+                            self.selected_mesh.hide_set(True)
+                        elif self.auto_center:
+                            bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+                            new_obj.location = (0, 0, 0)
 
+                    os.unlink(temp_result.name)
+                except Exception as e:
+                    print(f"Hunyuan3D Import Error: {str(e)}")
                 return None
 
-            bpy.app.timers.register(import_handler)
+            bpy.app.timers.register(import_callback)
 
+        except requests.exceptions.Timeout:
+            self.error_occurred = True
+            self.error_message = f"Request timed out after {self.timeout}s"
         except Exception as e:
-            self.report({'ERROR'}, f"Error: {str(e)}")
-
+            self.error_occurred = True
+            self.error_message = str(e)
         finally:
             self.task_finished = True
-            props = context.scene.gen_3d_props
-            props.is_processing = False
-            self.selected_mesh_base64 = ""
 
 
 class Hunyuan3DPanel(bpy.types.Panel):
@@ -306,31 +368,75 @@ class Hunyuan3DPanel(bpy.types.Panel):
         layout = self.layout
         props = context.scene.gen_3d_props
 
-        layout.prop(props, "api_url")
-        layout.prop(props, "prompt")
-        # Add image selector
-        layout.prop(props, "image_path")
-        # Add UI elements for new properties
-        layout.prop(props, "octree_resolution")
-        layout.prop(props, "num_inference_steps")
-        layout.prop(props, "guidance_scale")
-        # Add UI elements for texture property
-        layout.prop(props, "texture")
+        if not HAS_REQUESTS:
+            box = layout.box()
+            box.alert = True
+            box.label(text="Missing dependency: 'requests'", icon='ERROR')
+            box.label(text="Please install it in Blender's Python.")
+            return
 
-        row = layout.row()
+        # --- Connection Section ---
+        box = layout.box()
+        box.label(text="Server Connection", icon='WORLD')
+        box.prop(props, "api_url")
+        
+        row = box.row(align=True)
+        row.prop(props, "api_username")
+        row.prop(props, "api_password")
+        
+        box.operator("object.hunyuan3d_test_connection", icon='CONNECTION')
+
+        # --- Input Section ---
+        box = layout.box()
+        box.label(text="Input Data", icon='IMPORT')
+        box.prop(props, "prompt", icon='WORDPREVIEW')
+        box.prop(props, "image_path", icon='IMAGE_DATA')
+        
+        # Context Awareness Info
+        selected_obj = context.active_object
+        if selected_obj and selected_obj.type == 'MESH':
+            box.label(text=f"Target: {selected_obj.name}", icon='MESH_DATA')
+        else:
+            box.label(text="Mode: New Shape Generation", icon='MESH_CUBE')
+
+        # --- Settings Section ---
+        box = layout.box()
+        box.label(text="Generation Settings", icon='MODIFIER')
+        box.prop(props, "texture", icon='TEXTURE')
+        
+        col = box.column(align=True)
+        col.prop(props, "octree_resolution")
+        col.prop(props, "num_inference_steps")
+        col.prop(props, "guidance_scale")
+
+        # --- Import Section ---
+        box = layout.box()
+        box.label(text="Import Options", icon='OUTLINER_OB_MESH')
+        box.prop(props, "import_collection", icon='GROUP')
+        row = box.row()
+        row.prop(props, "auto_center")
+        row.prop(props, "match_transform")
+
+        # --- Action Section ---
+        layout.separator()
+        row = layout.row(align=False)
+        row.scale_y = 1.5
         row.enabled = not props.is_processing
-        row.operator("object.generate_3d")
+        row.operator("object.generate_3d", icon='PLAY', text="Generate 3D Asset")
 
         if props.is_processing:
+            box = layout.box()
+            box.label(text="Job Status", icon='INFO')
             if props.status_message:
                 for line in props.status_message.split("\n"):
-                    layout.label(text=line)
+                    box.label(text=line)
             else:
-                layout.label("Processing...")
+                box.label(text="In Progress...")
 
 
 classes = (
     Hunyuan3DProperties,
+    Hunyuan3DTestConnectionOperator,
     Hunyuan3DOperator,
     Hunyuan3DPanel,
 )

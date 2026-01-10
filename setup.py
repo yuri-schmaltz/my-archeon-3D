@@ -1,50 +1,72 @@
-# Hunyuan 3D is licensed under the TENCENT HUNYUAN NON-COMMERCIAL LICENSE AGREEMENT
-# except for the third-party components listed below.
-# Hunyuan 3D does not impose any additional limitations beyond what is outlined
-# in the repsective licenses of these third-party components.
-# Users must comply with all terms and conditions of original licenses of these third-party
-# components and must ensure that the usage of the third party components adheres to
-# all relevant laws and regulations.
-
-# For avoidance of doubts, Hunyuan 3D means the large language models and
-# their software and algorithms, including trained model weights, parameters (including
-# optimizer states), machine-learning model code, inference-enabling code, training-enabling code,
-# fine-tuning enabling code and other elements of the foregoing made publicly available
-# by Tencent in accordance with TENCENT HUNYUAN COMMUNITY LICENSE AGREEMENT.
-
+import os
+from pathlib import Path
 from setuptools import setup, find_packages
+
+def read_requirements(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return [
+            line.strip()
+            for line in f
+            if line.strip() and not line.startswith("#")
+        ]
+
+here = Path(__file__).parent.resolve()
+long_description = (here / "README.md").read_text(encoding="utf-8")
+
+# Categorize requirements
+all_reqs = read_requirements(here / "requirements.txt")
+
+# Core inference requirements (subset for basic usage)
+core_reqs = [
+    "numpy",
+    "torch",
+    "torchvision",
+    "diffusers",
+    "transformers>=4.48.0",
+    "einops",
+    "opencv-python",
+    "tqdm>=4.66.3",
+    "omegaconf",
+    "ninja",
+    "pybind11",
+    "trimesh",
+    "pillow",
+]
+
+# Map categories from requirements.txt to extras
+dev_reqs = ["pytest", "httpx", "ruff", "coverage"]
+docs_reqs = ["sphinx", "sphinx-rtd-theme", "furo", "myst-parser"]
 
 setup(
     name="hy3dgen",
     version="2.1.0",
+    description="Hunyuan3D 2.0: Large-scale 3D Synthesis System",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     url="https://github.com/Tencent/Hunyuan3D-2",
+    author="Tencent Hunyuan3D Team",
+    license="TENCENT HUNYUAN NON-COMMERCIAL LICENSE AGREEMENT",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=[
-        'gradio',
-        "tqdm>=4.66.3",
-        'numpy',
-        'ninja',
-        'diffusers',
-        'pybind11',
-        'opencv-python',
-        'einops',
-        "transformers>=4.48.0",
-        'omegaconf',
-        'trimesh',
-        'pymeshlab',
-        'pygltflib',
-        'xatlas',
-        'accelerate',
-        'rembg',
-        'onnxruntime',
-        'fastapi',
-        'uvicorn',
-        'pydantic',
-        'prometheus-client',
-        'pytest',
-        'httpx',
-        'ruff',
-        'coverage'
+    python_requires=">=3.9",
+    install_requires=core_reqs,
+    extras_require={
+        "dev": dev_reqs,
+        "docs": docs_reqs,
+        "all": all_reqs,
+    },
+    entry_points={
+        "console_scripts": [
+            "hy3dgen-api=hy3dgen.apps.api_server:main",
+            "hy3dgen-gui=hy3dgen.apps.gradio_app:main",
+        ],
+    },
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Programming Language :: Python :: 3",
+        "License :: Other/Proprietary License",
     ],
 )
+

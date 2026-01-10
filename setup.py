@@ -16,7 +16,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="hy3dgen",
-    version="2.1.0-pro",
+    version="2.1.0",
     url="https://github.com/Tencent/Hunyuan3D-2",
     packages=find_packages(),
     include_package_data=True,

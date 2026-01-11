@@ -67,14 +67,20 @@ class InferencePipeline:
         Main entry point for generation.
         params: dict containing 'image', 'text', 'seed', 'do_texture', etc.
         """
-        logger.info(f"[{uid}] Generation started.")
-        stats = {'time': {}}
-        t0 = time.time()
+        # Helper for progress reporting
+        progress_callback = params.get("progress_callback", None)
+        def report_progress(percent, msg):
+            if progress_callback:
+                progress_callback(percent, msg)
+            logger.info(f"[{uid}] Progress {percent}%: {msg}")
+
+        report_progress(0, "Starting generation...")
 
         # 1. Input Processing (Text -> Image if needed)
         image = params.get("image")
         if image is None:
             if params.get("text") and self.pipeline_t2i:
+                report_progress(5, "Generating Image from Text...")
                 logger.info(f"[{uid}] Generating image from text...")
                 t1 = time.time()
                 image = self.pipeline_t2i(params["text"])
@@ -90,6 +96,7 @@ class InferencePipeline:
 
         if image and not isinstance(image, dict):
              # Remove background for Single Image
+             report_progress(10, "Removing Background...")
              t1 = time.time()
              image = self.rembg(image)
              stats['time']['rembg'] = time.time() - t1
@@ -97,6 +104,7 @@ class InferencePipeline:
              # MV Mode: rembg is handled or images are already processed?
              # Gradio app does rmbg loop.
              if params.get("do_rembg", True):
+                 report_progress(10, "Removing Background (Multi-View)...")
                  t1 = time.time()
                  new_image = {}
                  for k, v in image.items():
@@ -112,6 +120,24 @@ class InferencePipeline:
         seed = int(params.get("seed", 1234))
         generator = torch.Generator(self.device).manual_seed(seed)
         
+        # Callback wrapper for pipeline
+        # Map pipeline steps (0-100%) to specific global range (approx 20% to 80%)
+        def pipeline_callback(step: int, timestep: int, latents: torch.Tensor):
+            # Assuming ~30 to 50 steps usually
+            # We want to map this progress to global 20% -> 80% range if texture is enabled
+            # Or 20% -> 95% if texture is disabled
+            
+            total_steps = params.get("num_inference_steps", 30)
+            has_texture = params.get("do_texture", False) and self.pipeline_tex
+            
+            start_range = 20
+            end_range = 80 if has_texture else 95
+            
+            # steps go 0 -> total_steps
+            ratio = (step + 1) / total_steps
+            current_percent = start_range + int(ratio * (end_range - start_range))
+            report_progress(current_percent, f"Generating Shape (Step {step+1}/{total_steps})")
+
         shape_params = {
             "image": image,
             "num_inference_steps": params.get("num_inference_steps", 30),
@@ -119,12 +145,15 @@ class InferencePipeline:
             "octree_resolution": params.get("octree_resolution", 256),
             "num_chunks": params.get("num_chunks", 200000),
             "generator": generator,
-            "output_type": "mesh"
+            "output_type": "mesh",
+            "callback": pipeline_callback,
+            "callback_steps": 1
         }
         
         # Determine if MV mode (passed via params or inferred)
         # For now assume standard flow
         
+        report_progress(20, "Initializing Shape Generation...")
         logger.info(f"[{uid}] Generating shape...")
         t1 = time.time()
         # The pipeline output is a list, we take [0]
@@ -135,6 +164,7 @@ class InferencePipeline:
         # API did it only if texturing? Grado does it optionally?
         # Let's clean up a bit if requested
         if params.get("reduce_face", False):
+             report_progress(80, "Optimizing Mesh...")
              mesh = self.floater_remover(mesh)
              mesh = self.degenerate_remover(mesh)
              
@@ -142,6 +172,7 @@ class InferencePipeline:
         # 3. Texturing (Optional)
         textured_mesh = None
         if params.get("do_texture", False) and self.pipeline_tex:
+            report_progress(85, "Generating Texture...")
             logger.info(f"[{uid}] Generating texture...")
             # Usually require cleanup before texturing
             mesh = self.floater_remover(mesh)
@@ -153,6 +184,7 @@ class InferencePipeline:
             stats['time']['tex_gen'] = time.time() - t1
         
         stats['time']['total'] = time.time() - t0
+        report_progress(100, "Generation Complete!")
         
         return {
             "mesh": mesh,

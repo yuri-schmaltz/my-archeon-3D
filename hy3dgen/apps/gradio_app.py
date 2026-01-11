@@ -97,10 +97,24 @@ async def unified_generation(model_key, caption, image, mv_image_front, mv_image
         if mv_image_left: mv_images['left'] = mv_image_left
         if mv_image_right: mv_images['right'] = mv_image_right
     seed = int(randomize_seed_fn(seed, randomize_seed))
+    # Progress callback bridge
+    def gradio_progress_callback(percent, message):
+        # Gradio expects 0.0 to 1.0 float
+        progress(percent / 100.0, desc=message)
+
     params = {
-        "model_key": model_key, "text": caption, "image": image, "mv_images": mv_images if mv_mode else None,
-        "num_inference_steps": steps, "guidance_scale": guidance_scale, "seed": seed, "octree_resolution": int(octree_resolution),
-        "do_rembg": check_box_rembg, "num_chunks": num_chunks, "do_texture": do_texture
+        'model_key': model_key,
+        'text': caption,
+        'image': image,
+        'mv_images': mv_images if mv_mode else None,
+        'num_inference_steps': steps, # Renamed from 'steps' in the instruction to match existing pipeline
+        'guidance_scale': guidance_scale,
+        'seed': seed,
+        'octree_resolution': int(octree_resolution), # Ensure it's an int
+        'do_rembg': check_box_rembg,
+        'num_chunks': num_chunks,
+        'do_texture': do_texture, # Flag to indicate if texturing is needed
+        'progress_callback': gradio_progress_callback
     }
     result = await request_manager.submit(params)
     mesh, stats = result["mesh"], result["stats"]
@@ -172,6 +186,15 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         
         btn.click(shape_generation, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, html_gen_mesh, stats, seed])
         btn_all.click(generation_all, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, file_out2, html_gen_mesh, stats, seed])
+        # Logic to switch interfaces
+        def update_input_interface(model_key):
+            if model_key == "Multiview":
+                return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+            else:
+                return gr.update(visible=True), gr.update(visible=HAS_T2I), gr.update(visible=False)
+
+        model_key.change(fn=update_input_interface, inputs=model_key, outputs=[tab_ip, tab_tp, tab_mv_p])
+
     return demo
 
 def main():

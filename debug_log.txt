@@ -1,0 +1,37 @@
+2026-01-11 14:12:20,324 - reproduce - INFO - Starting reproduction script...
+2026-01-11 14:12:20,325 - reproduce - INFO - Device: cuda
+2026-01-11 14:12:20,325 - reproduce - INFO - Loading model from tencent/Hunyuan3D-2 / hunyuan3d-dit-v2-0
+2026-01-11 14:12:24,363 - inference - INFO - Loading ShapeGen model from tencent/Hunyuan3D-2...
+2026-01-11 14:12:24,363 - hy3dgen.shapgen - INFO - Try to load model from local path: /home/yurix/.cache/hy3dgen/tencent/Hunyuan3D-2/hunyuan3d-dit-v2-0
+2026-01-11 14:12:24,363 - hy3dgen.shapgen - INFO - Model path not exists, try to download from huggingface
+2026-01-11 14:14:19,588 - hy3dgen.shapgen - INFO - Loading model from /home/yurix/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/9cd649ba6913f7a852e3286bad86bfa9a2d83dcf/hunyuan3d-dit-v2-0/model.fp16.safetensors
+2026-01-11 14:14:51,099 - hy3dgen.shapgen - INFO - Try to load model from local path: /home/yurix/.cache/hy3dgen/tencent/Hunyuan3D-2/hunyuan3d-vae-v2-0-turbo
+2026-01-11 14:14:51,100 - hy3dgen.shapgen - INFO - Model path not exists, try to download from huggingface
+2026-01-11 14:15:15,872 - hy3dgen.shapgen - INFO - Loading model from /home/yurix/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/9cd649ba6913f7a852e3286bad86bfa9a2d83dcf/hunyuan3d-vae-v2-0-turbo/model.fp16.safetensors
+2026-01-11 14:15:18,309 - inference - INFO - Loading Text2Image model...
+2026-01-11 14:17:17,840 - reproduce - ERROR - Failed to load pipeline: The component <class 'transformers.models.t5.tokenization_t5._LazyModule.__getattr__.<locals>.Placeholder'> of <class 'diffusers.pipelines.pag.pipeline_pag_hunyuandit.HunyuanDiTPAGPipeline'> cannot be loaded as it does not seem to have any of the loading methods defined in {'ModelMixin': ['save_pretrained', 'from_pretrained'], 'SchedulerMixin': ['save_pretrained', 'from_pretrained'], 'DiffusionPipeline': ['save_pretrained', 'from_pretrained'], 'OnnxRuntimeModel': ['save_pretrained', 'from_pretrained'], 'BaseGuidance': ['save_pretrained', 'from_pretrained'], 'PreTrainedTokenizer': ['save_pretrained', 'from_pretrained'], 'PreTrainedTokenizerFast': ['save_pretrained', 'from_pretrained'], 'PreTrainedModel': ['save_pretrained', 'from_pretrained'], 'FeatureExtractionMixin': ['save_pretrained', 'from_pretrained'], 'ProcessorMixin': ['save_pretrained', 'from_pretrained'], 'ImageProcessingMixin': ['save_pretrained', 'from_pretrained'], 'ORTModule': ['save_pretrained', 'from_pretrained']}.
+Traceback (most recent call last):
+  File "/home/yurix/Documentos/my-hunyuan-3D/reproduce_issue.py", line 32, in test_generation
+    pipeline = InferencePipeline(
+               ^^^^^^^^^^^^^^^^^^
+  File "/home/yurix/Documentos/my-hunyuan-3D/hy3dgen/inference.py", line 50, in __init__
+    self.pipeline_t2i = HunyuanDiTPipeline(
+                        ^^^^^^^^^^^^^^^^^^^
+  File "/home/yurix/Documentos/my-hunyuan-3D/hy3dgen/text2image.py", line 37, in __init__
+    self.pipe = AutoPipelineForText2Image.from_pretrained(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/yurix/Documentos/my-hunyuan-3D/.venv/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/yurix/Documentos/my-hunyuan-3D/.venv/lib/python3.12/site-packages/diffusers/pipelines/auto_pipeline.py", line 485, in from_pretrained
+    return text_2_image_cls.from_pretrained(pretrained_model_or_path, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/yurix/Documentos/my-hunyuan-3D/.venv/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/yurix/Documentos/my-hunyuan-3D/.venv/lib/python3.12/site-packages/diffusers/pipelines/pipeline_utils.py", line 1021, in from_pretrained
+    loaded_sub_model = load_sub_model(
+                       ^^^^^^^^^^^^^^^
+  File "/home/yurix/Documentos/my-hunyuan-3D/.venv/lib/python3.12/site-packages/diffusers/pipelines/pipeline_loading_utils.py", line 794, in load_sub_model
+    raise ValueError(
+ValueError: The component <class 'transformers.models.t5.tokenization_t5._LazyModule.__getattr__.<locals>.Placeholder'> of <class 'diffusers.pipelines.pag.pipeline_pag_hunyuandit.HunyuanDiTPAGPipeline'> cannot be loaded as it does not seem to have any of the loading methods defined in {'ModelMixin': ['save_pretrained', 'from_pretrained'], 'SchedulerMixin': ['save_pretrained', 'from_pretrained'], 'DiffusionPipeline': ['save_pretrained', 'from_pretrained'], 'OnnxRuntimeModel': ['save_pretrained', 'from_pretrained'], 'BaseGuidance': ['save_pretrained', 'from_pretrained'], 'PreTrainedTokenizer': ['save_pretrained', 'from_pretrained'], 'PreTrainedTokenizerFast': ['save_pretrained', 'from_pretrained'], 'PreTrainedModel': ['save_pretrained', 'from_pretrained'], 'FeatureExtractionMixin': ['save_pretrained', 'from_pretrained'], 'ProcessorMixin': ['save_pretrained', 'from_pretrained'], 'ImageProcessingMixin': ['save_pretrained', 'from_pretrained'], 'ORTModule': ['save_pretrained', 'from_pretrained']}.

@@ -97,6 +97,14 @@ class ModelManager:
         async with self.lock:
             # Determine which model to use. Default to 'primary' if not configured.
             model_key = params.get("model_key", "primary")
+
+            # Notify user about loading state
+            progress_callback = params.get("progress_callback")
+            if progress_callback:
+                try:
+                    progress_callback(0, f"Loading model '{model_key}' (this may take a while)...")
+                except Exception:
+                    pass
             
             # Retrieve (load) worker
             worker = await self.get_worker(model_key)

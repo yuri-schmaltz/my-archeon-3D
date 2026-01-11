@@ -31,6 +31,7 @@ from fastapi.staticfiles import StaticFiles
 from hy3dgen.shapegen.utils import logger
 from hy3dgen.manager import PriorityRequestManager, ModelManager
 from hy3dgen.inference import InferencePipeline
+from hy3dgen.apps.ui_templates import HTML_TEMPLATE_MODEL_VIEWER, HTML_PLACEHOLDER, CSS_STYLES
 
 # Global Manager
 request_manager = None
@@ -41,38 +42,6 @@ HAS_T2I = False
 TURBO_MODE = True
 HAS_TEXTUREGEN = True
 SUPPORTED_FORMATS = ['glb', 'obj']
-
-MODEL_VIEWER_TEMPLATE = """
-<!DOCTYPE html>
-<html>
-<head>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    <style>
-        body { margin: 0; background-color: #ffffff; }
-        model-viewer { width: 100%; height: #height#px; --progress-bar-color: transparent; }
-    </style>
-</head>
-<body>
-    <model-viewer src="#src#" 
-                  alt="Hunyuan3D Model" 
-                  auto-rotate 
-                  camera-controls 
-                  shadow-intensity="1" 
-                  exposure="1" 
-                  interaction-prompt="auto">
-    </model-viewer>
-</body>
-</html>
-"""
-
-HTML_OUTPUT_PLACEHOLDER = """
-<div style='height: 650px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px; display: flex; justify-content: center; align-items: center;'>
-  <div style='text-align: center; font-size: 16px; color: #6b7280;'>
-    <p style="color: #8d8d8d;">Welcome to Hunyuan3D!</p>
-    <p style="color: #8d8d8d;">No mesh here.</p>
-  </div>
-</div>
-"""
 
 HTML_HEIGHT = 650
 HTML_WIDTH = 500
@@ -111,17 +80,15 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
         related_path = f"./white_mesh.glb"
         output_html_path = os.path.join(save_folder, f'white_mesh.html')
     
-    offset = 50 if textured else 10
-    template_html = MODEL_VIEWER_TEMPLATE
+    template_html = HTML_TEMPLATE_MODEL_VIEWER
     with open(output_html_path, 'w', encoding='utf-8') as f:
-        template_html = template_html.replace('#height#', f'{height - offset}')
         template_html = template_html.replace('#src#', f'{related_path}')
         f.write(template_html)
     rel_path = os.path.relpath(output_html_path, SAVE_DIR)
-    iframe_tag = f'<iframe src="/static/{rel_path}" height="{height}" width="100%" frameborder="0"></iframe>'
-    return f"""<div style='height: {height}; width: 100%;'>{iframe_tag}</div>"""
+    iframe_tag = f'<iframe src="/static/{rel_path}" style="width: 100%; height: 600px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
+    return iframe_tag
 
-async def shape_generation(model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed):
+async def unified_generation(model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed, do_texture, progress):
     mv_mode = model_key == "Multiview"
     mv_images = {}
     if mv_mode:
@@ -133,46 +100,31 @@ async def shape_generation(model_key, caption, image, mv_image_front, mv_image_b
     params = {
         "model_key": model_key, "text": caption, "image": image, "mv_images": mv_images if mv_mode else None,
         "num_inference_steps": steps, "guidance_scale": guidance_scale, "seed": seed, "octree_resolution": int(octree_resolution),
-        "do_rembg": check_box_rembg, "num_chunks": num_chunks, "do_texture": False
+        "do_rembg": check_box_rembg, "num_chunks": num_chunks, "do_texture": do_texture
     }
     result = await request_manager.submit(params)
     mesh, stats = result["mesh"], result["stats"]
     save_folder = gen_save_folder()
-    path = export_mesh(mesh, save_folder, textured=False)
-    html_height = 690 if mv_mode else 650
-    model_viewer_html = build_model_viewer_html(save_folder, height=html_height, width=HTML_WIDTH)
-    return gr.update(value=path), model_viewer_html, stats, seed
+    
+    path_white = export_mesh(mesh, save_folder, textured=False)
+    html_white = build_model_viewer_html(save_folder, textured=False)
+    
+    if do_texture:
+        textured_mesh = result["textured_mesh"]
+        path_textured = export_mesh(textured_mesh, save_folder, textured=True)
+        html_textured = build_model_viewer_html(save_folder, textured=True)
+        return gr.update(value=path_white), gr.update(value=path_textured), html_textured, stats, seed
+    else:
+        return gr.update(value=path_white), html_white, stats, seed
 
-async def generation_all(model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed):
-    mv_mode = model_key == "Multiview"
-    mv_images = {}
-    if mv_mode:
-        if mv_image_front: mv_images['front'] = mv_image_front
-        if mv_image_back: mv_images['back'] = mv_image_back
-        if mv_image_left: mv_images['left'] = mv_image_left
-        if mv_image_right: mv_images['right'] = mv_image_right
-    seed = int(randomize_seed_fn(seed, randomize_seed))
-    params = {
-        "model_key": model_key, "text": caption, "image": image, "mv_images": mv_images if mv_mode else None,
-        "num_inference_steps": steps, "guidance_scale": guidance_scale, "seed": seed, "octree_resolution": int(octree_resolution),
-        "do_rembg": check_box_rembg, "num_chunks": num_chunks, "do_texture": True
-    }
-    result = await request_manager.submit(params)
-    mesh, textured_mesh, stats = result["mesh"], result["textured_mesh"], result["stats"]
-    save_folder = gen_save_folder()
-    path = export_mesh(mesh, save_folder, textured=False)
-    path_textured = export_mesh(textured_mesh, save_folder, textured=True)
-    html_height = 690 if mv_mode else 650
-    model_viewer_html_textured = build_model_viewer_html(save_folder, height=html_height, width=HTML_WIDTH, textured=True)
-    return gr.update(value=path), gr.update(value=path_textured), model_viewer_html_textured, stats, seed
+async def shape_generation(*args, progress=gr.Progress()):
+    return await unified_generation(*args, do_texture=False, progress=progress)
+
+async def generation_all(*args, progress=gr.Progress()):
+    return await unified_generation(*args, do_texture=True, progress=progress)
 
 def build_app(example_is=None, example_ts=None, example_mvs=None):
-    custom_css = """
-    .app.svelte-wpkpf6.svelte-wpkpf6:not(.fill_width) { max-width: 1480px; }
-    .mv-image button .wrap { font-size: 10px; }
-    .mv-image .icon-wrap { width: 20px; }
-    """
-    with gr.Blocks(theme=gr.themes.Base(), title='Hunyuan-3D-2.0', analytics_enabled=False, css=custom_css) as demo:
+    with gr.Blocks(theme=gr.themes.Base(), title='Hunyuan-3D-2.0', analytics_enabled=False, css=CSS_STYLES) as demo:
         with gr.Row():
             with gr.Column(scale=3):
                 model_key = gr.Dropdown(label="Model Category", choices=["Normal", "Small", "Multiview"], value="Normal")
@@ -192,8 +144,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                     btn = gr.Button(value='Gen Shape', variant='primary')
                     btn_all = gr.Button(value='Gen Textured Shape', variant='primary', visible=HAS_TEXTUREGEN)
                 with gr.Group():
-                    file_out = gr.File(label="File", visible=False)
-                    file_out2 = gr.File(label="File", visible=False)
+                    file_out = gr.File(label="Download .glb", visible=True)
+                    file_out2 = gr.File(label="Download Textured .glb", visible=True)
                 with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
                     with gr.Tab("Options", id='tab_options', visible=TURBO_MODE):
                         gen_mode = gr.Radio(label='Generation Mode', choices=['Turbo', 'Fast', 'Standard'], value='Turbo')
@@ -209,16 +161,14 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                         with gr.Row():
                             cfg_scale = gr.Number(value=5.0, label='Guidance Scale')
                             num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label='Number of Chunks')
-            with gr.Column(scale=6):
+            with gr.Column(scale=8):
                 with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
                     with gr.Tab('Generated Mesh', id='gen_mesh_panel'):
-                        html_gen_mesh = gr.HTML(HTML_OUTPUT_PLACEHOLDER, label='Output')
+                        html_gen_mesh = gr.HTML(HTML_PLACEHOLDER, label='Output')
                     with gr.Tab('Mesh Statistic', id='stats_panel'):
                         stats = gr.Json({}, label='Mesh Stats')
-            with gr.Column(scale=3):
-                with gr.Tabs(selected='tab_user_gallery') as gallery:
-                    with gr.Tab('User Gallery', id='tab_user_gallery') as tab_gi:
-                        gr.HTML("<div style='height: 290px; display: flex; justify-content: center; align-items: center; color: #6b7280;'>Your generated models will appear here.</div>")
+            # User Gallery removed for Wave 1 fixes (Non-functional)
+        
         btn.click(shape_generation, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, html_gen_mesh, stats, seed])
         btn_all.click(generation_all, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, file_out2, html_gen_mesh, stats, seed])
     return demo

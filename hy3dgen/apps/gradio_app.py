@@ -144,40 +144,45 @@ async def generation_all(*args, progress=gr.Progress()):
 def build_app(example_is=None, example_ts=None, example_mvs=None):
     with gr.Blocks(theme=gr.themes.Base(), title='Hunyuan-3D-2.0', analytics_enabled=False, css=CSS_STYLES, fill_height=True) as demo:
         with gr.Row():
-            with gr.Column(scale=3):
+            with gr.Column(scale=4):
                 model_key = gr.Dropdown(label="Model Category", choices=["Normal", "Small", "Multiview"], value="Normal")
-                with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
-                    with gr.Tab('Image Prompt', id='tab_img_prompt') as tab_ip:
-                        image = gr.Image(label='Image', type='pil', image_mode='RGBA', height=250)
-                    with gr.Tab('Text Prompt', id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
-                        caption = gr.Textbox(label='Text Prompt', placeholder='HunyuanDiT will be used to generate image.')
-                    with gr.Tab('MultiView Prompt', id='tab_mv_prompt', visible=False) as tab_mv_p:
-                        with gr.Row():
-                            mv_image_front = gr.Image(label='Front', type='pil', image_mode='RGBA', height=120)
-                            mv_image_back = gr.Image(label='Back', type='pil', image_mode='RGBA', height=120)
-                        with gr.Row():
-                            mv_image_left = gr.Image(label='Left', type='pil', image_mode='RGBA', height=120)
-                            mv_image_right = gr.Image(label='Right', type='pil', image_mode='RGBA', height=120)
+                
+                with gr.Accordion("Input Prompt", open=True):
+                    with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
+                        with gr.Tab('Image Prompt', id='tab_img_prompt') as tab_ip:
+                            image = gr.Image(label='Image', type='pil', image_mode='RGBA', height=250)
+                        with gr.Tab('Text Prompt', id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
+                            caption = gr.Textbox(label='Text Prompt', placeholder='HunyuanDiT will be used to generate image.', lines=3)
+                        with gr.Tab('MultiView Prompt', id='tab_mv_prompt', visible=False) as tab_mv_p:
+                            with gr.Row():
+                                mv_image_front = gr.Image(label='Front', type='pil', image_mode='RGBA', height=120)
+                                mv_image_back = gr.Image(label='Back', type='pil', image_mode='RGBA', height=120)
+                            with gr.Row():
+                                mv_image_left = gr.Image(label='Left', type='pil', image_mode='RGBA', height=120)
+                                mv_image_right = gr.Image(label='Right', type='pil', image_mode='RGBA', height=120)
+
+                with gr.Accordion("Generation Settings", open=False):
+                    with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
+                        with gr.Tab("Options", id='tab_options', visible=TURBO_MODE):
+                            gen_mode = gr.Radio(label='Generation Mode', choices=['Turbo', 'Fast', 'Standard'], value='Turbo')
+                            decode_mode = gr.Radio(label='Decoding Mode', choices=['Low', 'Standard', 'High'], value='Standard')
+                        with gr.Tab('Advanced Options', id='tab_advanced_options'):
+                            with gr.Row():
+                                check_box_rembg = gr.Checkbox(value=True, label='Remove Background')
+                                randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
+                            seed = gr.Slider(label="Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
+                            with gr.Row():
+                                num_steps = gr.Slider(maximum=100, minimum=1, value=5, step=1, label='Inference Steps')
+                                octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label='Octree Resolution')
+                            with gr.Row():
+                                cfg_scale = gr.Number(value=5.0, label='Guidance Scale')
+                                num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label='Number of Chunks')
+
                 with gr.Row():
                     btn = gr.Button(value='Gen Shape', variant='primary')
                     btn_all = gr.Button(value='Gen Textured Shape', variant='primary', visible=HAS_TEXTUREGEN)
                     btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
 
-                with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
-                    with gr.Tab("Options", id='tab_options', visible=TURBO_MODE):
-                        gen_mode = gr.Radio(label='Generation Mode', choices=['Turbo', 'Fast', 'Standard'], value='Turbo')
-                        decode_mode = gr.Radio(label='Decoding Mode', choices=['Low', 'Standard', 'High'], value='Standard')
-                    with gr.Tab('Advanced Options', id='tab_advanced_options'):
-                        with gr.Row():
-                            check_box_rembg = gr.Checkbox(value=True, label='Remove Background')
-                            randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
-                        seed = gr.Slider(label="Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
-                        with gr.Row():
-                            num_steps = gr.Slider(maximum=100, minimum=1, value=5, step=1, label='Inference Steps')
-                            octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label='Octree Resolution')
-                        with gr.Row():
-                            cfg_scale = gr.Number(value=5.0, label='Guidance Scale')
-                            num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label='Number of Chunks')
             with gr.Column(scale=8):
                 with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
                     with gr.Tab('Generated Mesh', id='gen_mesh_panel'):
@@ -188,9 +193,6 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                                 file_out2 = gr.DownloadButton(label="Download Textured .glb", variant='primary', visible=True)
                     with gr.Tab('Mesh Statistic', id='stats_panel'):
                         stats = gr.Json({}, label='Mesh Stats')
-            # User Gallery removed for Wave 1 fixes (Non-functional)
-        
-            # User Gallery removed
         
         # Helper to toggle buttons
         def on_gen_start():
@@ -199,7 +201,6 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         def on_gen_finish():
             return gr.update(visible=True), gr.update(visible=HAS_TEXTUREGEN), gr.update(visible=False)
 
-        # Wire events
         # Wire events
         # Event Chain 1: Shape Generation
         succ1_1 = btn.click(on_gen_start, outputs=[btn, btn_all, btn_stop])
@@ -220,7 +221,6 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         succ2_3 = succ2_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop])
 
         # Stop Button
-        # Cancels the generation step specifically and resets UI
         btn_stop.click(
             fn=on_gen_finish, 
             outputs=[btn, btn_all, btn_stop], 

@@ -1,11 +1,25 @@
+from pathlib import Path
+
 HTML_TEMPLATE_MODEL_VIEWER = """
 <!DOCTYPE html>
 <html>
 <head>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background-color: #ffffff; height: 100vh; width: 100vw; overflow: hidden; }
-        model-viewer { width: 100%; height: 100%; --progress-bar-color: #4f46e5; }
+        body { 
+            margin: 0; 
+            background: radial-gradient(circle at 50% 50%, #f9fafb 0%, #e5e7eb 100%);
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; 
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: radial-gradient(circle at 50% 50%, #1f2937 0%, #111827 100%);
+            }
+        }
+        model-viewer { width: 100%; height: 100%; --progress-bar-color: #6366f1; }
     </style>
 </head>
 <body>
@@ -14,54 +28,32 @@ HTML_TEMPLATE_MODEL_VIEWER = """
                   auto-rotate 
                   camera-controls 
                   shadow-intensity="1" 
-                  exposure="1" 
-                  interaction-prompt="auto">
+                  exposure="0.9" 
+                  interaction-prompt="auto"
+                  ar
+                  ar-modes="webxr scene-viewer quick-look">
     </model-viewer>
 </body>
 </html>
 """
 
 HTML_PLACEHOLDER = """
-<div style='height: 100%; min-height: 550px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px; display: flex; justify-content: center; align-items: center;'>
-  <div style='text-align: center; font-size: 16px; color: #6b7280;'>
-    <p style="color: #6b7280; font-weight: bold;">Ready to Generate</p>
-    <p style="color: #8d8d8d;">Your 3D model will appear here.</p>
+<div style='height: 100%; min-height: 550px; width: 100%; border-radius: 12px; border: 2px dashed #e5e7eb; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #f9fafb00; transition: all 0.3s ease;'>
+  <div style='display: flex; justify-content: center; align-items: center; width: 64px; height: 64px; background-color: rgba(99, 102, 241, 0.1); border-radius: 50%; margin-bottom: 16px;'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3z"></path></svg>
   </div>
+  <h3 style='font-size: 18px; font-weight: 600; color: #374151; margin: 0 0 8px 0;'>Ready to Create</h3>
+  <p style='font-size: 14px; color: #6b7280; margin: 0; text-align: center; max-width: 240px;'>Configure your prompt and settings on the left, then click Generate.</p>
 </div>
-
 """
 
-CSS_STYLES = """
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
-    
-    .gradio-container { font-family: 'Inter', system-ui, sans-serif !important; min-height: 0 !important; }
-    
-    .app.svelte-wpkpf6.svelte-wpkpf6:not(.fill_width) { max-width: 100% !important; padding: 0 20px; }
-    
-    #tab_img_prompt { padding: 8px !important; }
-    #tab_txt_prompt { padding: 8px !important; }
-    #tab_mv_prompt { padding: 8px !important; }
-    
-    /* Buttons */
-    button.primary { 
-        background: linear-gradient(135deg, #6366f1, #4f46e5) !important; 
-        border: none !important;
-        transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
-    button.primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-    }
-    
-    /* Model Viewer Integration */
-    .mv-image button .wrap { font-size: 10px; }
-    .mv-image .icon-wrap { width: 20px; }
-    
-    /* Output Refresh */
-    iframe { width: 100% !important; }
+def load_css():
+    try:
+        css_path = Path(__file__).parent / "assets" / "theme.css"
+        if css_path.exists():
+            return css_path.read_text(encoding="utf-8")
+        return ""
+    except Exception:
+        return ""
 
-    /* Layout Fixes */
-    #gen_output_container { display: flex !important; flex-direction: column !important; height: 100% !important; flex-grow: 1; min-height: 0 !important; }
-    #model_3d_viewer { flex-grow: 1; overflow: hidden; min-height: 0 !important; }
-    .download-row { flex-shrink: 0; margin-top: auto; padding-top: 10px; }
-"""
+CSS_STYLES = load_css()

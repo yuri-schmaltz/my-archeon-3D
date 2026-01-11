@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    /* Brand Colors */
+    --primary-500: #6366f1;
+    --primary-600: #4f46e5;
+    --secondary-500: #ec4899;
+    
+    /* Neutral / Surface */
+    --surface-bg: #ffffff;
+    --surface-bg-alt: #f9fafb;
+    --border-color: #e5e7eb;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+
+    /* Metrics */
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --radius-sm: 4px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* Dark Mode Overrides */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --surface-bg: #1f2937;
+        --surface-bg-alt: #111827;
+        --border-color: #374151;
+        --text-main: #f9fafb;
+        --text-muted: #9ca3af;
+    }
+}
+
+/* Global Reset & Typography */
+.gradio-container { 
+    font-family: 'Inter', system-ui, sans-serif !important; 
+    min-height: 0 !important;
+}
+
+.app { 
+    padding: 20px !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+}
+
+/* Accordions */
+.label-wrap.svelte-12cmxck {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+/* Tabs Styling */
+.tabs {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background: var(--surface-bg);
+}
+
+/* Spacing fixes */
+#tab_img_prompt, #tab_txt_prompt, #tab_mv_prompt { padding: 16px !important; }
+
+/* Buttons */
+button.primary { 
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600)) !important; 
+    border: none !important;
+    border-radius: var(--radius-md) !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: var(--shadow-sm);
+    color: white !important;
+}
+button.primary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    filter: brightness(1.05);
+}
+button.primary:active {
+    transform: translateY(0);
+}
+
+/* Stop Button */
+button.stop {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+/* Output Area */
+#gen_output_container { 
+    display: flex !important; 
+    flex-direction: column !important; 
+    height: 100% !important; 
+    flex-grow: 1; 
+    min-height: 600px !important; 
+    background: transparent;
+}
+
+#model_3d_viewer { 
+    flex-grow: 1; 
+    overflow: hidden; 
+    min-height: 0 !important; 
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-color);
+    background: var(--surface-bg);
+    position: relative;
+}
+
+/* Fixes for dark mode in gradio defaults if needed */
+.block.svelte-90oupt {
+    border-color: var(--border-color) !important;
+    background: var(--surface-bg) !important;
+}
+
+iframe { 
+    width: 100% !important; 
+    height: 100% !important;
+    display: block;
+    border: none;
+}
+
+.download-row { 
+    margin-top: 16px; 
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Slider & Inputs */
+input[type="range"] {
+    accent-color: var(--primary-500);
+}

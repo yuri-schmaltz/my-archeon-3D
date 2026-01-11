@@ -98,9 +98,12 @@ async def unified_generation(model_key, caption, image, mv_image_front, mv_image
         if mv_image_right: mv_images['right'] = mv_image_right
     seed = int(randomize_seed_fn(seed, randomize_seed))
     # Progress callback bridge
+    loop = asyncio.get_running_loop()
     def gradio_progress_callback(percent, message):
-        # Gradio expects 0.0 to 1.0 float
-        progress(percent / 100.0, desc=message)
+        # Schedule the update on the main event loop to be thread-safe
+        def _update():
+            progress(percent / 100.0, desc=message)
+        loop.call_soon_threadsafe(_update)
 
     params = {
         'model_key': model_key,

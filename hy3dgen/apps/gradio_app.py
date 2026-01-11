@@ -85,7 +85,7 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
         template_html = template_html.replace('#src#', f'{related_path}')
         f.write(template_html)
     rel_path = os.path.relpath(output_html_path, SAVE_DIR)
-    iframe_tag = f'<iframe src="/static/{rel_path}" style="width: 100%; height: 600px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
+    iframe_tag = f'<iframe src="/static/{rel_path}" style="width: 100%; height: 100%; min-height: 600px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
     return iframe_tag
 
 async def unified_generation(model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed, do_texture, progress):
@@ -141,7 +141,7 @@ async def generation_all(*args, progress=gr.Progress()):
     return await unified_generation(*args, do_texture=True, progress=progress)
 
 def build_app(example_is=None, example_ts=None, example_mvs=None):
-    with gr.Blocks(theme=gr.themes.Base(), title='Hunyuan-3D-2.0', analytics_enabled=False, css=CSS_STYLES) as demo:
+    with gr.Blocks(theme=gr.themes.Base(), title='Hunyuan-3D-2.0', analytics_enabled=False, css=CSS_STYLES, fill_height=True) as demo:
         with gr.Row():
             with gr.Column(scale=3):
                 model_key = gr.Dropdown(label="Model Category", choices=["Normal", "Small", "Multiview"], value="Normal")
@@ -187,16 +187,43 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                         stats = gr.Json({}, label='Mesh Stats')
             # User Gallery removed for Wave 1 fixes (Non-functional)
         
-        btn.click(shape_generation, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, html_gen_mesh, stats, seed])
-        btn_all.click(generation_all, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, file_out2, html_gen_mesh, stats, seed])
+            # User Gallery removed
+        
+        btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
+
+        # Helper to toggle buttons
+        def on_gen_start():
+            return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+        
+        def on_gen_finish():
+            return gr.update(visible=True), gr.update(visible=HAS_TEXTUREGEN), gr.update(visible=False)
+
+        # Wire events
+        gen_event1 = btn.click(
+            on_gen_start, outputs=[btn, btn_all, btn_stop]
+        ).then(
+            shape_generation, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, html_gen_mesh, stats, seed]
+        ).then(
+            on_gen_finish, outputs=[btn, btn_all, btn_stop]
+        )
+        
+        gen_event2 = btn_all.click(
+            on_gen_start, outputs=[btn, btn_all, btn_stop]
+        ).then(
+            generation_all, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, file_out2, html_gen_mesh, stats, seed]
+        ).then(
+            on_gen_finish, outputs=[btn, btn_all, btn_stop]
+        )
+
+        btn_stop.click(fn=None, cancels=[gen_event1, gen_event2])
         # Logic to switch interfaces
         def update_input_interface(model_key):
             if model_key == "Multiview":
-                return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
+                return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(selected='tab_mv_prompt')
             else:
-                return gr.update(visible=True), gr.update(visible=HAS_T2I), gr.update(visible=False)
+                return gr.update(visible=True), gr.update(visible=HAS_T2I), gr.update(visible=False), gr.update(selected='tab_img_prompt')
 
-        model_key.change(fn=update_input_interface, inputs=model_key, outputs=[tab_ip, tab_tp, tab_mv_p])
+        model_key.change(fn=update_input_interface, inputs=model_key, outputs=[tab_ip, tab_tp, tab_mv_p, tabs_prompt])
 
     return demo
 

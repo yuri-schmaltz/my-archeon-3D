@@ -69,7 +69,13 @@ class InferencePipeline:
         """
         # Helper for progress reporting
         progress_callback = params.get("progress_callback", None)
+        cancel_event = params.get("cancel_event", None)
+
         def report_progress(percent, msg):
+            if cancel_event and cancel_event.is_set():
+                logger.info(f"[{uid}] Generation cancelled by user.")
+                raise InterruptedError("Generation cancelled locally")
+                
             if progress_callback:
                 progress_callback(percent, msg)
             logger.info(f"[{uid}] Progress {percent}%: {msg}")

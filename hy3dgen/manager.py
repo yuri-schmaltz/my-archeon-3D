@@ -3,6 +3,7 @@ import logging
 import uuid
 import time
 import torch
+import threading
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Callable
 from hy3dgen.shapegen.utils import get_logger
@@ -156,11 +157,25 @@ class PriorityRequestManager:
             future=future
         )
         
+        # Create cancel event for this job
+        cancel_event = threading.Event()
+        item.params['cancel_event'] = cancel_event
+        
         await self.queue.put(item)
         logger.info(f"Job {uid} queued with priority {priority}. Queue size: {self.queue.qsize()}")
         
-        # Wait for the result
-        return await future
+        # Wait for the result with cancellation support
+        try:
+            return await future
+        except asyncio.CancelledError:
+            logger.info(f"Job {uid} cancelled by caller.")
+            cancel_event.set()
+            # We also need to cancel the future if it wasn't already?
+            # If we are here, caller cancelled the *await*, so we must ensure future is marked cancelled
+            # so worker knows to stop or ignore result.
+            if not future.done():
+                future.cancel()
+            raise
 
     async def _worker_loop(self, worker_id: int):
         logger.info(f"Worker {worker_id} started.")

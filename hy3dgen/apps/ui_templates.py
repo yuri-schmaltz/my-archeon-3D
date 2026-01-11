@@ -22,12 +22,13 @@ HTML_TEMPLATE_MODEL_VIEWER = """
 """
 
 HTML_PLACEHOLDER = """
-<div style='height: 550px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px; display: flex; justify-content: center; align-items: center;'>
+<div style='height: 100%; min-height: 550px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px; display: flex; justify-content: center; align-items: center;'>
   <div style='text-align: center; font-size: 16px; color: #6b7280;'>
     <p style="color: #6b7280; font-weight: bold;">Ready to Generate</p>
     <p style="color: #8d8d8d;">Your 3D model will appear here.</p>
   </div>
 </div>
+
 """
 
 CSS_STYLES = """

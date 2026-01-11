@@ -33,3 +33,7 @@ jobs:
     - name: Run Linter
       run: |
         bash scripts/lint.sh
+
+    - name: Run Tests
+      run: |
+        pytest tests/

@@ -19,6 +19,7 @@ import shutil
 import uuid
 import webbrowser
 import argparse
+import json
 from pathlib import Path
 
 import gradio as gr
@@ -130,6 +131,20 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
         'do_texture': do_texture, # Flag to indicate if texturing is needed
         'progress_callback': gradio_progress_callback
     }
+    
+    # [LOGGING] Print all parameters to console
+    log_params = params.copy()
+    # Sanitize large objects for logging
+    if 'image' in log_params: log_params['image'] = f"<Image: {type(params['image'])}>"
+    if 'mv_images' in log_params and log_params['mv_images']: 
+        log_params['mv_images'] = {k: f"<Image: {type(v)}>" for k, v in log_params['mv_images'].items()}
+    if 'progress_callback' in log_params: del log_params['progress_callback']
+    
+    logger.info(f"==================================================")
+    logger.info(f"ACTION: Generation Request Submitted")
+    logger.info(f"PARAMS: {json.dumps(log_params, indent=2, default=str)}")
+    logger.info(f"==================================================")
+
     result = await request_manager.submit(params)
     mesh, stats = result["mesh"], result["stats"]
     save_folder = gen_save_folder()
@@ -211,9 +226,11 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         
         # Helper to toggle buttons
         def on_gen_start():
+            logger.info("UI EVENT: 'Gen Shape' or 'Gen Textured Shape' button clicked.")
             return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
         
         def on_gen_finish():
+            logger.info("UI EVENT: Generation finished (or stopped). Restoring UI.")
             return gr.update(visible=True), gr.update(visible=HAS_TEXTUREGEN), gr.update(visible=False)
 
         # Update model state based on tab selection
@@ -277,7 +294,8 @@ def main():
     def get_loader(model_path, subfolder):
         return lambda: InferencePipeline(
             model_path=model_path, tex_model_path=args.texgen_model_path, subfolder=subfolder,
-            device=args.device, enable_t2i=args.enable_t23d, enable_tex=not args.disable_tex
+            device=args.device, enable_t2i=args.enable_t23d, enable_tex=not args.disable_tex,
+            low_vram_mode=args.low_vram_mode
         )
     model_mgr.register_model("Normal", get_loader("tencent/Hunyuan3D-2", "hunyuan3d-dit-v2-0-turbo"))
 

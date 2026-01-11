@@ -32,6 +32,7 @@ class InferencePipeline:
                  low_vram_mode: bool = False):
         
         self.device = device
+        self.low_vram_mode = low_vram_mode
         self.rembg = BackgroundRemover()
         
         logger.info(f"Loading ShapeGen model from {model_path}...")
@@ -149,9 +150,12 @@ class InferencePipeline:
         # 2. Shape Generation
         # Prepare shape gen params
         seed = int(params.get("seed", 1234))
-        # Create generator on the pipeline's execution device (handles CPU offload case)
-        exec_device = self.pipeline._execution_device if hasattr(self.pipeline, '_execution_device') else self.device
-        generator = torch.Generator(exec_device).manual_seed(seed)
+        # Create generator respecting offload: CPU generator avoids device mismatch when the model is offloaded
+        if getattr(self, "low_vram_mode", False):
+            generator = torch.Generator('cpu').manual_seed(seed)
+        else:
+            exec_device = self.pipeline._execution_device if hasattr(self.pipeline, '_execution_device') else self.device
+            generator = torch.Generator(exec_device).manual_seed(seed)
         
         # Callback wrapper for pipeline
         # Map pipeline steps (0-100%) to specific global range (approx 20% to 80%)

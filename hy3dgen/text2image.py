@@ -61,14 +61,35 @@ class HunyuanDiTPipeline:
         )[0][0]
 
     @torch.no_grad()
-    def __call__(self, prompt, seed=0):
+    def __call__(self, prompt, negative_prompt=None, seed=0, num_inference_steps=25):
         seed_everything(seed)
         generator = torch.Generator(device=self.pipe.device)
         generator = generator.manual_seed(int(seed))
+        
+        # logical handling: if negative_prompt is None, use default.
+        # if prompt doesn't have "3D style", maybe append it? 
+        # For now, we trust the caller (Orchestrator) to provide the full qualified prompt.
+        # But we keep the original logic as fallback if needed, or just append pos_txt if not present.
+        # Actually, per plan, we want to remove the hardcoded append if possible, or make it cleaner.
+        # The plan said: prompt = prompt + ", " + self.pos_txt. 
+        # But for full control, we should ideally let the user decide. 
+        # Let's stick to the plan: remove truncation, keep appending pos_txt for safety unless we want pure raw.
+        # The user Plan said: "DEPOIS: prompt=prompt + ", " + self.pos_txt (ou controle total via argumento)"
+        # Let's give control. 
+        
+        final_prompt = prompt
+        # We append pos_txt only if it's not likely already there (naive check) or just always append 
+        # since it contains "white background".
+        # However, the Senior Prompt already specifies "white background".
+        # Let's append it to be safe but simpler.
+        final_prompt = f"{prompt}, {self.pos_txt}"
+        
+        final_neg = negative_prompt if negative_prompt is not None else self.neg_txt
+
         out_img = self.pipe(
-            prompt=prompt[:60] + self.pos_txt,
-            negative_prompt=self.neg_txt,
-            num_inference_steps=25,
+            prompt=final_prompt,
+            negative_prompt=final_neg,
+            num_inference_steps=num_inference_steps,
             pag_scale=1.3,
             width=1024,
             height=1024,

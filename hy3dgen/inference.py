@@ -93,7 +93,17 @@ class InferencePipeline:
                 report_progress(5, "Generating Image from Text...")
                 logger.info(f"[{uid}] Generating image from text...")
                 t1 = time.time()
-                image = self.pipeline_t2i(params["text"])
+                # Use passed seed or default
+                seed = int(params.get("seed", 0))
+                steps = int(params.get("t2i_steps", 25))
+                neg = params.get("negative_prompt", None)
+                
+                image = self.pipeline_t2i(
+                    prompt=params["text"],
+                    negative_prompt=neg,
+                    seed=seed,
+                    num_inference_steps=steps
+                )
                 stats['time']['t2i'] = time.time() - t1
             elif params.get("text") and not self.pipeline_t2i:
                 raise ValueError("Text provided but T2I model is disabled.")

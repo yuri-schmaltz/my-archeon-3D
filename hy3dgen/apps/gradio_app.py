@@ -98,12 +98,13 @@ async def unified_generation(model_key, caption, image, mv_image_front, mv_image
         if mv_image_right: mv_images['right'] = mv_image_right
     seed = int(randomize_seed_fn(seed, randomize_seed))
     # Progress callback bridge
-    loop = asyncio.get_running_loop()
+    # Progress callback bridge
     def gradio_progress_callback(percent, message):
-        # Schedule the update on the main event loop to be thread-safe
-        def _update():
+        logger.info(f"Progress update: {percent}% - {message}")
+        try:
             progress(percent / 100.0, desc=message)
-        loop.call_soon_threadsafe(_update)
+        except Exception as e:
+            logger.error(f"Progress update failed: {e}")
 
     params = {
         'model_key': model_key,
@@ -160,6 +161,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                 with gr.Row():
                     btn = gr.Button(value='Gen Shape', variant='primary')
                     btn_all = gr.Button(value='Gen Textured Shape', variant='primary', visible=HAS_TEXTUREGEN)
+                    btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
 
                 with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
                     with gr.Tab("Options", id='tab_options', visible=TURBO_MODE):
@@ -179,18 +181,17 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             with gr.Column(scale=8):
                 with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
                     with gr.Tab('Generated Mesh', id='gen_mesh_panel'):
-                        html_gen_mesh = gr.HTML(HTML_PLACEHOLDER, label='Output')
-                        with gr.Row():
-                            file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
-                            file_out2 = gr.DownloadButton(label="Download Textured .glb", variant='primary', visible=True)
+                        with gr.Column(elem_id="gen_output_container"):
+                            html_gen_mesh = gr.HTML(HTML_PLACEHOLDER, label='Output', elem_id="model_3d_viewer")
+                            with gr.Row(elem_classes="download-row"):
+                                file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
+                                file_out2 = gr.DownloadButton(label="Download Textured .glb", variant='primary', visible=True)
                     with gr.Tab('Mesh Statistic', id='stats_panel'):
                         stats = gr.Json({}, label='Mesh Stats')
             # User Gallery removed for Wave 1 fixes (Non-functional)
         
             # User Gallery removed
         
-        btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
-
         # Helper to toggle buttons
         def on_gen_start():
             return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True)
@@ -199,23 +200,32 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             return gr.update(visible=True), gr.update(visible=HAS_TEXTUREGEN), gr.update(visible=False)
 
         # Wire events
-        gen_event1 = btn.click(
-            on_gen_start, outputs=[btn, btn_all, btn_stop]
-        ).then(
-            shape_generation, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, html_gen_mesh, stats, seed]
-        ).then(
-            on_gen_finish, outputs=[btn, btn_all, btn_stop]
+        # Wire events
+        # Event Chain 1: Shape Generation
+        succ1_1 = btn.click(on_gen_start, outputs=[btn, btn_all, btn_stop])
+        succ1_2 = succ1_1.then(
+            shape_generation, 
+            inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
+            outputs=[file_out, html_gen_mesh, stats, seed]
         )
+        succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop])
         
-        gen_event2 = btn_all.click(
-            on_gen_start, outputs=[btn, btn_all, btn_stop]
-        ).then(
-            generation_all, inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], outputs=[file_out, file_out2, html_gen_mesh, stats, seed]
-        ).then(
-            on_gen_finish, outputs=[btn, btn_all, btn_stop]
+        # Event Chain 2: Textured Generation
+        succ2_1 = btn_all.click(on_gen_start, outputs=[btn, btn_all, btn_stop])
+        succ2_2 = succ2_1.then(
+            generation_all, 
+            inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
+            outputs=[file_out, file_out2, html_gen_mesh, stats, seed]
         )
+        succ2_3 = succ2_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop])
 
-        btn_stop.click(fn=None, cancels=[gen_event1, gen_event2])
+        # Stop Button
+        # Cancels the generation step specifically and resets UI
+        btn_stop.click(
+            fn=on_gen_finish, 
+            outputs=[btn, btn_all, btn_stop], 
+            cancels=[succ1_2, succ2_2]
+        )
         # Logic to switch interfaces
         def update_input_interface(model_key):
             if model_key == "Multiview":

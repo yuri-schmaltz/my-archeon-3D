@@ -196,8 +196,16 @@ You can now launch a single unified app and select the model (Normal, Small, Mul
 ```bash
 ```bash
 # Safe default (loads models on demand, opens browser automatically)
+# Safe default (loads models on demand, opens browser automatically)
 python3 my_hunyuan_3d.py
 ```
+
+#### New Pro Features (v2.0)
+- **Unified Interface**: Full-screen, responsive layout with optimized density.
+- **Stop Generation**: Immediately cancel generation tasks with the Red Stop Button.
+- **Smart Tabs**: Auto-switching prompts based on model category (Multi-view/Normal).
+- **Progress Feedback**: Granular, thread-safe progress bars.
+
 
 ### API Server
 
@@ -205,7 +213,7 @@ You could launch an API server locally, which you could post web request for Ima
 
 ```bash
 # Default port changed to 8081 for better coexistence
-python api_server.py --host 0.0.0.0 --port 8081
+python my_hunyuan_3d.py --api --host 0.0.0.0 --port 8081
 ```
 
 #### Features
@@ -256,6 +264,15 @@ Don't forget to visit [Hunyuan3D](https://3d.hunyuan.tencent.com) for quick use,
 - [x] ComfyUI
 - [x] Finetuning
 - [ ] TensorRT Version
+
+## 🛠️ Development
+
+We use `pytest` for ensuring the reliability of the Request Manager and Inference pipeline.
+
+```bash
+# Run all tests
+pytest tests/
+```
 
 ## 🔗 BibTeX
 

@@ -38,9 +38,9 @@ CSS_STYLES = """
     
     .app.svelte-wpkpf6.svelte-wpkpf6:not(.fill_width) { max-width: 100% !important; padding: 0 20px; }
     
-    #tab_img_prompt { padding: 0 !important; }
-    #tab_txt_prompt { padding: 0 !important; }
-    #tab_mv_prompt { padding: 0 !important; }
+    #tab_img_prompt { padding: 8px !important; }
+    #tab_txt_prompt { padding: 8px !important; }
+    #tab_mv_prompt { padding: 8px !important; }
     
     /* Buttons */
     button.primary { 
@@ -59,4 +59,9 @@ CSS_STYLES = """
     
     /* Output Refresh */
     iframe { width: 100% !important; }
+
+    /* Layout Fixes */
+    #gen_output_container { display: flex !important; flex-direction: column !important; height: 100% !important; flex-grow: 1; min-height: 0 !important; }
+    #model_3d_viewer { flex-grow: 1; overflow: hidden; min-height: 0 !important; }
+    .download-row { flex-shrink: 0; margin-top: auto; padding-top: 10px; }
 """

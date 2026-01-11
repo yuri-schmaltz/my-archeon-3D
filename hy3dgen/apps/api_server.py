@@ -132,6 +132,7 @@ async def health():
 class GenerateRequest(BaseModel):
     image: Optional[str] = Field(None, description="Base64 encoded image")
     text: Optional[str] = Field(None, description="Text prompt for T2I")
+    negative_prompt: Optional[str] = Field(None, description="Negative prompt for T2I")
     mesh: Optional[str] = Field(None, description="Base64 encoded mesh (glb)")
     seed: int = Field(1234, description="Random seed")
     octree_resolution: int = Field(128, description="Octree resolution")

@@ -88,7 +88,7 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
     iframe_tag = f'<iframe src="/static/{rel_path}" style="width: 100%; height: 100%; min-height: 600px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
     return iframe_tag
 
-async def unified_generation(model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed, do_texture, progress):
+async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed, do_texture, progress):
     mv_mode = model_key == "Multiview"
     mv_images = {}
     if mv_mode:
@@ -109,6 +109,7 @@ async def unified_generation(model_key, caption, image, mv_image_front, mv_image
     params = {
         'model_key': model_key,
         'text': caption,
+        'negative_prompt': negative_prompt,
         'image': image,
         'mv_images': mv_images if mv_mode else None,
         'num_inference_steps': int(steps), # Renamed from 'steps' in the instruction to match existing pipeline
@@ -164,6 +165,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
 
                         with gr.Tab('Text Prompt', id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
                             caption = gr.Textbox(label='Text Prompt', placeholder='HunyuanDiT will be used to generate image.', lines=3)
+                            negative_prompt = gr.Textbox(label='Negative Prompt', placeholder='Low quality, distortion, etc.', lines=2)
 
                 with gr.Accordion("Generation Settings", open=False):
                     with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
@@ -219,7 +221,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         succ1_1 = btn.click(on_gen_start, outputs=[btn, btn_all, btn_stop])
         succ1_2 = succ1_1.then(
             shape_generation, 
-            inputs=[model_key_state, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
+            inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
             outputs=[file_out, html_gen_mesh, stats, seed]
         )
         succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop])
@@ -228,7 +230,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         succ2_1 = btn_all.click(on_gen_start, outputs=[btn, btn_all, btn_stop])
         succ2_2 = succ2_1.then(
             generation_all, 
-            inputs=[model_key_state, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
+            inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
             outputs=[file_out, file_out2, html_gen_mesh, stats, seed]
         )
         succ2_3 = succ2_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop])

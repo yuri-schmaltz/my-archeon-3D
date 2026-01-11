@@ -194,8 +194,9 @@ The output mesh is a [trimesh object](https://trimesh.org/trimesh.html), which y
 You can now launch a single unified app and select the model (Normal, Small, Multiview) directly from the UI:
 
 ```bash
-# Safe default (loads models on demand)
-python3 gradio_app.py --low_vram_mode
+```bash
+# Safe default (loads models on demand, opens browser automatically)
+python3 my_hunyuan_3d.py
 ```
 
 ### API Server

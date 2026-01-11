@@ -74,6 +74,10 @@ class InferencePipeline:
                 progress_callback(percent, msg)
             logger.info(f"[{uid}] Progress {percent}%: {msg}")
 
+        logger.info(f"[{uid}] Generation started.")
+        stats = {'time': {}}
+        t0 = time.time()
+
         report_progress(0, "Starting generation...")
 
         # 1. Input Processing (Text -> Image if needed)
@@ -143,7 +147,7 @@ class InferencePipeline:
             "num_inference_steps": params.get("num_inference_steps", 30),
             "guidance_scale": params.get("guidance_scale", 7.5),
             "octree_resolution": params.get("octree_resolution", 256),
-            "num_chunks": params.get("num_chunks", 200000),
+            "num_chunks": params.get("num_chunks", 8000), # Reduced default from 200k to 8k
             "generator": generator,
             "output_type": "mesh",
             "callback": pipeline_callback,
@@ -154,11 +158,16 @@ class InferencePipeline:
         # For now assume standard flow
         
         report_progress(20, "Initializing Shape Generation...")
-        logger.info(f"[{uid}] Generating shape...")
+        print(f"[{uid}] Generating shape with params: steps={shape_params['num_inference_steps']}, chunks={shape_params['num_chunks']}", flush=True)
         t1 = time.time()
         # The pipeline output is a list, we take [0]
-        mesh = self.pipeline(**shape_params)[0]
+        try:
+            mesh = self.pipeline(**shape_params)[0]
+        except Exception as e:
+            print(f"[{uid}] Shape generation FAILED: {e}", flush=True)
+            raise e
         stats['time']['shape_gen'] = time.time() - t1
+        print(f"[{uid}] Shape generation done in {stats['time']['shape_gen']:.2f}s", flush=True)
 
         # Post-processing (always do basic cleanup?) 
         # API did it only if texturing? Grado does it optionally?

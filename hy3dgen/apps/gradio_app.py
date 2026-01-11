@@ -110,12 +110,12 @@ async def unified_generation(model_key, caption, image, mv_image_front, mv_image
         'text': caption,
         'image': image,
         'mv_images': mv_images if mv_mode else None,
-        'num_inference_steps': steps, # Renamed from 'steps' in the instruction to match existing pipeline
+        'num_inference_steps': int(steps), # Renamed from 'steps' in the instruction to match existing pipeline
         'guidance_scale': guidance_scale,
         'seed': seed,
         'octree_resolution': int(octree_resolution), # Ensure it's an int
         'do_rembg': check_box_rembg,
-        'num_chunks': num_chunks,
+        'num_chunks': int(num_chunks),
         'do_texture': do_texture, # Flag to indicate if texturing is needed
         'progress_callback': gradio_progress_callback
     }

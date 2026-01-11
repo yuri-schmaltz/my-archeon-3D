@@ -143,23 +143,27 @@ async def generation_all(*args, progress=gr.Progress()):
 
 def build_app(example_is=None, example_ts=None, example_mvs=None):
     with gr.Blocks(theme=gr.themes.Base(), title='Hunyuan-3D-2.0', analytics_enabled=False, css=CSS_STYLES, fill_height=True) as demo:
+        # State to track current model mode based on tab
+        model_key_state = gr.State("Normal")
+
         with gr.Row():
             with gr.Column(scale=4):
-                model_key = gr.Dropdown(label="Model Category", choices=["Normal", "Small", "Multiview"], value="Normal")
                 
                 with gr.Accordion("Input Prompt", open=True):
                     with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
                         with gr.Tab('Image Prompt', id='tab_img_prompt') as tab_ip:
                             image = gr.Image(label='Image', type='pil', image_mode='RGBA', height=250)
-                        with gr.Tab('Text Prompt', id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
-                            caption = gr.Textbox(label='Text Prompt', placeholder='HunyuanDiT will be used to generate image.', lines=3)
-                        with gr.Tab('MultiView Prompt', id='tab_mv_prompt', visible=False) as tab_mv_p:
+                        
+                        with gr.Tab('MultiView Prompt', id='tab_mv_prompt') as tab_mv_p:
                             with gr.Row():
                                 mv_image_front = gr.Image(label='Front', type='pil', image_mode='RGBA', height=120)
                                 mv_image_back = gr.Image(label='Back', type='pil', image_mode='RGBA', height=120)
                             with gr.Row():
                                 mv_image_left = gr.Image(label='Left', type='pil', image_mode='RGBA', height=120)
                                 mv_image_right = gr.Image(label='Right', type='pil', image_mode='RGBA', height=120)
+
+                        with gr.Tab('Text Prompt', id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
+                            caption = gr.Textbox(label='Text Prompt', placeholder='HunyuanDiT will be used to generate image.', lines=3)
 
                 with gr.Accordion("Generation Settings", open=False):
                     with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
@@ -201,12 +205,21 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         def on_gen_finish():
             return gr.update(visible=True), gr.update(visible=HAS_TEXTUREGEN), gr.update(visible=False)
 
+        # Update model state based on tab selection
+        def update_model_key(evt: gr.SelectData):
+            # When Tabs have IDs, the selected value is the ID
+            if evt.value == "tab_mv_prompt":
+                return "Multiview"
+            return "Normal"
+
+        tabs_prompt.select(fn=update_model_key, outputs=model_key_state)
+
         # Wire events
         # Event Chain 1: Shape Generation
         succ1_1 = btn.click(on_gen_start, outputs=[btn, btn_all, btn_stop])
         succ1_2 = succ1_1.then(
             shape_generation, 
-            inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
+            inputs=[model_key_state, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
             outputs=[file_out, html_gen_mesh, stats, seed]
         )
         succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop])
@@ -215,7 +228,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         succ2_1 = btn_all.click(on_gen_start, outputs=[btn, btn_all, btn_stop])
         succ2_2 = succ2_1.then(
             generation_all, 
-            inputs=[model_key, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
+            inputs=[model_key_state, caption, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
             outputs=[file_out, file_out2, html_gen_mesh, stats, seed]
         )
         succ2_3 = succ2_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop])
@@ -226,22 +239,14 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             outputs=[btn, btn_all, btn_stop], 
             cancels=[succ1_2, succ2_2]
         )
-        # Logic to switch interfaces
-        def update_input_interface(model_key):
-            if model_key == "Multiview":
-                return gr.update(visible=False), gr.update(visible=False), gr.update(visible=True), gr.update(selected='tab_mv_prompt')
-            else:
-                return gr.update(visible=True), gr.update(visible=HAS_T2I), gr.update(visible=False), gr.update(selected='tab_img_prompt')
-
-        model_key.change(fn=update_input_interface, inputs=model_key, outputs=[tab_ip, tab_tp, tab_mv_p, tabs_prompt])
 
     return demo
 
 def main():
     global request_manager, SAVE_DIR, HAS_T2I, HAS_TEXTUREGEN
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_path", type=str, default='tencent/Hunyuan3D-2mini')
-    parser.add_argument("--subfolder", type=str, default='hunyuan3d-dit-v2-mini-turbo')
+    parser.add_argument("--model_path", type=str, default='tencent/Hunyuan3D-2')
+    parser.add_argument("--subfolder", type=str, default='hunyuan3d-dit-v2-0-turbo')
     parser.add_argument("--texgen_model_path", type=str, default='tencent/Hunyuan3D-2')
     parser.add_argument('--port', type=int, default=7860)
     parser.add_argument('--host', type=str, default='127.0.0.1')
@@ -264,7 +269,7 @@ def main():
             device=args.device, enable_t2i=args.enable_t23d, enable_tex=not args.disable_tex
         )
     model_mgr.register_model("Normal", get_loader("tencent/Hunyuan3D-2", "hunyuan3d-dit-v2-0-turbo"))
-    model_mgr.register_model("Small", get_loader("tencent/Hunyuan3D-2mini", "hunyuan3d-dit-v2-mini-turbo"))
+
     model_mgr.register_model("Multiview", get_loader("tencent/Hunyuan3D-2mv", "hunyuan3d-dit-v2-mv-turbo"))
     request_manager = PriorityRequestManager(model_mgr, max_concurrency=1)
     loop = asyncio.new_event_loop()

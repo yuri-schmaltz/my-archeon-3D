@@ -139,7 +139,7 @@ class GenerateRequest(BaseModel):
     guidance_scale: float = Field(5.0, description="Guidance scale")
     texture: bool = Field(False, description="Generate texture")
     face_count: int = Field(40000, description="Target face count for reduction")
-    model: str = Field("Normal", description="Model category: Normal, Small, Multiview")
+    model: str = Field("Normal", description="Model category: Normal, Multiview")
     type: str = Field("glb", description="Output file format (glb, obj)")
 
 
@@ -216,7 +216,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8081)
-    parser.add_argument("--model_path", type=str, default='tencent/Hunyuan3D-2mini')
+    parser.add_argument("--model_path", type=str, default='tencent/Hunyuan3D-2')
     parser.add_argument("--tex_model_path", type=str, default='tencent/Hunyuan3D-2')
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--limit-model-concurrency", type=int, default=5)
@@ -237,7 +237,7 @@ def main():
         )
 
     model_mgr.register_model("Normal", get_loader("tencent/Hunyuan3D-2", "hunyuan3d-dit-v2-0-turbo"))
-    model_mgr.register_model("Small", get_loader("tencent/Hunyuan3D-2mini", "hunyuan3d-dit-v2-mini-turbo"))
+
     model_mgr.register_model("Multiview", get_loader("tencent/Hunyuan3D-2mv", "hunyuan3d-dit-v2-mv-turbo"))
 
     request_manager = PriorityRequestManager(model_mgr, max_concurrency=args.limit_model_concurrency)

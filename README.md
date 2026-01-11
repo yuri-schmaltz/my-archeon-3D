@@ -191,7 +191,7 @@ mesh = pipeline(image='path/to/your/image.png')[0]
 The output mesh is a [trimesh object](https://trimesh.org/trimesh.html), which you could save to glb/obj (or other format) file.
 ### Gradio App
 
-You can now launch a single unified app and select the model (Normal, Small, Multiview) directly from the UI:
+You can now launch a single unified app and select the model (Normal, Multiview) directly from the UI:
 
 ```bash
 ```bash

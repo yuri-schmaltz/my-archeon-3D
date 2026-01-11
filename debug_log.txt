@@ -178,3 +178,37 @@ ValueError: Cannot generate a cpu tensor from a generator of type cuda.
 2026-01-11 15:13:25,725 - hy3dgen.shapgen - INFO - FlashVDMVolumeDecoding Resolution: [63, 126, 252]
 2026-01-11 15:13:27,351 - inference - INFO - [test_uid] Progress 100%: Generation Complete!
 2026-01-11 15:13:27,352 - reproduce - INFO - Generation successful!
+2026-01-11 15:39:33,158 - reproduce - INFO - Starting reproduction script...
+2026-01-11 15:39:33,158 - reproduce - INFO - Device: cuda
+2026-01-11 15:39:33,158 - reproduce - INFO - Loading model from tencent/Hunyuan3D-2 / hunyuan3d-dit-v2-0
+2026-01-11 15:39:34,113 - inference - INFO - Loading ShapeGen model from tencent/Hunyuan3D-2...
+2026-01-11 15:39:34,113 - hy3dgen.shapgen - INFO - Try to load model from local path: /home/yurix/.cache/hy3dgen/tencent/Hunyuan3D-2/hunyuan3d-dit-v2-0
+2026-01-11 15:39:34,113 - hy3dgen.shapgen - INFO - Model path not exists, try to download from huggingface
+2026-01-11 15:39:34,430 - hy3dgen.shapgen - INFO - Loading model from /home/yurix/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/9cd649ba6913f7a852e3286bad86bfa9a2d83dcf/hunyuan3d-dit-v2-0/model.fp16.safetensors
+2026-01-11 15:40:04,603 - hy3dgen.shapgen - INFO - Try to load model from local path: /home/yurix/.cache/hy3dgen/tencent/Hunyuan3D-2/hunyuan3d-vae-v2-0-turbo
+2026-01-11 15:40:04,604 - hy3dgen.shapgen - INFO - Model path not exists, try to download from huggingface
+2026-01-11 15:40:04,768 - hy3dgen.shapgen - INFO - Loading model from /home/yurix/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/9cd649ba6913f7a852e3286bad86bfa9a2d83dcf/hunyuan3d-vae-v2-0-turbo/model.fp16.safetensors
+2026-01-11 15:40:06,948 - inference - INFO - Enabling CPU offload for ShapeGen model...
+2026-01-11 15:40:08,676 - inference - INFO - Loading Text2Image model...
+2026-01-11 15:40:15,008 - inference - INFO - Enabling CPU offload for Text2Image model...
+2026-01-11 15:40:18,217 - reproduce - INFO - Pipeline loaded successfully.
+2026-01-11 15:40:18,217 - reproduce - INFO - Starting dummy generation...
+2026-01-11 15:40:18,217 - inference - INFO - [test_uid] Generation started.
+2026-01-11 15:40:18,217 - inference - INFO - [test_uid] Progress 0%: Starting generation...
+2026-01-11 15:40:18,217 - inference - INFO - [test_uid] Progress 5%: Generating Image from Text...
+2026-01-11 15:40:18,217 - inference - INFO - [test_uid] Generating image from text...
+2026-01-11 15:41:40,540 - inference - INFO - [test_uid] Progress 10%: Removing Background...
+2026-01-11 15:41:40,848 - inference - INFO - [test_uid] Progress 20%: Initializing Shape Generation...
+2026-01-11 15:41:45,454 - inference - INFO - [test_uid] Progress 27%: Generating Shape (Step 1/10)
+2026-01-11 15:41:45,801 - inference - INFO - [test_uid] Progress 35%: Generating Shape (Step 2/10)
+2026-01-11 15:41:46,856 - inference - INFO - [test_uid] Progress 42%: Generating Shape (Step 3/10)
+2026-01-11 15:41:47,912 - inference - INFO - [test_uid] Progress 50%: Generating Shape (Step 4/10)
+2026-01-11 15:41:48,967 - inference - INFO - [test_uid] Progress 57%: Generating Shape (Step 5/10)
+2026-01-11 15:41:50,023 - inference - INFO - [test_uid] Progress 65%: Generating Shape (Step 6/10)
+2026-01-11 15:41:51,078 - inference - INFO - [test_uid] Progress 72%: Generating Shape (Step 7/10)
+2026-01-11 15:41:52,133 - inference - INFO - [test_uid] Progress 80%: Generating Shape (Step 8/10)
+2026-01-11 15:41:53,188 - inference - INFO - [test_uid] Progress 87%: Generating Shape (Step 9/10)
+2026-01-11 15:41:54,248 - inference - INFO - [test_uid] Progress 95%: Generating Shape (Step 10/10)
+2026-01-11 15:41:56,441 - hy3dgen.shapgen - INFO - FlashVDMVolumeDecoding Resolution: [63, 126, 252]
+2026-01-11 15:41:58,035 - inference - INFO - [test_uid] Progress 100%: Generation Complete!
+2026-01-11 15:41:58,036 - reproduce - INFO - Generation successful!

@@ -149,7 +149,9 @@ class InferencePipeline:
         # 2. Shape Generation
         # Prepare shape gen params
         seed = int(params.get("seed", 1234))
-        generator = torch.Generator(self.device).manual_seed(seed)
+        # Create generator on the pipeline's execution device (handles CPU offload case)
+        exec_device = self.pipeline._execution_device if hasattr(self.pipeline, '_execution_device') else self.device
+        generator = torch.Generator(exec_device).manual_seed(seed)
         
         # Callback wrapper for pipeline
         # Map pipeline steps (0-100%) to specific global range (approx 20% to 80%)

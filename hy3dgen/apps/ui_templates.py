@@ -22,7 +22,7 @@ HTML_TEMPLATE_MODEL_VIEWER = """
 """
 
 HTML_PLACEHOLDER = """
-<div style='height: 650px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px; display: flex; justify-content: center; align-items: center;'>
+<div style='height: 550px; width: 100%; border-radius: 8px; border-color: #e5e7eb; border-style: solid; border-width: 1px; display: flex; justify-content: center; align-items: center;'>
   <div style='text-align: center; font-size: 16px; color: #6b7280;'>
     <p style="color: #6b7280; font-weight: bold;">Ready to Generate</p>
     <p style="color: #8d8d8d;">Your 3D model will appear here.</p>
@@ -33,9 +33,13 @@ HTML_PLACEHOLDER = """
 CSS_STYLES = """
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
     
-    .gradio-container { font-family: 'Inter', system-ui, sans-serif !important; }
+    .gradio-container { font-family: 'Inter', system-ui, sans-serif !important; min-height: 0 !important; }
     
     .app.svelte-wpkpf6.svelte-wpkpf6:not(.fill_width) { max-width: 100% !important; padding: 0 20px; }
+    
+    #tab_img_prompt { padding: 0 !important; }
+    #tab_txt_prompt { padding: 0 !important; }
+    #tab_mv_prompt { padding: 0 !important; }
     
     /* Buttons */
     button.primary { 

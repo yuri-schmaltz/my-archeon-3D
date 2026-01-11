@@ -130,22 +130,20 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                 model_key = gr.Dropdown(label="Model Category", choices=["Normal", "Small", "Multiview"], value="Normal")
                 with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
                     with gr.Tab('Image Prompt', id='tab_img_prompt') as tab_ip:
-                        image = gr.Image(label='Image', type='pil', image_mode='RGBA', height=290)
+                        image = gr.Image(label='Image', type='pil', image_mode='RGBA', height=250)
                     with gr.Tab('Text Prompt', id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
                         caption = gr.Textbox(label='Text Prompt', placeholder='HunyuanDiT will be used to generate image.')
                     with gr.Tab('MultiView Prompt', id='tab_mv_prompt', visible=False) as tab_mv_p:
                         with gr.Row():
-                            mv_image_front = gr.Image(label='Front', type='pil', image_mode='RGBA', height=140)
-                            mv_image_back = gr.Image(label='Back', type='pil', image_mode='RGBA', height=140)
+                            mv_image_front = gr.Image(label='Front', type='pil', image_mode='RGBA', height=120)
+                            mv_image_back = gr.Image(label='Back', type='pil', image_mode='RGBA', height=120)
                         with gr.Row():
-                            mv_image_left = gr.Image(label='Left', type='pil', image_mode='RGBA', height=140)
-                            mv_image_right = gr.Image(label='Right', type='pil', image_mode='RGBA', height=140)
+                            mv_image_left = gr.Image(label='Left', type='pil', image_mode='RGBA', height=120)
+                            mv_image_right = gr.Image(label='Right', type='pil', image_mode='RGBA', height=120)
                 with gr.Row():
                     btn = gr.Button(value='Gen Shape', variant='primary')
                     btn_all = gr.Button(value='Gen Textured Shape', variant='primary', visible=HAS_TEXTUREGEN)
-                with gr.Group():
-                    file_out = gr.File(label="Download .glb", visible=True)
-                    file_out2 = gr.File(label="Download Textured .glb", visible=True)
+
                 with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
                     with gr.Tab("Options", id='tab_options', visible=TURBO_MODE):
                         gen_mode = gr.Radio(label='Generation Mode', choices=['Turbo', 'Fast', 'Standard'], value='Turbo')
@@ -165,6 +163,9 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                 with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
                     with gr.Tab('Generated Mesh', id='gen_mesh_panel'):
                         html_gen_mesh = gr.HTML(HTML_PLACEHOLDER, label='Output')
+                        with gr.Row():
+                            file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
+                            file_out2 = gr.DownloadButton(label="Download Textured .glb", variant='primary', visible=True)
                     with gr.Tab('Mesh Statistic', id='stats_panel'):
                         stats = gr.Json({}, label='Mesh Stats')
             # User Gallery removed for Wave 1 fixes (Non-functional)
@@ -186,6 +187,7 @@ def main():
     parser.add_argument('--enable_t23d', action='store_true')
     parser.add_argument('--disable_tex', action='store_true')
     parser.add_argument('--low_vram_mode', action='store_true')
+    parser.add_argument('--no-browser', action='store_true', help='Do not open the browser automatically')
     args = parser.parse_args()
     SAVE_DIR = args.cache_path
     os.makedirs(SAVE_DIR, exist_ok=True)
@@ -210,7 +212,10 @@ def main():
     app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
     demo = build_app()
     app = gr.mount_gradio_app(app, demo, path="/")
-    print(f"\nHunyuan3D-2 Pro Unified is running at: http://{args.host}:{args.port}\n")
+    url = f"http://{args.host}:{args.port}"
+    print(f"\nHunyuan3D-2 Pro Unified is running at: {url}\n")
+    if not args.no_browser:
+        webbrowser.open(url)
     uvicorn.run(app, host=args.host, port=args.port, workers=1)
 
 if __name__ == '__main__':

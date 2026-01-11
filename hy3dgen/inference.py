@@ -28,7 +28,8 @@ class InferencePipeline:
                  enable_t2i: bool = False,
                  enable_tex: bool = False,
                  use_flashvdm: bool = True,
-                 mc_algo: str = 'mc'):
+                 mc_algo: str = 'mc',
+                 low_vram_mode: bool = False):
         
         self.device = device
         self.rembg = BackgroundRemover()
@@ -44,6 +45,10 @@ class InferencePipeline:
         if use_flashvdm:
             self.pipeline.enable_flashvdm(mc_algo=mc_algo)
 
+        if low_vram_mode:
+            logger.info("Enabling CPU offload for ShapeGen model...")
+            self.pipeline.enable_model_cpu_offload()
+
         self.pipeline_t2i = None
         if enable_t2i:
             logger.info("Loading Text2Image model...")
@@ -51,11 +56,17 @@ class InferencePipeline:
                 'Tencent-Hunyuan/HunyuanDiT-v1.1-Diffusers-Distilled',
                 device=device
             )
+            if low_vram_mode:
+                logger.info("Enabling CPU offload for Text2Image model...")
+                self.pipeline_t2i.pipe.enable_model_cpu_offload()
 
         self.pipeline_tex = None
         if enable_tex:
             logger.info(f"Loading TexGen model from {tex_model_path}...")
             self.pipeline_tex = Hunyuan3DPaintPipeline.from_pretrained(tex_model_path)
+            if low_vram_mode:
+                logger.info("Enabling CPU offload for TexGen model...")
+                self.pipeline_tex.enable_model_cpu_offload()
 
         # Helper workers
         self.floater_remover = FloaterRemover()

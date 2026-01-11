@@ -99,12 +99,21 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
     seed = int(randomize_seed_fn(seed, randomize_seed))
     # Progress callback bridge
     # Progress callback bridge
+    # Progress callback bridge
     def gradio_progress_callback(percent, message):
         logger.info(f"Progress update: {percent}% - {message}")
         try:
-            progress(percent / 100.0, desc=message)
+            # Ensure float 0.0-1.0
+            p = max(0.0, min(1.0, float(percent) / 100.0))
+            progress(p, desc=message)
         except Exception as e:
-            logger.error(f"Progress update failed: {e}")
+            logger.warning(f"Progress UI update failed (likely thread context): {e}")
+
+    # Force init progress bar
+    try:
+        progress(0.0, desc="Initializing...")
+    except:
+        pass
 
     params = {
         'model_key': model_key,

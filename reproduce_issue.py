@@ -35,7 +35,8 @@ def test_generation():
             subfolder=subfolder,
             device=device,
             enable_t2i=True,
-            enable_tex=False
+            enable_tex=False,
+            low_vram_mode=True
         )
         logger.info("Pipeline loaded successfully.")
     except Exception as e:

@@ -57,11 +57,11 @@ def gen_save_folder():
     os.makedirs(new_folder, exist_ok=True)
     return new_folder
 
-def export_mesh(mesh, save_folder, textured=False, type='glb'):
+def export_mesh(mesh, save_folder, textured=False, file_type='glb'):
     if textured:
-        path = os.path.join(save_folder, f'textured_mesh.{type}')
+        path = os.path.join(save_folder, f'textured_mesh.{file_type}')
     else:
-        path = os.path.join(save_folder, f'white_mesh.{type}')
+        path = os.path.join(save_folder, f'white_mesh.{file_type}')
     
     # Handle Latent2MeshOutput object - convert to trimesh
     if hasattr(mesh, 'mesh_v') and hasattr(mesh, 'mesh_f'):
@@ -71,20 +71,23 @@ def export_mesh(mesh, save_folder, textured=False, type='glb'):
     # For textured meshes, preserve existing visual/texture data
     if not textured:
         import numpy as np
+        # Create a copy to avoid modifying the original mesh
+        mesh = mesh.copy()
         # Create white vertex colors with full opacity
-        # Use ColorVisuals with face colors for better compatibility
         white_color = np.array([255, 255, 255, 255], dtype=np.uint8)
         mesh.visual = trimesh.visual.ColorVisuals(mesh=mesh)
         # Set face colors (more reliable than vertex colors)
         mesh.visual.face_colors = np.tile(white_color, (len(mesh.faces), 1))
     else:
-        # For textured mesh, ensure visual is properly set
-        # The mesh should already have textures from the paint pipeline
-        logger.info(f"Exporting textured mesh with visual type: {type(mesh.visual) if hasattr(mesh, 'visual') else 'None'}")
+        # For textured mesh, preserve existing visual/texture data
+        # Log the visual type for debugging
+        visual_type = mesh.visual.__class__.__name__ if hasattr(mesh, 'visual') else 'None'
+        logger.info(f"Exporting textured mesh with visual type: {visual_type}")
         if hasattr(mesh, 'visual') and mesh.visual is not None:
-            logger.info(f"Visual has texture: {hasattr(mesh.visual, 'image') and mesh.visual.image is not None}")
+            has_image = hasattr(mesh.visual, 'image') and mesh.visual.image is not None
+            logger.info(f"Visual has texture image: {has_image}")
     
-    if type not in ['glb', 'obj']:
+    if file_type not in ['glb', 'obj']:
         mesh.export(path)
     else:
         # Use include_normals=True for better geometry quality in GLB

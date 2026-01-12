@@ -68,19 +68,29 @@ def export_mesh(mesh, save_folder, textured=False, type='glb'):
         mesh = trimesh.Trimesh(vertices=mesh.mesh_v, faces=mesh.mesh_f)
     
     # For non-textured meshes, apply white material
+    # For textured meshes, preserve existing visual/texture data
     if not textured:
-        # Create white vertex colors
-        if not hasattr(mesh, 'visual') or mesh.visual is None:
-            mesh.visual = trimesh.visual.ColorVisuals()
-        if not hasattr(mesh.visual, 'vertex_colors') or mesh.visual.vertex_colors is None or len(mesh.visual.vertex_colors) == 0:
-            import numpy as np
-            # Set white color for all vertices (R, G, B, A)
-            mesh.visual.vertex_colors = np.ones((len(mesh.vertices), 4)) * [220, 220, 220, 255]
+        import numpy as np
+        # Create white vertex colors with full opacity
+        # Use ColorVisuals with face colors for better compatibility
+        white_color = np.array([255, 255, 255, 255], dtype=np.uint8)
+        mesh.visual = trimesh.visual.ColorVisuals(mesh=mesh)
+        # Set face colors (more reliable than vertex colors)
+        mesh.visual.face_colors = np.tile(white_color, (len(mesh.faces), 1))
+    else:
+        # For textured mesh, ensure visual is properly set
+        # The mesh should already have textures from the paint pipeline
+        logger.info(f"Exporting textured mesh with visual type: {type(mesh.visual) if hasattr(mesh, 'visual') else 'None'}")
+        if hasattr(mesh, 'visual') and mesh.visual is not None:
+            logger.info(f"Visual has texture: {hasattr(mesh.visual, 'image') and mesh.visual.image is not None}")
     
     if type not in ['glb', 'obj']:
         mesh.export(path)
     else:
+        # Use include_normals=True for better geometry quality in GLB
         mesh.export(path, include_normals=True)
+    
+    logger.info(f"Exported {'textured' if textured else 'white'} mesh to {path}")
     return path
 
 def randomize_seed_fn(seed: int, randomize_seed: bool) -> int:

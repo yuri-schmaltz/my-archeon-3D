@@ -220,15 +220,31 @@ class InferencePipeline:
         if params.get("do_texture", False) and self.pipeline_tex:
             report_progress(85, "Generating Texture...")
             logger.info(f"[{uid}] Generating texture...")
+            logger.info(f"[{uid}] Mesh before texturing: {len(mesh.vertices)} verts, {len(mesh.faces)} faces")
+            
             # Further optimization for texture generation
             try:
                 mesh = self.face_reducer(mesh, max_facenum=params.get("target_face_num", 40000))
+                logger.info(f"[{uid}] Mesh after face reduction: {len(mesh.vertices)} verts, {len(mesh.faces)} faces")
             except Exception as e:
                 logger.warning(f"[{uid}] Face reduction warning: {e}")
             
-            t1 = time.time()
-            textured_mesh = self.pipeline_tex(mesh, image)
-            stats['time']['tex_gen'] = time.time() - t1
+            try:
+                t1 = time.time()
+                textured_mesh = self.pipeline_tex(mesh, image)
+                stats['time']['tex_gen'] = time.time() - t1
+                logger.info(f"[{uid}] Texture generation completed in {stats['time']['tex_gen']:.2f}s")
+                logger.info(f"[{uid}] Textured mesh type: {type(textured_mesh)}")
+                if hasattr(textured_mesh, 'visual'):
+                    logger.info(f"[{uid}] Textured mesh visual type: {type(textured_mesh.visual)}")
+                    if hasattr(textured_mesh.visual, 'image'):
+                        logger.info(f"[{uid}] Textured mesh has image: {textured_mesh.visual.image is not None}")
+                    if hasattr(textured_mesh.visual, 'uv'):
+                        logger.info(f"[{uid}] Textured mesh has UV: {textured_mesh.visual.uv is not None}")
+            except Exception as e:
+                logger.error(f"[{uid}] Texture generation FAILED: {e}", exc_info=True)
+                # Return untextured mesh if texturing fails
+                textured_mesh = None
         
         stats['time']['total'] = time.time() - t0
         report_progress(100, "Generation Complete!")

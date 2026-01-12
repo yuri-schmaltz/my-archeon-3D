@@ -19,7 +19,15 @@ HTML_TEMPLATE_MODEL_VIEWER = """
                 background: radial-gradient(circle at 50% 50%, #1f2937 0%, #111827 100%);
             }
         }
-        model-viewer { width: 100%; height: 100%; --progress-bar-color: #6366f1; }
+        model-viewer { 
+            width: 100%; 
+            height: 100%; 
+            --progress-bar-color: #6366f1; 
+        }
+        model-viewer::part(default-progress-bar) {
+            height: 4px;
+            background-color: #6366f1;
+        }
     </style>
 </head>
 <body>
@@ -27,14 +35,31 @@ HTML_TEMPLATE_MODEL_VIEWER = """
                   alt="Hunyuan3D Model" 
                   auto-rotate 
                   camera-controls 
-                  shadow-intensity="1" 
-                  exposure="1.2" 
+                  shadow-intensity="0.8" 
+                  exposure="1.5" 
+                  tone-mapping="neutral"
                   environment-image="neutral"
-                  skybox-image=""
                   interaction-prompt="auto"
                   ar
                   ar-modes="webxr scene-viewer quick-look">
+        <div slot="progress-bar" style="display: none;"></div>
     </model-viewer>
+    <script>
+        const modelViewer = document.querySelector('model-viewer');
+        modelViewer.addEventListener('load', () => {
+            // Force white material for models without textures
+            const model = modelViewer.model;
+            if (model && model.materials) {
+                model.materials.forEach(material => {
+                    if (!material.pbrMetallicRoughness.baseColorTexture) {
+                        material.pbrMetallicRoughness.setBaseColorFactor([1.0, 1.0, 1.0, 1.0]);
+                        material.pbrMetallicRoughness.setRoughnessFactor(0.5);
+                        material.pbrMetallicRoughness.setMetallicFactor(0.0);
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
 """

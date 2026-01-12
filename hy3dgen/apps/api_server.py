@@ -42,6 +42,7 @@ import prometheus_client
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 from hy3dgen.shapegen.utils import get_logger
+from hy3dgen.rembg import BackgroundRemover
 logger = get_logger("api_server")
 
 server_error_msg = "**NETWORK ERROR DUE TO HIGH TRAFFIC. PLEASE REGENERATE OR REFRESH THIS PAGE.**"
@@ -58,9 +59,24 @@ GENERATION_COUNT = Counter('app_generation_total', 'Total generations', ['status
 
 # Global Manager
 request_manager = None
+rembg_processor = None
 
 def load_image_from_base64(image):
     return Image.open(BytesIO(base64.b64decode(image)))
+
+def apply_rembg(image):
+    """Apply background removal to image if needed"""
+    global rembg_processor
+    if rembg_processor is None:
+        rembg_processor = BackgroundRemover()
+    
+    # Convert to RGBA if needed
+    if image.mode != 'RGBA':
+        image = image.convert('RGBA')
+    
+    # Apply rembg
+    image = rembg_processor(image)
+    return image
 
 app = FastAPI()
 from fastapi.middleware.cors import CORSMiddleware
@@ -151,7 +167,11 @@ async def generate(request: GenerateRequest, username: str = Depends(authenticat
     params["model_key"] = params.pop("model")
     
     if params.get("image"):
-        params["image"] = load_image_from_base64(params["image"])
+        # Load image from base64
+        image = load_image_from_base64(params["image"])
+        # Apply background removal
+        image = apply_rembg(image)
+        params["image"] = image
     
     if params.get("texture"):
         params["do_texture"] = True
@@ -169,6 +189,10 @@ async def generate(request: GenerateRequest, username: str = Depends(authenticat
         type_ = params.get('type', 'glb')
         
         mesh_to_save = result.get('textured_mesh') if params.get('do_texture') else result.get('mesh')
+        
+        # Handle Latent2MeshOutput object
+        if hasattr(mesh_to_save, 'mesh'):
+            mesh_to_save = mesh_to_save.mesh
         
         os.makedirs(SAVE_DIR, exist_ok=True)
         save_path = os.path.join(SAVE_DIR, f'{str(uid)}.{type_}')
@@ -222,6 +246,8 @@ def main():
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--limit-model-concurrency", type=int, default=5)
     parser.add_argument('--enable_tex', action='store_true')
+    parser.add_argument('--enable_t2i', action='store_true', help='Enable Text2Image pipeline (requires additional VRAM)')
+    parser.add_argument('--low_vram_mode', action='store_true', default=True, help='Enable low VRAM mode with CPU offload')
     args = parser.parse_args()
     logger.info(f"[req_id={get_request_id()}] args: {args}")
 
@@ -233,8 +259,9 @@ def main():
             tex_model_path=args.tex_model_path,
             subfolder=subfolder,
             device=args.device,
-            enable_t2i=True,
-            enable_tex=args.enable_tex
+            enable_t2i=args.enable_t2i,
+            enable_tex=args.enable_tex,
+            low_vram_mode=args.low_vram_mode
         )
 
     model_mgr.register_model("Normal", get_loader("tencent/Hunyuan3D-2", "hunyuan3d-dit-v2-0-turbo"))

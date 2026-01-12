@@ -1,22 +1,16 @@
-# Hunyuan 3D is licensed under the TENCENT HUNYUAN NON-COMMERCIAL LICENSE AGREEMENT
-# except for the third-party components listed below.
-# Hunyuan 3D does not impose any additional limitations beyond what is outlined
-# in the repsective licenses of these third-party components.
-# Users must comply with all terms and conditions of original licenses of these third-party
-# components and must ensure that the usage of the third party components adheres to
-# all relevant laws and regulations.
+# Package init: load compiled extension and helpers
+import os
+import sys
+import importlib
 
-# For avoidance of doubts, Hunyuan 3D means the large language models and
-# their software and algorithms, including trained model weights, parameters (including
-# optimizer states), machine-learning model code, inference-enabling code, training-enabling code,
-# fine-tuning enabling code and other elements of the foregoing made publicly available
-# by Tencent in accordance with TENCENT HUNYUAN COMMUNITY LICENSE AGREEMENT.
+_pkg_dir = os.path.dirname(__file__)
+_parent_dir = os.path.dirname(_pkg_dir)
+if _parent_dir not in sys.path:
+    sys.path.insert(0, _parent_dir)
 
-'''
-from .hierarchy import BuildHierarchy, BuildHierarchyWithColor
-from .io_obj import LoadObj, LoadObjWithTexture
-from .render import rasterize, interpolate
-'''
+# Load compiled extension module (custom_rasterizer_kernel*.so)
+custom_rasterizer_kernel = importlib.import_module("custom_rasterizer_kernel")
+
 from .io_glb import *
 from .io_obj import *
 from .render import *

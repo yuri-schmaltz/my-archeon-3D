@@ -62,10 +62,25 @@ def export_mesh(mesh, save_folder, textured=False, type='glb'):
         path = os.path.join(save_folder, f'textured_mesh.{type}')
     else:
         path = os.path.join(save_folder, f'white_mesh.{type}')
+    
+    # Handle Latent2MeshOutput object - convert to trimesh
+    if hasattr(mesh, 'mesh_v') and hasattr(mesh, 'mesh_f'):
+        mesh = trimesh.Trimesh(vertices=mesh.mesh_v, faces=mesh.mesh_f)
+    
+    # For non-textured meshes, apply white material
+    if not textured:
+        # Create white vertex colors
+        if not hasattr(mesh, 'visual') or mesh.visual is None:
+            mesh.visual = trimesh.visual.ColorVisuals()
+        if not hasattr(mesh.visual, 'vertex_colors') or mesh.visual.vertex_colors is None or len(mesh.visual.vertex_colors) == 0:
+            import numpy as np
+            # Set white color for all vertices (R, G, B, A)
+            mesh.visual.vertex_colors = np.ones((len(mesh.vertices), 4)) * [220, 220, 220, 255]
+    
     if type not in ['glb', 'obj']:
         mesh.export(path)
     else:
-        mesh.export(path, include_normals=textured)
+        mesh.export(path, include_normals=True)
     return path
 
 def randomize_seed_fn(seed: int, randomize_seed: bool) -> int:
@@ -98,23 +113,44 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
         if mv_image_left: mv_images['left'] = mv_image_left
         if mv_image_right: mv_images['right'] = mv_image_right
     seed = int(randomize_seed_fn(seed, randomize_seed))
-    # Progress callback bridge
-    # Progress callback bridge
-    # Progress callback bridge
+    
+    # Thread-safe progress tracking
+    import queue
+    import threading
+    progress_queue = queue.Queue()
+    progress_lock = threading.Lock()
+    last_progress = {'percent': 0.0, 'message': 'Starting...'}
+    stop_updater = {'value': False}  # Usar dict para permitir modificação em closure
+    
     def gradio_progress_callback(percent, message):
+        """Thread-safe callback que funciona mesmo quando chamado de executors"""
         logger.info(f"Progress update: {percent}% - {message}")
-        try:
-            # Ensure float 0.0-1.0
-            p = max(0.0, min(1.0, float(percent) / 100.0))
-            progress(p, desc=message)
-        except Exception as e:
-            logger.warning(f"Progress UI update failed (likely thread context): {e}")
+        with progress_lock:
+            last_progress['percent'] = percent
+            last_progress['message'] = message
+        progress_queue.put((percent, message))
 
+    # Background task para processar atualizações de progresso
+    async def progress_updater():
+        while not stop_updater['value']:
+            try:
+                percent, message = progress_queue.get(timeout=0.1)
+                p = max(0.0, min(1.0, float(percent) / 100.0))
+                try:
+                    progress(p, desc=message)
+                except Exception as e:
+                    logger.debug(f"Gradio progress() call failed: {e}")
+            except queue.Empty:
+                await asyncio.sleep(0.05)
+            except Exception as e:
+                logger.debug(f"Progress update error: {e}")
+                await asyncio.sleep(0.05)
+    
+    # Inicia o updater em background
+    updater_task = asyncio.create_task(progress_updater())
+    
     # Force init progress bar
-    try:
-        progress(0.0, desc="Initializing...")
-    except:
-        pass
+    progress(0.0, desc="Initializing...")
 
     params = {
         'model_key': model_key,
@@ -145,8 +181,18 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
     logger.info(f"PARAMS: {json.dumps(log_params, indent=2, default=str)}")
     logger.info(f"==================================================")
 
-    result = await request_manager.submit(params)
-    mesh, stats = result["mesh"], result["stats"]
+    try:
+        result = await request_manager.submit(params)
+        mesh, stats = result["mesh"], result["stats"]
+    finally:
+        # Para o progress updater
+        stop_updater['value'] = True
+        updater_task.cancel()
+        try:
+            await updater_task
+        except asyncio.CancelledError:
+            pass
+    
     save_folder = gen_save_folder()
     
     path_white = export_mesh(mesh, save_folder, textured=False)
@@ -281,7 +327,7 @@ def main():
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--cache-path', type=str, default='gradio_cache')
     parser.add_argument('--enable_t23d', action='store_true')
-    parser.add_argument('--disable_tex', action='store_true')
+    parser.add_argument('--disable_tex', action='store_true', help='Disable texture generation (avoids custom_rasterizer requirement)')
     parser.add_argument('--low_vram_mode', action='store_true')
     parser.add_argument('--no-browser', action='store_true', help='Do not open the browser automatically')
     args = parser.parse_args()
@@ -289,6 +335,9 @@ def main():
     os.makedirs(SAVE_DIR, exist_ok=True)
     HAS_T2I = args.enable_t23d
     HAS_TEXTUREGEN = not args.disable_tex
+    
+    if args.disable_tex:
+        logger.info("Texturization disabled (custom_rasterizer not required)")
 
     model_mgr = ModelManager(capacity=1 if args.low_vram_mode else 3, device=args.device)
     def get_loader(model_path, subfolder):
@@ -301,10 +350,18 @@ def main():
 
     model_mgr.register_model("Multiview", get_loader("tencent/Hunyuan3D-2mv", "hunyuan3d-dit-v2-mv-turbo"))
     request_manager = PriorityRequestManager(model_mgr, max_concurrency=1)
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.create_task(request_manager.start())
+    
+    # Cria a aplicação FastAPI
     app = FastAPI()
+    
+    # Inicia o manager na montagem da aplicação
+    @app.on_event("startup")
+    async def startup_event():
+        """Inicia o request manager quando a aplicação FastAPI sobe"""
+        logger.info("Starting PriorityRequestManager...")
+        asyncio.create_task(request_manager.start())
+        logger.info("PriorityRequestManager started successfully")
+    
     static_dir = Path(SAVE_DIR).absolute()
     app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
     demo = build_app()

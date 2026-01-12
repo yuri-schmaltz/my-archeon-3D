@@ -28,7 +28,9 @@ HTML_TEMPLATE_MODEL_VIEWER = """
                   auto-rotate 
                   camera-controls 
                   shadow-intensity="1" 
-                  exposure="0.9" 
+                  exposure="1.2" 
+                  environment-image="neutral"
+                  skybox-image=""
                   interaction-prompt="auto"
                   ar
                   ar-modes="webxr scene-viewer quick-look">

@@ -202,24 +202,29 @@ class InferencePipeline:
         stats['time']['shape_gen'] = time.time() - t1
         print(f"[{uid}] Shape generation done in {stats['time']['shape_gen']:.2f}s", flush=True)
 
-        # Post-processing (always do basic cleanup?) 
-        # API did it only if texturing? Grado does it optionally?
-        # Let's clean up a bit if requested
-        if params.get("reduce_face", False):
-             report_progress(80, "Optimizing Mesh...")
-             mesh = self.floater_remover(mesh)
-             mesh = self.degenerate_remover(mesh)
-             
+        # Convert Latent2MeshOutput to trimesh if needed
+        if hasattr(mesh, 'mesh_v') and hasattr(mesh, 'mesh_f'):
+            mesh = trimesh.Trimesh(vertices=mesh.mesh_v, faces=mesh.mesh_f)
+            logger.info(f"[{uid}] Converted Latent2MeshOutput to trimesh")
+
+        # Post-processing: Always apply basic cleanup for better quality
+        report_progress(75, "Cleaning Mesh...")
+        try:
+            mesh = self.floater_remover(mesh)
+            mesh = self.degenerate_remover(mesh)
+        except Exception as e:
+            logger.warning(f"[{uid}] Mesh cleanup warning: {e}")
         
         # 3. Texturing (Optional)
         textured_mesh = None
         if params.get("do_texture", False) and self.pipeline_tex:
             report_progress(85, "Generating Texture...")
             logger.info(f"[{uid}] Generating texture...")
-            # Usually require cleanup before texturing
-            mesh = self.floater_remover(mesh)
-            mesh = self.degenerate_remover(mesh)
-            mesh = self.face_reducer(mesh, max_facenum=params.get("target_face_num", 40000))
+            # Further optimization for texture generation
+            try:
+                mesh = self.face_reducer(mesh, max_facenum=params.get("target_face_num", 40000))
+            except Exception as e:
+                logger.warning(f"[{uid}] Face reduction warning: {e}")
             
             t1 = time.time()
             textured_mesh = self.pipeline_tex(mesh, image)

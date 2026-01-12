@@ -42,8 +42,9 @@ class Benchmark:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        print(f"[BENCHMARK] {self.name}: {self.end - self.start:.2f}s")
         self.end = time.time()
+        duration = (self.end - self.start) if self.start is not None else 0.0
+        print(f"[BENCHMARK] {self.name}: {duration:.2f}s")
 
 
 class Hunyuan3DTexGenConfig:

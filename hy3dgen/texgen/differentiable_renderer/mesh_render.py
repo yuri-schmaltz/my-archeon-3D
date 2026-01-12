@@ -19,6 +19,13 @@ import torch.nn.functional as F
 import trimesh
 from PIL import Image
 
+# Ensure custom_rasterizer package (and compiled .so) is on sys.path
+import sys
+import os
+_cr_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "custom_rasterizer"))
+if _cr_dir not in sys.path:
+    sys.path.insert(0, _cr_dir)
+
 from .camera_utils import (
     transform_pos,
     get_mv_matrix,

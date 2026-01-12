@@ -190,9 +190,9 @@ async def generate(request: GenerateRequest, username: str = Depends(authenticat
         
         mesh_to_save = result.get('textured_mesh') if params.get('do_texture') else result.get('mesh')
         
-        # Handle Latent2MeshOutput object
-        if hasattr(mesh_to_save, 'mesh'):
-            mesh_to_save = mesh_to_save.mesh
+        # Handle Latent2MeshOutput object - convert to trimesh
+        if hasattr(mesh_to_save, 'mesh_v') and hasattr(mesh_to_save, 'mesh_f'):
+            mesh_to_save = trimesh.Trimesh(vertices=mesh_to_save.mesh_v, faces=mesh_to_save.mesh_f)
         
         os.makedirs(SAVE_DIR, exist_ok=True)
         save_path = os.path.join(SAVE_DIR, f'{str(uid)}.{type_}')

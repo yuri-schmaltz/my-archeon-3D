@@ -18,12 +18,7 @@ A model worker executes the model.
 import argparse
 import asyncio
 import base64
-import logging
-import logging.handlers
 import os
-import sys
-import tempfile
-import threading
 import traceback
 import uuid
 from io import BytesIO
@@ -35,10 +30,9 @@ from PIL import Image
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel, Field
-from typing import Optional, Union
+from typing import Optional
 from hy3dgen.manager import PriorityRequestManager, ModelManager
 from hy3dgen.inference import InferencePipeline
-import prometheus_client
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 from hy3dgen.shapegen.utils import get_logger

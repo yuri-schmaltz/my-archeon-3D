@@ -19,15 +19,10 @@ import numpy as np
 import torch
 import torch.distributed
 import torch.utils.checkpoint
-import transformers
 from PIL import Image
-import diffusers
 from diffusers import (
     AutoencoderKL,
-    DDPMScheduler,
     DiffusionPipeline,
-    EulerAncestralDiscreteScheduler,
-    UNet2DConditionModel,
     ImagePipelineOutput
 )
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
@@ -36,10 +31,10 @@ from diffusers.image_processor import VaeImageProcessor
 from diffusers.pipelines.stable_diffusion.pipeline_output import StableDiffusionPipelineOutput
 from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion import StableDiffusionPipeline, \
     retrieve_timesteps, rescale_noise_cfg
-from diffusers.schedulers import KarrasDiffusionSchedulers, LCMScheduler
+from diffusers.schedulers import KarrasDiffusionSchedulers
 from diffusers.utils import deprecate
 from einops import rearrange
-from transformers import CLIPImageProcessor, CLIPTextModel, CLIPTokenizer, CLIPVisionModelWithProjection
+from transformers import CLIPImageProcessor, CLIPTextModel, CLIPTokenizer
 
 from .unet.modules import UNet2p5DConditionModel, \
     compute_multi_resolution_mask, compute_multi_resolution_discrete_voxel_indice

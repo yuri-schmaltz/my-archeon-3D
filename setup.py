@@ -18,19 +18,19 @@ all_reqs = read_requirements(here / "requirements.txt")
 
 # Core inference requirements (subset for basic usage)
 core_reqs = [
-    "numpy",
-    "torch",
-    "torchvision",
-    "diffusers",
-    "transformers>=4.48.0",
-    "einops",
-    "opencv-python",
-    "tqdm>=4.66.3",
-    "omegaconf",
-    "ninja",
-    "pybind11",
-    "trimesh",
-    "pillow",
+    "numpy>=2.2.0,<2.3.0",
+    "torch>=2.9.0",
+    "torchvision>=0.24.0",
+    "diffusers>=0.36.0",
+    "transformers>=4.57.0",
+    "einops>=0.8.0",
+    "opencv-python>=4.12.0",
+    "tqdm>=4.67.0",
+    "omegaconf>=2.3.0",
+    "ninja>=1.13.0",
+    "pybind11>=3.0.0",
+    "trimesh>=4.11.0",
+    "pillow>=12.0.0",
 ]
 
 # Map categories from requirements.txt to extras

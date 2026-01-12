@@ -1,11 +1,10 @@
 import asyncio
-import logging
 import uuid
 import time
 import torch
 import threading
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Dict, Callable
 from hy3dgen.shapegen.utils import get_logger
 
 logger = get_logger("manager")

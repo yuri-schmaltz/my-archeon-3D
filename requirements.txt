@@ -1,53 +1,53 @@
 ninja
 pybind11
-diffusers
-einops
-opencv-python
-numpy
-torch
-transformers
-torchvision
-omegaconf
-tqdm
+diffusers>=0.36.0
+einops>=0.8.0
+opencv-python>=4.12.0
+numpy>=2.2.0,<2.3.0
+torch>=2.9.0
+transformers>=4.57.0
+torchvision>=0.24.0
+omegaconf>=2.3.0
+tqdm>=4.67.0
 
 # Mesh Processing
-trimesh
-pymeshlab
-pygltflib
+trimesh>=4.11.0
+pymeshlab>=2025.0
+pygltflib>=1.16.0
 xatlas
 
 # Training
-accelerate
+accelerate>=1.12.0
 
 # Demo and API Server
-gradio
-fastapi
-uvicorn
-onnxruntime
-pydantic
-prometheus-client
-rembg
+gradio>=6.3.0
+fastapi>=0.128.0
+uvicorn>=0.40.0
+onnxruntime>=1.23.0
+pydantic>=2.12.0
+prometheus-client>=0.23.0
+rembg>=2.0.69
 
 # Development and Testing
-pytest
-httpx
-ruff
-coverage
+pytest>=9.0.0
+httpx>=0.28.0
+ruff>=0.14.0
+coverage>=7.13.0
 
 # Documentation
-myst-parser
-sphinx-rtd-theme
-furo
-sphinx-copybutton
-sphinx-inline-tabs
-nbsphinx
-nbsphinx_link
-linkify-it-py
-linkify
-ipython
-imageio
-scikit_image
-matplotlib
+myst-parser>=4.0.0
+sphinx-rtd-theme>=3.0.0
+furo>=2025.12.0
+sphinx-copybutton>=0.5.0
+sphinx-inline-tabs>=2025.12.0
+nbsphinx>=0.9.0
+nbsphinx_link>=1.3.0
+linkify-it-py>=2.0.0
+linkify>=1.4.0
+ipython>=9.9.0
+imageio>=2.37.0
+scikit_image>=0.26.0
+matplotlib>=3.10.0
 munch
 cvxpy
 tensorboardX

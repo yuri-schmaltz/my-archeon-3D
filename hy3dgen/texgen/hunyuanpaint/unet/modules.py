@@ -15,11 +15,10 @@
 import copy
 import json
 import os
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from diffusers.models import UNet2DConditionModel
 from diffusers.models.attention_processor import Attention
 from diffusers.models.transformers.transformer_2d import BasicTransformerBlock

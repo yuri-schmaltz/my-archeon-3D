@@ -24,7 +24,6 @@ import time
 from .differentiable_renderer.mesh_render import MeshRender
 from .utils.dehighlight_utils import Light_Shadow_Remover
 from .utils.multiview_utils import Multiview_Diffusion_Net
-from .utils.imagesuper_utils import Image_Super_Net
 from .utils.uv_warp_utils import mesh_uv_wrap
 
 logger = logging.getLogger(__name__)

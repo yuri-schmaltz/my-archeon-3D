@@ -1,11 +1,8 @@
-import os
 import time
 import torch
 import logging
 import trimesh
-import base64
-from io import BytesIO
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 from hy3dgen.rembg import BackgroundRemover
 from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline, FloaterRemover, DegenerateFaceRemover, FaceReducer

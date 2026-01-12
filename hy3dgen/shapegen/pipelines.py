@@ -124,7 +124,7 @@ def instantiate_from_config(config, **kwargs):
     try:
         target = config['target']
         cls = get_obj_from_str(target)
-    except Exception as e:
+    except Exception:
         target = config['target'].replace("hy3dshape", "hy3dgen.shapegen")
         cls = get_obj_from_str(target)
     params = config.get("params", dict())

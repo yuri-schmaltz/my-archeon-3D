@@ -185,7 +185,7 @@ def LoadGlb(path):
                     result['VC'] = colors
 
                 # Extract UVs
-                if 'TEXCOORD_0' in attributes and not attributes['TEXCOORD_0'] is None:
+                if 'TEXCOORD_0' in attributes and attributes['TEXCOORD_0'] is not None:
                     uvs = get_attribute_data(gltf, attributes['TEXCOORD_0'])
                     result['UV'] = uvs
 
@@ -198,7 +198,7 @@ def LoadGlb(path):
                         texture_index = material.pbrMetallicRoughness.baseColorTexture.index
                         texture = gltf.textures[texture_index]
                         image_index = texture.source
-                        if not image_index in images:
+                        if image_index not in images:
                             image = gltf.images[image_index]
                             image_data = get_image_data(gltf, image, os.path.dirname(path))
                             pil_image = PILImage.open(io.BytesIO(image_data))
@@ -210,7 +210,7 @@ def LoadGlb(path):
                         texture_index = material.emissiveTexture.index
                         texture = gltf.textures[texture_index]
                         image_index = texture.source
-                        if not image_index in images:
+                        if image_index not in images:
                             image = gltf.images[image_index]
                             image_data = get_image_data(gltf, image, os.path.dirname(path))
                             pil_image = PILImage.open(io.BytesIO(image_data))

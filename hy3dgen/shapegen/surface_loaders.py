@@ -74,7 +74,7 @@ def sharp_sample_pointcloud(mesh, num=16384):
 def load_surface_sharpegde(mesh, num_points=4096, num_sharp_points=4096, sharpedge_flag=True):
     try:
         mesh_full = trimesh.util.concatenate(mesh.dump())
-    except Exception as err:
+    except Exception:
         mesh_full = trimesh.util.concatenate(mesh)
     mesh_full = normalize_mesh(mesh_full)
 

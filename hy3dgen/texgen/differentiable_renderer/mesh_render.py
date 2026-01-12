@@ -201,7 +201,7 @@ class MeshRender():
                        boundary_mode='wrap', max_mip_level=None):
 
         if self.raster_mode == 'cr':
-            raise f'Texture is not implemented in cr'
+            raise 'Texture is not implemented in cr'
         else:
             raise f'No raster named {self.raster_mode}'
 

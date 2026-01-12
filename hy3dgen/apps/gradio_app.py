@@ -15,15 +15,14 @@
 import os
 import random
 import asyncio
-import shutil
 import uuid
 import webbrowser
 import argparse
 import json
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import gradio as gr
-import torch
 import trimesh
 import uvicorn
 from fastapi import FastAPI
@@ -108,11 +107,11 @@ def randomize_seed_fn(seed: int, randomize_seed: bool) -> int:
 
 def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
     if textured:
-        related_path = f"./textured_mesh.glb"
-        output_html_path = os.path.join(save_folder, f'textured_mesh.html')
+        related_path = "./textured_mesh.glb"
+        output_html_path = os.path.join(save_folder, 'textured_mesh.html')
     else:
-        related_path = f"./white_mesh.glb"
-        output_html_path = os.path.join(save_folder, f'white_mesh.html')
+        related_path = "./white_mesh.glb"
+        output_html_path = os.path.join(save_folder, 'white_mesh.html')
     
     template_html = HTML_TEMPLATE_MODEL_VIEWER
     with open(output_html_path, 'w', encoding='utf-8') as f:
@@ -194,10 +193,10 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
         log_params['mv_images'] = {k: f"<Image: {type(v)}>" for k, v in log_params['mv_images'].items()}
     if 'progress_callback' in log_params: del log_params['progress_callback']
     
-    logger.info(f"==================================================")
-    logger.info(f"ACTION: Generation Request Submitted")
+    logger.info("==================================================")
+    logger.info("ACTION: Generation Request Submitted")
     logger.info(f"PARAMS: {json.dumps(log_params, indent=2, default=str)}")
-    logger.info(f"==================================================")
+    logger.info("==================================================")
 
     try:
         result = await request_manager.submit(params)
@@ -231,7 +230,12 @@ async def generation_all(*args, progress=gr.Progress()):
     return await unified_generation(*args, do_texture=True, progress=progress)
 
 def build_app(example_is=None, example_ts=None, example_mvs=None):
-    with gr.Blocks(theme=gr.themes.Base(), title='Hunyuan-3D-2.0', analytics_enabled=False, css=CSS_STYLES, fill_height=True) as demo:
+    # Gradio 6.3+: theme and css are handled in mount_gradio_app
+    with gr.Blocks(
+        title='Hunyuan-3D-2.0',
+        analytics_enabled=False,
+        fill_height=True
+    ) as demo:
         # State to track current model mode based on tab
         model_key_state = gr.State("Normal")
 
@@ -369,21 +373,32 @@ def main():
     model_mgr.register_model("Multiview", get_loader("tencent/Hunyuan3D-2mv", "hunyuan3d-dit-v2-mv-turbo"))
     request_manager = PriorityRequestManager(model_mgr, max_concurrency=1)
     
-    # Cria a aplicação FastAPI
-    app = FastAPI()
-    
-    # Inicia o manager na montagem da aplicação
-    @app.on_event("startup")
-    async def startup_event():
-        """Inicia o request manager quando a aplicação FastAPI sobe"""
+    # Define lifespan for FastAPI app (Gradio 6.3+ / FastAPI 0.93+)
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Startup
         logger.info("Starting PriorityRequestManager...")
         asyncio.create_task(request_manager.start())
         logger.info("PriorityRequestManager started successfully")
+        yield
+        # Shutdown (if needed)
+    
+    # Cria a aplicação FastAPI com lifespan
+    app = FastAPI(lifespan=lifespan)
     
     static_dir = Path(SAVE_DIR).absolute()
     app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
     demo = build_app()
-    app = gr.mount_gradio_app(app, demo, path="/")
+    
+    # Injeta CSS via head customizada (Gradio 6.3+)
+    custom_head = f"<style>{CSS_STYLES}</style>"
+    app = gr.mount_gradio_app(
+        app, 
+        demo, 
+        path="/",
+        head=custom_head,
+        theme=gr.themes.Base()
+    )
     url = f"http://{args.host}:{args.port}"
     print(f"\nHunyuan3D-2 Pro Unified is running at: {url}\n")
     if not args.no_browser:

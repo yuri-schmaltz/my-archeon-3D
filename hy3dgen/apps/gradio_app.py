@@ -84,8 +84,13 @@ def export_mesh(mesh, save_folder, textured=False, file_type='glb'):
         visual_type = mesh.visual.__class__.__name__ if hasattr(mesh, 'visual') else 'None'
         logger.info(f"Exporting textured mesh with visual type: {visual_type}")
         if hasattr(mesh, 'visual') and mesh.visual is not None:
-            has_image = hasattr(mesh.visual, 'image') and mesh.visual.image is not None
-            logger.info(f"Visual has texture image: {has_image}")
+            # Check for image in visual (TextureVisuals has material.image)
+            if hasattr(mesh.visual, 'material') and mesh.visual.material is not None:
+                has_image = hasattr(mesh.visual.material, 'image') and mesh.visual.material.image is not None
+                logger.info(f"Visual material has texture image: {has_image}")
+            elif hasattr(mesh.visual, 'image'):
+                has_image = mesh.visual.image is not None
+                logger.info(f"Visual has direct texture image: {has_image}")
     
     if file_type not in ['glb', 'obj']:
         mesh.export(path)

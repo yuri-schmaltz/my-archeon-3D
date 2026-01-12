@@ -224,7 +224,7 @@ class MeshRender():
         auto_center=True,
     ):
         vtx_pos, pos_idx, vtx_uv, uv_idx, texture_data = load_mesh(mesh)
-        self.mesh_copy = mesh
+        self.mesh_copy = mesh.copy()
         self.set_mesh(vtx_pos, pos_idx,
                       vtx_uv=vtx_uv, uv_idx=uv_idx,
                       scale_factor=scale_factor, auto_center=auto_center

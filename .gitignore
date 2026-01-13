@@ -160,7 +160,15 @@ dmypy.json
 .DS_Store
 # Cython debug symbols
 cython_debug/
+# Caches customizados
 gradio_cache/
+debug_log.txt
+*.json
+*.bak
+*.old
+*.tmp
+# Logs temporários
+*.log
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

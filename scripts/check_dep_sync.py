@@ -1,3 +1,4 @@
+# DEPRECATED: Este script utilitário está marcado como suspeito de não ser mais utilizado. Favor revisar antes de remover.
 #!/usr/bin/env python3
 """
 Check for synchronization between setup.py and requirements.txt

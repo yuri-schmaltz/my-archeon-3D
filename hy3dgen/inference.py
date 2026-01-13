@@ -240,8 +240,13 @@ class InferencePipeline:
                         logger.info(f"[{uid}] Textured mesh has UV: {textured_mesh.visual.uv is not None}")
             except Exception as e:
                 logger.error(f"[{uid}] Texture generation FAILED: {e}", exc_info=True)
-                # Return untextured mesh if texturing fails
-                textured_mesh = None
+                # Return untextured mesh with white color if texturing fails
+                textured_mesh = mesh.copy()
+                # Ensure it has white color for visual feedback
+                import numpy as np
+                white_color = np.array([255, 255, 255, 255], dtype=np.uint8)
+                textured_mesh.visual = trimesh.visual.ColorVisuals(mesh=textured_mesh)
+                textured_mesh.visual.face_colors = np.tile(white_color, (len(textured_mesh.faces), 1))
         
         stats['time']['total'] = time.time() - t0
         report_progress(100, "Generation Complete!")

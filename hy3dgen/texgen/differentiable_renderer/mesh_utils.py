@@ -13,13 +13,32 @@
 # by Tencent in accordance with TENCENT HUNYUAN COMMUNITY LICENSE AGREEMENT.
 
 import trimesh
+import numpy as np
 
 
 def load_mesh(mesh):
     vtx_pos = mesh.vertices if hasattr(mesh, 'vertices') else None
     pos_idx = mesh.faces if hasattr(mesh, 'faces') else None
 
-    vtx_uv = mesh.visual.uv if hasattr(mesh.visual, 'uv') else None
+    # Check if mesh has UV coordinates
+    if hasattr(mesh.visual, 'uv') and mesh.visual.uv is not None:
+        vtx_uv = mesh.visual.uv
+    else:
+        # Generate simple planar UV mapping if none exists
+        if vtx_pos is not None:
+            # Normalize vertex positions to [0, 1] range for UV
+            min_coords = vtx_pos.min(axis=0)
+            max_coords = vtx_pos.max(axis=0)
+            range_coords = max_coords - min_coords
+            # Avoid division by zero
+            range_coords[range_coords == 0] = 1.0
+            # Use XY projection for UV
+            vtx_uv = (vtx_pos[:, :2] - min_coords[:2]) / range_coords[:2]
+            # Ensure UV is within [0, 1]
+            vtx_uv = np.clip(vtx_uv, 0, 1)
+        else:
+            vtx_uv = None
+    
     uv_idx = mesh.faces if hasattr(mesh, 'faces') else None
 
     texture_data = None
@@ -28,7 +47,25 @@ def load_mesh(mesh):
 
 
 def save_mesh(mesh, texture_data):
+    """Save mesh with texture data, creating UV coordinates if needed"""
+    # Check if mesh has UV coordinates
+    if not hasattr(mesh.visual, 'uv') or mesh.visual.uv is None:
+        # Generate simple planar UV mapping if none exists
+        vertices = mesh.vertices
+        # Normalize vertex positions to [0, 1] range for UV
+        min_coords = vertices.min(axis=0)
+        max_coords = vertices.max(axis=0)
+        range_coords = max_coords - min_coords
+        # Avoid division by zero
+        range_coords[range_coords == 0] = 1.0
+        # Use XY projection for UV (can be enhanced with proper unwrapping)
+        uv = (vertices[:, :2] - min_coords[:2]) / range_coords[:2]
+        # Ensure UV is within [0, 1]
+        uv = np.clip(uv, 0, 1)
+    else:
+        uv = mesh.visual.uv
+    
     material = trimesh.visual.texture.SimpleMaterial(image=texture_data, diffuse=(255, 255, 255))
-    texture_visuals = trimesh.visual.TextureVisuals(uv=mesh.visual.uv, material=material)
+    texture_visuals = trimesh.visual.TextureVisuals(uv=uv, material=material)
     mesh.visual = texture_visuals
     return mesh

@@ -1,3 +1,4 @@
+# DEPRECATED: Este script/teste está marcado como suspeito de não ser mais utilizado. Favor revisar antes de remover.
 #!/usr/bin/env python
 """
 ETAPA DE PÓS-PROCESSAMENTO: Limpeza e Repair de Malha

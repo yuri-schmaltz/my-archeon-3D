@@ -57,6 +57,10 @@ def gen_save_folder():
     return new_folder
 
 def export_mesh(mesh, save_folder, textured=False, file_type='glb'):
+    # Validate mesh input
+    if mesh is None:
+        raise ValueError("Cannot export None mesh")
+    
     if textured:
         path = os.path.join(save_folder, f'textured_mesh.{file_type}')
     else:
@@ -217,6 +221,10 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
     
     if do_texture:
         textured_mesh = result["textured_mesh"]
+        # If texturing failed, use white mesh as fallback
+        if textured_mesh is None:
+            logger.warning("Texture generation failed, using untextured mesh")
+            textured_mesh = mesh
         path_textured = export_mesh(textured_mesh, save_folder, textured=True)
         html_textured = build_model_viewer_html(save_folder, textured=True)
         return gr.update(value=path_white), gr.update(value=path_textured), html_textured, stats, seed

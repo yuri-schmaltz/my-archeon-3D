@@ -1,3 +1,4 @@
+# DEPRECATED: Este script utilitário está marcado como suspeito de não ser mais utilizado. Favor revisar antes de remover.
 
 import sys
 try:

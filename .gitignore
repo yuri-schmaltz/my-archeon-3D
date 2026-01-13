@@ -1,3 +1,8 @@
+# Arquivos grandes/temporários de saída
+*.glb
+*.png
+gradio_output.log
+test_minimal.log
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -28,13 +28,32 @@ To add or remove dependencies, modify `requirements.txt` and `setup.py`.
 
 Before committing, ensure that any new dependencies are necessary and don't introduce security risks.
 
+## Repository Hygiene
+
+To maintain a high-quality codebase, we follow these cleanup and organization standards:
+
+1. **Root Cleanliness**: Only essential project files (configs, README, etc.) should belong in the root. Utility scripts go to `scripts/`, tests to `tests/`, and documentation to `docs/`.
+2. **Automated Checks**: We provide a script to verify repository governance:
+   ```bash
+   python scripts/cleanup_governance.py
+   ```
+3. **Ghost Files**: Avoid committing stubs or "deleted" placeholders. If a file is moved, delete the original completely.
+4. **Ignored Files**: Ensure `.gitignore` is up to date and no ignored files (caches, logs, binaries) are accidentally tracked.
+
 ## Code Quality
 
 ### Pre-commit Checks
 
-Before committing:
-- [ ] Linter passes: `bash scripts/lint.sh`
-- [ ] Dependency sync verified: `python scripts/check_dep_sync.py`
+We use `pre-commit` to automate code quality checks.
+
+1. **Install pre-commit**: `pip install pre-commit`
+2. **Install hooks**: `pre-commit install`
+3. **Manual run**: `pre-commit run --all-files`
+
+Local checks still available:
+- Linter passes: `bash scripts/lint.sh` or `ruff check hy3dgen/`
+- Governance check: `python scripts/cleanup_governance.py`
+- Dependency sync verified: `python scripts/check_dep_sync.py`
 
 ### Commit Messages
 

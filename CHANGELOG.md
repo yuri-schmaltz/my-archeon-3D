@@ -1,6 +1,6 @@
-# Hunyuan3D-2 Changelog
+# Archeon 3D-2 Changelog
 
-All notable changes to the Hunyuan3D-2 project are documented in this file.
+All notable changes to the Archeon 3D-2 project are documented in this file.
 
 ## [2.2.0] - 2024-12-20
 
@@ -173,7 +173,7 @@ diffusers>=0.36.0
 - Performance benchmarking
 
 ### 📝 Release Notes Summary
-This release represents a **major stability and quality improvement** for Hunyuan3D-2:
+This release represents a **major stability and quality improvement** for Archeon 3D-2:
 - ✨ Fixed critical texture preservation bug affecting all GLB exports
 - 📚 Added comprehensive automated testing (11 passing tests)
 - 🐳 Containerization ready with Docker/GPU support

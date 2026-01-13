@@ -18,9 +18,9 @@ sys.path.insert(0, os.path.abspath("../../"))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Hunyuan3D-2'
-copyright = '2025, Tencent Hunyuan3D'
-author = 'Hunyuan3D Team'
+project = 'Archeon 3D-2'
+copyright = '2025, Tencent Archeon 3D'
+author = 'Archeon 3D Team'
 
 # The full version, including alpha/beta/rc tags
 release = '0.0.1'
@@ -103,7 +103,7 @@ pygments_style = 'sphinx'
 # html_theme = 'alabaster'
 # html_theme = 'sphinx_rtd_theme'
 html_theme = "furo"
-html_title = "Hunyuan3D-2"
+html_title = "Archeon 3D-2"
 language = "en"
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -116,7 +116,7 @@ html_theme_options = {
         "font-stack": "Arial,Noto Sans,sans-serif",
         "font-stack--monospace": "IBM Plex Mono,ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace",
     },
-    "announcement": 'Release 🤗<a href="https://huggingface.co/spaces/tencent/Hunyuan3D-2mini-Turbo">Turbo Series</a> and <a href="https://github.com/Tencent/FlashVDM">FlashVDM</a>, Fast Shape Generation within 1 Second Right Now!',
+    "announcement": 'Release 🤗<a href="https://huggingface.co/spaces/tencent/Archeon 3D-2mini-Turbo">Turbo Series</a> and <a href="https://github.com/Tencent/FlashVDM">FlashVDM</a>, Fast Shape Generation within 1 Second Right Now!',
 }
 
 #

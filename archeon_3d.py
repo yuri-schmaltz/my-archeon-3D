@@ -25,7 +25,7 @@ def main():
         sys.argv[1:1] = defaults
         
         from hy3dgen.apps.api_server import main as api_main
-        print("Starting Hunyuan3D API Server...")
+        print("Starting Archeon 3D API Server...")
         api_main()
     else:
         # Defaults for Gradio App
@@ -41,7 +41,7 @@ def main():
         sys.argv[1:1] = defaults
         
         from hy3dgen.apps.gradio_app import main as gradio_main
-        print("Starting Hunyuan3D Gradio App...")
+        print("Starting Archeon 3D Gradio App...")
         gradio_main()
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-# Contributing to Hunyuan3D-2
+# Contributing to Archeon 3D
 
 Thank you for your interest in contributing! This document outlines our development practices and policies.
 
@@ -51,7 +51,7 @@ We use `pre-commit` to automate code quality checks.
 3. **Manual run**: `pre-commit run --all-files`
 
 Local checks still available:
-- Linter passes: `bash scripts/lint.sh` or `ruff check hy3dgen/`
+- Linter passes: `ruff check hy3dgen/`
 - Governance check: `python scripts/cleanup_governance.py`
 - Dependency sync verified: `python scripts/check_dep_sync.py`
 
@@ -69,7 +69,7 @@ Example:
 ```
 feat: add texture resolution parameter to Paint pipeline
 
-- Add resolution argument to Hunyuan3DPaintPipeline
+- Add resolution argument to Archeon 3DPaintPipeline
 - Update docs with usage examples
 - Add tests for resolution validation
 ```

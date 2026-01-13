@@ -38,13 +38,13 @@ dev_reqs = ["pytest", "httpx", "ruff", "coverage"]
 docs_reqs = ["sphinx", "sphinx-rtd-theme", "furo", "myst-parser"]
 
 setup(
-    name="hy3dgen",
+    name="archeon3d",
     version="2.2.0",
-    description="Hunyuan3D 2.0: Large-scale 3D Synthesis System",
+    description="Archeon 3D 2.0: Large-scale 3D Synthesis System",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Tencent/Hunyuan3D-2",
-    author="Tencent Hunyuan3D Team",
+    author="Archeon 3D Team",
     license="TENCENT HUNYUAN NON-COMMERCIAL LICENSE AGREEMENT",
     packages=find_packages(),
     include_package_data=True,

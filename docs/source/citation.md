@@ -1,14 +1,14 @@
 # Citation
 
-The following publications discuss the ideas behind Hunyuan3D-2:
+The following publications discuss the ideas behind Archeon 3D-2:
 
 > **Unleashing Vecset Diffusion Model for Fast Shape Generation** </br>
 > Technical Report, 2025.
 
-> **Hunyuan3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation** </br>
+> **Archeon 3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation** </br>
 > Technical Report, 2024.
 
-> **Hunyuan3D 1.0: A Unified Framework for Text-to-3D and Image-to-3D Generation** </br>
+> **Archeon 3D 1.0: A Unified Framework for Text-to-3D and Image-to-3D Generation** </br>
 > Technical Report, 2024.
 
 If you found this repository helpful, please cite our reports:
@@ -24,8 +24,8 @@ If you found this repository helpful, please cite our reports:
       url={https://arxiv.org/abs/2503.16302}, 
 }
 @misc{hunyuan3d22025tencent,
-    title={Hunyuan3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation},
-    author={Tencent Hunyuan3D Team},
+    title={Archeon 3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation},
+    author={Tencent Archeon 3D Team},
     year={2025},
     eprint={2501.12202},
     archivePrefix={arXiv},
@@ -33,8 +33,8 @@ If you found this repository helpful, please cite our reports:
 }
 
 @misc{yang2024hunyuan3d,
-    title={Hunyuan3D 1.0: A Unified Framework for Text-to-3D and Image-to-3D Generation},
-    author={Tencent Hunyuan3D Team},
+    title={Archeon 3D 1.0: A Unified Framework for Text-to-3D and Image-to-3D Generation},
+    author={Tencent Archeon 3D Team},
     year={2024},
     eprint={2411.02293},
     archivePrefix={arXiv},

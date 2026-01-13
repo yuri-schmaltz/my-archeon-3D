@@ -1,4 +1,4 @@
-name: Hunyuan3D CI/CD Pipeline
+name: Archeon 3D CI/CD Pipeline
 
 on:
   push:

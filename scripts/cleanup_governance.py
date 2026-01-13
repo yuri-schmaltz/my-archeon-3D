@@ -10,7 +10,7 @@ def check_root_cleanliness():
         'README.md', 'LICENSE', 'CHANGELOG.md', 'CONTRIBUTING.md', 'NOTICE',
         'requirements.txt', 'setup.py', 'pytest.ini', 'Dockerfile', '.dockerignore',
         '.gitignore', '.editorconfig', '.pre-commit-config.yaml', 'docker-compose.yml',
-        '.readthedocs.yaml', 'my_hunyuan_3d.py'
+        '.readthedocs.yaml', 'archeon_3d.py'
     }
     
     root_path = Path('.')
@@ -41,7 +41,7 @@ def check_git_ignored_committed():
         return []
 
 def main():
-    print("=== Hunyuan3D Repository Governance Check ===")
+    print("=== Archeon 3D Repository Governance Check ===")
     
     # 1. Root Cleanliness
     print("\n[1] Checking Root Cleanliness...")

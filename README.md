@@ -1,4 +1,4 @@
-# Hunyuan3D 2.0
+# Archeon 3D 2.0
 
 <div align="center">
   <a href=https://3d.hunyuan.tencent.com target="_blank">Official Site</a> |
@@ -26,26 +26,26 @@
 ## 🔥 News
 
 - July 26, 2025: 🤗 We release the first open-source, simulation-capable, immersive 3D world generation model, [HunyuanWorld-1.0](https://github.com/Tencent-Hunyuan/HunyuanWorld-1.0)!
-- June 23, 2025: 📄 Release the system technical report of [Hunyuan3D 2.5](https://arxiv.org/abs/2506.16504).
-- June 13, 2025: 🤗 Release [Hunyuan3D-2.1](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1), fully open-sourced with new PBR model, VAE encoder, and all training code. 
-- Apr 1, 2025: 🤗 Release turbo paint model [Hunyuan3D-Paint-v2-0-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo), and multiview texture generation pipeline! Stay tuned for our new texture generation model [RomanTex](https://github.com/oakshy/RomanTex) and PBR material generation [MaterialMVP](https://github.com/ZebinHe/MaterialMVP/)! 
-- Mar 19, 2025: 🤗 Release turbo model [Hunyuan3D-2-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/), [Hunyuan3D-2mini-Turbo](https://huggingface.co/tencent/Hunyuan3D-2mini/) and [FlashVDM](https://github.com/Tencent/FlashVDM).
-- Mar 18, 2025: 🤗 Release multiview shape model [Hunyuan3D-2mv](https://huggingface.co/tencent/Hunyuan3D-2mv) and 0.6B
-  shape model [Hunyuan3D-2mini](https://huggingface.co/tencent/Hunyuan3D-2mini).
+- June 23, 2025: 📄 Release the system technical report of [Archeon 3D 2.5](https://arxiv.org/abs/2506.16504).
+- June 13, 2025: 🤗 Release [Archeon 3D-2.1](https://github.com/Tencent-Hunyuan/Archeon 3D-2.1), fully open-sourced with new PBR model, VAE encoder, and all training code. 
+- Apr 1, 2025: 🤗 Release turbo paint model [Archeon 3D-Paint-v2-0-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo), and multiview texture generation pipeline! Stay tuned for our new texture generation model [RomanTex](https://github.com/oakshy/RomanTex) and PBR material generation [MaterialMVP](https://github.com/ZebinHe/MaterialMVP/)! 
+- Mar 19, 2025: 🤗 Release turbo model [Archeon 3D-2-Turbo](https://huggingface.co/tencent/Hunyuan3D-2/), [Archeon 3D-2mini-Turbo](https://huggingface.co/tencent/Hunyuan3D-2mini/) and [FlashVDM](https://github.com/Tencent/FlashVDM).
+- Mar 18, 2025: 🤗 Release multiview shape model [Archeon 3D-2mv](https://huggingface.co/tencent/Hunyuan3D-2mv) and 0.6B
+  shape model [Archeon 3D-2mini](https://huggingface.co/tencent/Hunyuan3D-2mini).
 - Feb 14, 2025: 🛠️ Release texture enhancement module!
 - Feb 3, 2025: 🐎
-  Release [Hunyuan3D-DiT-v2-0-Fast](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-fast), our
+  Release [Archeon 3D-DiT-v2-0-Fast](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-fast), our
   guidance distillation model that could half the dit inference time.
-- Jan 9, 2026: 🚀 Release **Hunyuan3D-2 Pro Generator** for Blender 5.0! Includes connection diagnostics, smart object integration, and enhanced UI.
-- Jan 27, 2025: 🛠️ Release Blender addon for Hunyuan3D 2.0, Check it out [here](#blender-addon).
+- Jan 9, 2026: 🚀 Release **Archeon 3D-2 Pro Generator** for Blender 5.0! Includes connection diagnostics, smart object integration, and enhanced UI.
+- Jan 27, 2025: 🛠️ Release Blender addon for Archeon 3D 2.0, Check it out [here](#blender-addon).
 - Jan 23, 2025: 💬 We thank community members for
-  creating [Windows installation tool](https://github.com/YanWenKun/Hunyuan3D-2-WinPortable), ComfyUI support
-  with [ComfyUI-Hunyuan3DWrapper](https://github.com/kijai/ComfyUI-Hunyuan3DWrapper)
+  creating [Windows installation tool](https://github.com/YanWenKun/Archeon 3D-2-WinPortable), ComfyUI support
+  with [ComfyUI-Archeon 3DWrapper](https://github.com/kijai/ComfyUI-Archeon 3DWrapper)
   and [ComfyUI-3D-Pack](https://github.com/MrForExample/ComfyUI-3D-Pack) and other
   awesome [extensions](#community-resources).
-- Jan 21, 2025: 💬 Enjoy exciting 3D generation on our website [Hunyuan3D Studio](https://3d.hunyuan.tencent.com)!
+- Jan 21, 2025: 💬 Enjoy exciting 3D generation on our website [Archeon 3D Studio](https://3d.hunyuan.tencent.com)!
 - Jan 21, 2025: 🤗 Release inference code and pretrained models
-  of [Hunyuan3D 2.0](https://huggingface.co/tencent/Hunyuan3D-2). Please give it a try
+  of [Archeon 3D 2.0](https://huggingface.co/tencent/Hunyuan3D-2). Please give it a try
   via [huggingface space](https://huggingface.co/spaces/tencent/Hunyuan3D-2) and
   our [official site](https://3d.hunyuan.tencent.com)!
 
@@ -58,17 +58,17 @@
 
 ## **Abstract**
 
-We present Hunyuan3D 2.0, an advanced large-scale 3D synthesis system for generating high-resolution textured 3D assets.
-This system includes two foundation components: a large-scale shape generation model - Hunyuan3D-DiT, and a large-scale
-texture synthesis model - Hunyuan3D-Paint.
+We present Archeon 3D 2.0, an advanced large-scale 3D synthesis system for generating high-resolution textured 3D assets.
+This system includes two foundation components: a large-scale shape generation model - Archeon 3D-DiT, and a large-scale
+texture synthesis model - Archeon 3D-Paint.
 The shape generative model, built on a scalable flow-based diffusion transformer, aims to create geometry that properly
 aligns with a given condition image, laying a solid foundation for downstream applications.
 The texture synthesis model, benefiting from strong geometric and diffusion priors, produces high-resolution and vibrant
 texture maps for either generated or hand-crafted meshes.
-Furthermore, we build Hunyuan3D-Studio - a versatile, user-friendly production platform that simplifies the re-creation
+Furthermore, we build Archeon 3D-Studio - a versatile, user-friendly production platform that simplifies the re-creation
 process of 3D assets. It allows both professional and amateur users to manipulate or even animate their meshes
 efficiently.
-We systematically evaluate our models, showing that Hunyuan3D 2.0 outperforms previous state-of-the-art models,
+We systematically evaluate our models, showing that Archeon 3D 2.0 outperforms previous state-of-the-art models,
 including the open-source models and closed-source models in geometry details, condition alignment, texture quality, and
 e.t.c.
 
@@ -77,11 +77,11 @@ e.t.c.
 <p align="center">
 
 
-## ☯️ **Hunyuan3D 2.0**
+## ☯️ **Archeon 3D 2.0**
 
 ### Architecture
 
-Hunyuan3D 2.0 features a two-stage generation pipeline, starting with the creation of a bare mesh, followed by the
+Archeon 3D 2.0 features a two-stage generation pipeline, starting with the creation of a bare mesh, followed by the
 synthesis of a texture map for that mesh. This strategy is effective for decoupling the difficulties of shape and
 texture generation and also provides flexibility for texturing either generated or handcrafted meshes.
 
@@ -90,8 +90,8 @@ texture generation and also provides flexibility for texturing either generated 
 
 ### Performance
 
-We have evaluated Hunyuan3D 2.0 with other open-source as well as close-source 3d-generation methods.
-The numerical results indicate that Hunyuan3D 2.0 surpasses all baselines in the quality of generated textured 3D assets
+We have evaluated Archeon 3D 2.0 with other open-source as well as close-source 3d-generation methods.
+The numerical results indicate that Archeon 3D 2.0 surpasses all baselines in the quality of generated textured 3D assets
 and the condition following ability.
 
 | Model                   | CMMD(⬇)   | FID_CLIP(⬇) | FID(⬇)      | CLIP-score(⬆) |
@@ -100,53 +100,53 @@ and the condition following ability.
 | Top Close-source Model1 | 3.600     | 55.866      | 305.922     | 0.779         |
 | Top Close-source Model2 | 3.368     | 49.744      | 294.628     | 0.806         |
 | Top Close-source Model3 | 3.218     | 51.574      | 295.691     | 0.799         |
-| Hunyuan3D 2.0           | **3.193** | **49.165**  | **282.429** | **0.809**     |
+| Archeon 3D 2.0           | **3.193** | **49.165**  | **282.429** | **0.809**     |
 
-Generation results of Hunyuan3D 2.0:
+Generation results of Archeon 3D 2.0:
 
 
 ## 🎁 Models Zoo
 
 It takes 6 GB VRAM for shape generation and 16 GB for shape and texture generation in total.
 
-Hunyuan3D-2-1 Series
+Archeon 3D-2-1 Series
 
 | Model                | Description                   | Date       | Size | Huggingface                                                                             |
 |----------------------|-------------------------------|------------|------|-----------------------------------------------------------------------------------------|
-| Hunyuan3D-DiT-v2-1   | Mini Image to Shape Model     | 2025-06-13 | 3.0B | [Download](https://huggingface.co/tencent/Hunyuan3D-2.1/tree/main/hunyuan3d-dit-v2-1)   |
-| Hunyuan3D-Paint-v2-1 | Texture Generation Model    | 2025-06-13 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2.1/tree/main/hunyuan3d-paintpbr-v2-1) |
+| Archeon 3D-DiT-v2-1   | Mini Image to Shape Model     | 2025-06-13 | 3.0B | [Download](https://huggingface.co/tencent/Hunyuan3D-2.1/tree/main/hunyuan3d-dit-v2-1)   |
+| Archeon 3D-Paint-v2-1 | Texture Generation Model    | 2025-06-13 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2.1/tree/main/hunyuan3d-paintpbr-v2-1) |
 
-Hunyuan3D-2mini Series
+Archeon 3D-2mini Series
 
 | Model                       | Description                   | Date       | Size | Huggingface                                                                                      |
 |-----------------------------|-------------------------------|------------|------|--------------------------------------------------------------------------------------------------|
-| Hunyuan3D-DiT-v2-mini-Turbo | Step Distillation Version     | 2025-03-19 | 0.6B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini-turbo) |
-| Hunyuan3D-DiT-v2-mini-Fast  | Guidance Distillation Version | 2025-03-18 | 0.6B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini-fast)  |
-| Hunyuan3D-DiT-v2-mini       | Mini Image to Shape Model     | 2025-03-18 | 0.6B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini)       |
+| Archeon 3D-DiT-v2-mini-Turbo | Step Distillation Version     | 2025-03-19 | 0.6B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini-turbo) |
+| Archeon 3D-DiT-v2-mini-Fast  | Guidance Distillation Version | 2025-03-18 | 0.6B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini-fast)  |
+| Archeon 3D-DiT-v2-mini       | Mini Image to Shape Model     | 2025-03-18 | 0.6B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mini/tree/main/hunyuan3d-dit-v2-mini)       |
 
 
-Hunyuan3D-2mv Series
+Archeon 3D-2mv Series
 
 | Model                     | Description                    | Date       | Size | Huggingface                                                                                  |
 |---------------------------|--------------------------------|------------|------|----------------------------------------------------------------------------------------------| 
-| Hunyuan3D-DiT-v2-mv-Turbo | Step Distillation Version      | 2025-03-19 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv-turbo) |
-| Hunyuan3D-DiT-v2-mv-Fast  | Guidance Distillation Version  | 2025-03-18 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv-fast)  |
-| Hunyuan3D-DiT-v2-mv       | Multiview Image to Shape Model | 2025-03-18 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv)       |
+| Archeon 3D-DiT-v2-mv-Turbo | Step Distillation Version      | 2025-03-19 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv-turbo) |
+| Archeon 3D-DiT-v2-mv-Fast  | Guidance Distillation Version  | 2025-03-18 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv-fast)  |
+| Archeon 3D-DiT-v2-mv       | Multiview Image to Shape Model | 2025-03-18 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2mv/tree/main/hunyuan3d-dit-v2-mv)       |
 
-Hunyuan3D-2 Series
+Archeon 3D-2 Series
 
 | Model                      | Description                 | Date       | Size | Huggingface                                                                               |
 |----------------------------|-----------------------------|------------|------|-------------------------------------------------------------------------------------------| 
-| Hunyuan3D-DiT-v2-0-Turbo   | Step Distillation Model     | 2025-03-19 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-turbo)   |
-| Hunyuan3D-DiT-v2-0-Fast    | Guidance Distillation Model | 2025-02-03 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-fast)    |
-| Hunyuan3D-DiT-v2-0         | Image to Shape Model        | 2025-01-21 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0)         |
-| Hunyuan3D-Paint-v2-0       | Texture Generation Model    | 2025-01-21 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0)       |
-| Hunyuan3D-Paint-v2-0-Turbo | Distillation Texure Model   | 2025-04-01 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo) |
-| Hunyuan3D-Delight-v2-0     | Image Delight Model         | 2025-01-21 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-delight-v2-0)     | 
+| Archeon 3D-DiT-v2-0-Turbo   | Step Distillation Model     | 2025-03-19 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-turbo)   |
+| Archeon 3D-DiT-v2-0-Fast    | Guidance Distillation Model | 2025-02-03 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0-fast)    |
+| Archeon 3D-DiT-v2-0         | Image to Shape Model        | 2025-01-21 | 1.1B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-dit-v2-0)         |
+| Archeon 3D-Paint-v2-0       | Texture Generation Model    | 2025-01-21 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0)       |
+| Archeon 3D-Paint-v2-0-Turbo | Distillation Texure Model   | 2025-04-01 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-paint-v2-0-turbo) |
+| Archeon 3D-Delight-v2-0     | Image Delight Model         | 2025-01-21 | 1.3B | [Download](https://huggingface.co/tencent/Hunyuan3D-2/tree/main/hunyuan3d-delight-v2-0)     | 
 
-## 🤗 Get Started with Hunyuan3D 2.0
+## 🤗 Get Started with Archeon 3D 2.0
 
-Hunyuan3D 2.0 supports MacOS, Windows, Linux. You may follow the next steps to use Hunyuan3D 2.0 via:
+Archeon 3D 2.0 supports MacOS, Windows, Linux. You may follow the next steps to use Archeon 3D 2.0 via:
 
 - [Code](#code-usage)
 - [Gradio App](#gradio-app)
@@ -176,15 +176,15 @@ python3 setup.py install
 
 ### Code Usage
 
-We designed a diffusers-like API to use our shape generation model - Hunyuan3D-DiT and texture synthesis model -
-Hunyuan3D-Paint.
+We designed a diffusers-like API to use our shape generation model - Archeon 3D-DiT and texture synthesis model -
+Archeon 3D-Paint.
 
-You could assess **Hunyuan3D-DiT** via:
+You could assess **Archeon 3D-DiT** via:
 
 ```python
-from hy3dgen.shapegen import Hunyuan3DDiTFlowMatchingPipeline
+from hy3dgen.shapegen import Archeon 3DDiTFlowMatchingPipeline
 
-pipeline = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained('tencent/Hunyuan3D-2')
+pipeline = Archeon 3DDiTFlowMatchingPipeline.from_pretrained('tencent/Hunyuan3D-2')
 mesh = pipeline(image='path/to/your/image.png')[0]
 ```
 
@@ -240,7 +240,7 @@ curl -X POST "http://localhost:8081/generate" \
 
 ### Blender Addon
 
-With an API server launched, you can use our **Hunyuan3D-2 Pro (v1.3)** addon for a seamless 3D workflow inside Blender.
+With an API server launched, you can use our **Archeon 3D-2 Pro (v1.3)** addon for a seamless 3D workflow inside Blender.
 
 - **Download**: [scripts/blender_addon.py](scripts/blender_addon.py)
 - **Compatibility**: Fully compatible with **Blender 5.0** and earlier versions.
@@ -254,7 +254,7 @@ With an API server launched, you can use our **Hunyuan3D-2 Pro (v1.3)** addon fo
 
 ### Official Site
 
-Don't forget to visit [Hunyuan3D](https://3d.hunyuan.tencent.com) for quick use, if you don't want to host yourself.
+Don't forget to visit [Archeon 3D](https://3d.hunyuan.tencent.com) for quick use, if you don't want to host yourself.
 
 ## 📑 Open-Source Plan
 
@@ -280,8 +280,8 @@ If you found this repository helpful, please cite our reports:
 
 ```bibtex
 @misc{lai2025hunyuan3d25highfidelity3d,
-      title={Hunyuan3D 2.5: Towards High-Fidelity 3D Assets Generation with Ultimate Details}, 
-      author={Tencent Hunyuan3D Team},
+      title={Archeon 3D 2.5: Towards High-Fidelity 3D Assets Generation with Ultimate Details}, 
+      author={Tencent Archeon 3D Team},
       year={2025},
       eprint={2506.16504},
       archivePrefix={arXiv},
@@ -290,8 +290,8 @@ If you found this repository helpful, please cite our reports:
 }
 
 @misc{hunyuan3d22025tencent,
-    title={Hunyuan3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation},
-    author={Tencent Hunyuan3D Team},
+    title={Archeon 3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation},
+    author={Tencent Archeon 3D Team},
     year={2025},
     eprint={2501.12202},
     archivePrefix={arXiv},
@@ -299,8 +299,8 @@ If you found this repository helpful, please cite our reports:
 }
 
 @misc{yang2024hunyuan3d,
-    title={Hunyuan3D 1.0: A Unified Framework for Text-to-3D and Image-to-3D Generation},
-    author={Tencent Hunyuan3D Team},
+    title={Archeon 3D 1.0: A Unified Framework for Text-to-3D and Image-to-3D Generation},
+    author={Tencent Archeon 3D Team},
     year={2024},
     eprint={2411.02293},
     archivePrefix={arXiv},
@@ -310,14 +310,14 @@ If you found this repository helpful, please cite our reports:
 
 ## Community Resources
 
-Thanks for the contributions of community members, here we have these great extensions of Hunyuan3D 2.0:
+Thanks for the contributions of community members, here we have these great extensions of Archeon 3D 2.0:
 
 - [ComfyUI-3D-Pack](https://github.com/MrForExample/ComfyUI-3D-Pack)
-- [ComfyUI-Hunyuan3DWrapper](https://github.com/kijai/ComfyUI-Hunyuan3DWrapper)
-- [Hunyuan3D-2-for-windows](https://github.com/sdbds/Hunyuan3D-2-for-windows)
-- [📦 A bundle for running on Windows](https://github.com/YanWenKun/Hunyuan3D-2-WinPortable)
-- [Hunyuan3D-2GP](https://github.com/deepbeepmeep/Hunyuan3D-2GP)
-- [Kaggle Notebook](https://github.com/darkon12/Hunyuan3D-2GP_Kaggle)
+- [ComfyUI-Archeon 3DWrapper](https://github.com/kijai/ComfyUI-Archeon 3DWrapper)
+- [Archeon 3D-2-for-windows](https://github.com/sdbds/Archeon 3D-2-for-windows)
+- [📦 A bundle for running on Windows](https://github.com/YanWenKun/Archeon 3D-2-WinPortable)
+- [Archeon 3D-2GP](https://github.com/deepbeepmeep/Archeon 3D-2GP)
+- [Kaggle Notebook](https://github.com/darkon12/Archeon 3D-2GP_Kaggle)
 
 ## Acknowledgements
 
@@ -328,10 +328,10 @@ exploration.
 
 ## Star History
 
-<a href="https://star-history.com/#Tencent/Hunyuan3D-2&Date">
+<a href="https://star-history.com/#Tencent/Archeon 3D-2&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Tencent/Hunyuan3D-2&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Tencent/Hunyuan3D-2&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Tencent/Hunyuan3D-2&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Tencent/Archeon 3D-2&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Tencent/Archeon 3D-2&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Tencent/Archeon 3D-2&type=Date" />
  </picture>
 </a>

@@ -39,7 +39,7 @@ docs_reqs = ["sphinx", "sphinx-rtd-theme", "furo", "myst-parser"]
 
 setup(
     name="hy3dgen",
-    version="2.1.0",
+    version="2.2.0",
     description="Hunyuan3D 2.0: Large-scale 3D Synthesis System",
     long_description=long_description,
     long_description_content_type="text/markdown",

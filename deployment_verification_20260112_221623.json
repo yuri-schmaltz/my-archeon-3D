@@ -1,0 +1,182 @@
+{
+  "timestamp": "2026-01-12T22:15:50.779858",
+  "version": "2.2.0",
+  "checks": {
+    "setup.py version": {
+      "status": "\u2705 PASS",
+      "details": "setup.py should contain version='2.2.0'",
+      "passed": true
+    },
+    "CHANGELOG.md exists": {
+      "status": "\u2705 PASS",
+      "details": "Detailed changelog should be present",
+      "passed": true
+    },
+    "tests/ directory exists": {
+      "status": "\u2705 PASS",
+      "details": "Unit tests directory required",
+      "passed": true
+    },
+    "test_e2e.py exists": {
+      "status": "\u2705 PASS",
+      "details": "End-to-end test script required",
+      "passed": true
+    },
+    "E2E tests passing": {
+      "status": "\u2705 PASS",
+      "details": "Exit code: 0",
+      "passed": true
+    },
+    "Dockerfile exists": {
+      "status": "\u2705 PASS",
+      "details": "Production-ready Dockerfile required",
+      "passed": true
+    },
+    "docker-compose.yml exists": {
+      "status": "\u2705 PASS",
+      "details": "Docker Compose orchestration required",
+      "passed": true
+    },
+    ".dockerignore exists": {
+      "status": "\u2705 PASS",
+      "details": "Container image optimization required",
+      "passed": true
+    },
+    "Dockerfile has CUDA support": {
+      "status": "\u2705 PASS",
+      "details": "CUDA 12.1 base image required",
+      "passed": true
+    },
+    "Dockerfile has health check": {
+      "status": "\u2705 PASS",
+      "details": "Health monitoring required",
+      "passed": true
+    },
+    "GitHub Actions workflow exists": {
+      "status": "\u2705 PASS",
+      "details": "Automated CI/CD pipeline required",
+      "passed": true
+    },
+    "CI/CD stage: lint": {
+      "status": "\u2705 PASS",
+      "details": "lint stage in workflow",
+      "passed": true
+    },
+    "CI/CD stage: test": {
+      "status": "\u2705 PASS",
+      "details": "test stage in workflow",
+      "passed": true
+    },
+    "CI/CD stage: e2e": {
+      "status": "\u2705 PASS",
+      "details": "e2e stage in workflow",
+      "passed": true
+    },
+    "CI/CD stage: build": {
+      "status": "\u2705 PASS",
+      "details": "build stage in workflow",
+      "passed": true
+    },
+    "CI/CD stage: performance": {
+      "status": "\u2705 PASS",
+      "details": "performance stage in workflow",
+      "passed": true
+    },
+    "CI/CD stage: dependencies": {
+      "status": "\u2705 PASS",
+      "details": "dependencies stage in workflow",
+      "passed": true
+    },
+    "CI/CD stage: docs": {
+      "status": "\u2705 PASS",
+      "details": "docs stage in workflow",
+      "passed": true
+    },
+    "API Reference (docs/API_AUTO.md)": {
+      "status": "\u2705 PASS",
+      "details": "API Reference",
+      "passed": true
+    },
+    "Release Changelog (CHANGELOG.md)": {
+      "status": "\u2705 PASS",
+      "details": "Release Changelog",
+      "passed": true
+    },
+    "Release Notes (RELEASE_NOTES.md)": {
+      "status": "\u2705 PASS",
+      "details": "Release Notes",
+      "passed": true
+    },
+    "Contributing Guide (CONTRIBUTING.md)": {
+      "status": "\u2705 PASS",
+      "details": "Contributing Guide",
+      "passed": true
+    },
+    "Project README (README.md)": {
+      "status": "\u2705 PASS",
+      "details": "Project README",
+      "passed": true
+    },
+    "requirements.txt exists": {
+      "status": "\u2705 PASS",
+      "details": "Dependency specification required",
+      "passed": true
+    },
+    "Dependency: gradio>=6.3": {
+      "status": "\u2705 PASS",
+      "details": "Latest gradio>=6.3 required",
+      "passed": true
+    },
+    "Dependency: fastapi": {
+      "status": "\u2705 PASS",
+      "details": "Latest fastapi required",
+      "passed": true
+    },
+    "Dependency: torch": {
+      "status": "\u2705 PASS",
+      "details": "Latest torch required",
+      "passed": true
+    },
+    "Dependency: numpy>=2.2": {
+      "status": "\u2705 PASS",
+      "details": "Latest numpy>=2.2 required",
+      "passed": true
+    },
+    "pip check (no conflicts)": {
+      "status": "\u2705 PASS",
+      "details": "All dependencies compatible",
+      "passed": true
+    },
+    "benchmark.py exists": {
+      "status": "\u2705 PASS",
+      "details": "Performance profiling script required",
+      "passed": true
+    },
+    "Benchmark execution": {
+      "status": "\u2705 PASS",
+      "details": "Performance metrics collected",
+      "passed": true
+    },
+    "Import: hy3dgen.manager.ModelManager": {
+      "status": "\u2705 PASS",
+      "details": "Module successfully imported",
+      "passed": true
+    },
+    "Import: hy3dgen.inference.InferencePipeline": {
+      "status": "\u2705 PASS",
+      "details": "Module successfully imported",
+      "passed": true
+    },
+    "Import: hy3dgen.apps.gradio_app.build_app": {
+      "status": "\u2705 PASS",
+      "details": "Module successfully imported",
+      "passed": true
+    },
+    "Import: hy3dgen.apps.api_server.app": {
+      "status": "\u2705 PASS",
+      "details": "Module successfully imported",
+      "passed": true
+    }
+  },
+  "overall_status": "APPROVED"
+}

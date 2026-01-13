@@ -1,0 +1,43 @@
+{
+  "system_info": {
+    "timestamp": "2026-01-12T22:13:24.015795",
+    "python_version": "3.12.3",
+    "cpu_count": 40,
+    "cpu_percent": 5.8,
+    "memory_total_gb": 62.757720947265625,
+    "memory_available_gb": 50.390567779541016,
+    "memory_used_gb": 12.36715316772461,
+    "torch_version": "2.9.1+cu128",
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "cuda_device_name": "NVIDIA GeForce RTX 3060"
+  },
+  "imports": {
+    "ModelManager": 3822.7925300598145,
+    "InferencePipeline": 1606.3008308410645,
+    "ShapeGenPipeline": 0.0026226043701171875,
+    "TextureGenPipeline": 0.0016689300537109375,
+    "build_app": 1969.9733257293701
+  },
+  "import_overhead": {
+    "torch_import_ms": 0.004291534423828125,
+    "transformers_import_ms": 0.0035762786865234375,
+    "diffusers_import_ms": 0.0040531158447265625
+  },
+  "mesh_operations": {
+    "mesh_creation_ms": 0.7894039154052734,
+    "mesh_copy_ms": 0.23937225341796875,
+    "mesh_export_glb_ms": 0.5662441253662109,
+    "glb_size_kb": 0.74609375,
+    "mesh_reload_ms": 0.36716461181640625,
+    "large_mesh_creation_ms": 0.26035308837890625
+  },
+  "app_building": {
+    "app_build_time_ms": 240.2052879333496,
+    "memory_used_mb": 5.3125
+  },
+  "api_server": {
+    "api_init_time_ms": 0.0002384185791015625,
+    "total_routes": 9
+  }
+}

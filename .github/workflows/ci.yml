@@ -106,7 +106,7 @@ jobs:
       
       - name: Run E2E tests
         run: |
-          python test_e2e.py
+          python tests/test_e2e.py
       
       - name: Test import consistency
         run: |

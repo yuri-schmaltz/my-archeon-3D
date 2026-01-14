@@ -45,10 +45,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3.10 \
+    python3 \
     curl \
     wget \
     libgomp1 \
+    libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy virtual environment from builder

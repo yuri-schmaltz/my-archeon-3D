@@ -57,7 +57,36 @@ setup_environment() {
     echo -e "${GREEN}✔ Diretórios de cache e logs criados.${NC}"
 }
 
-# 3. Interactive Menu
+# 3. Helper Functions
+wait_and_open() {
+    local url=$1
+    local max_retries=60 # Wait up to 60 seconds
+    local count=0
+    
+    echo -e "${YELLOW}Aguardando serviço iniciar em ${url}...${NC}"
+    
+    # Run in background to not block the menu loop if it takes too long, 
+    # but initially we want to give it a chance. 
+    # Actually, simpler to just background the whole wait process.
+    (
+        while ! curl -s --head "$url" > /dev/null; do
+            sleep 1
+            count=$((count+1))
+            if [ $count -ge $max_retries ]; then
+                # Timeout silently to not mess up the terminal if user is doing other things
+                exit 1
+            fi
+        done
+        
+        if command -v xdg-open &> /dev/null; then
+            xdg-open "$url" &> /dev/null
+        elif command -v open &> /dev/null; then
+            open "$url" &> /dev/null
+        fi
+    ) &
+}
+
+# 4. Interactive Menu
 show_menu() {
     echo -e "\n${BLUE}--- Menu de Gerenciamento ---${NC}"
     echo -e "1) ${GREEN}Build${NC} (Construir/Atualizar Imagem)"
@@ -86,6 +115,7 @@ while true; do
             echo -e "${YELLOW}Iniciando Archeon 3D (Gradio)...${NC}"
             docker compose up -d
             echo -e "${GREEN}Aplicação disponível em http://localhost:7860${NC}"
+            wait_and_open "http://localhost:7860"
             ;;
         3)
             echo -e "${YELLOW}Iniciando Archeon 3D (API Server)...${NC}"

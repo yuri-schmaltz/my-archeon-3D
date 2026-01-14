@@ -86,6 +86,22 @@ def export_mesh(mesh, save_folder, textured=False, file_type='glb'):
         # Log the visual type for debugging
         visual_type = mesh.visual.__class__.__name__ if hasattr(mesh, 'visual') else 'None'
         logger.info(f"Exporting textured mesh with visual type: {visual_type}")
+        
+        # FIX: Ensure PBR material is correctly set up for GLB export
+        # Sometimes trimesh SimpleMaterial exports as black if ambient/diffuse are 0
+        if hasattr(mesh, 'visual') and hasattr(mesh.visual, 'material'):
+            if isinstance(mesh.visual.material, trimesh.visual.material.PBRMaterial):
+                # Ensure base color is white so texture shows
+                mesh.visual.material.baseColorFactor = [255, 255, 255, 255]
+                mesh.visual.material.metallicFactor = 0.0
+                mesh.visual.material.roughnessFactor = 0.5
+            elif isinstance(mesh.visual.material, trimesh.visual.material.SimpleMaterial):
+                 # Convert SimpleMaterial to PBR for better GLB compatibility or ensure colors are bright
+                 # But simplistic approach: just set main color to white
+                 mesh.visual.material.main_color = [255, 255, 255, 255]
+                 # Also ensure ambient is not black
+                 mesh.visual.material.ambient = [255, 255, 255, 255]
+
         if hasattr(mesh, 'visual') and mesh.visual is not None:
             # Check for image in visual (TextureVisuals has material.image)
             if hasattr(mesh.visual, 'material') and mesh.visual.material is not None:

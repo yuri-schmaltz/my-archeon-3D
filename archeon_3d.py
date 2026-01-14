@@ -1,6 +1,21 @@
 import sys
 import argparse
 
+import os
+import warnings
+import logging
+
+# Suppress Warnings
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+warnings.filterwarnings("ignore")
+logging.getLogger("uvicorn.access").setLevel(logging.ERROR)
+logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
+logging.getLogger("httpx").setLevel(logging.ERROR)
+logging.getLogger("diffusers").setLevel(logging.ERROR)
+logging.getLogger("transformers").setLevel(logging.ERROR)
+logging.getLogger("torch").setLevel(logging.ERROR)
+logging.getLogger("numba").setLevel(logging.ERROR)
+
 def main():
     # Quick check for API mode before importing heavy libraries
     is_api = "--api" in sys.argv

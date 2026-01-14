@@ -1,5 +1,6 @@
 ninja
 pybind11
+sentencepiece
 diffusers>=0.36.0
 einops>=0.8.0
 opencv-python>=4.12.0

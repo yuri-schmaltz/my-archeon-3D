@@ -46,7 +46,7 @@ linkify-it-py>=2.0.0
 linkify>=1.4.0
 ipython>=8.12.0,<9.0.0
 imageio>=2.37.0
-scikit_image>=0.26.0
+scikit_image>=0.21.0,<0.25.0
 matplotlib>=3.10.0
 munch
 cvxpy

@@ -151,6 +151,7 @@ Archeon 3D 2.0 supports MacOS, Windows, Linux. You may follow the next steps to 
 - [Code](#code-usage)
 - [Gradio App](#gradio-app)
 - [API Server](#api-server)
+- [Docker Usage](docs/DOCKER.md)
 - [Blender Addon](#blender-addon)
 - [Official Site](#official-site)
 

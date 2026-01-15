@@ -269,8 +269,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         # State to track current model mode based on tab
         model_key_state = gr.State("Normal")
 
-        with gr.Row():
-            with gr.Column(scale=4):
+        with gr.Row(elem_classes="main-row"):
+            with gr.Column(scale=4, elem_classes="left-col"):
                 
                 with gr.Group():
                     gr.Markdown("### Input Prompt", header_links=True)
@@ -318,7 +318,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                             btn_confirm_yes = gr.Button("Yes", variant="stop", size="sm")
                             btn_confirm_no = gr.Button("No", size="sm")
 
-            with gr.Column(scale=8):
+            with gr.Column(scale=8, elem_classes="right-col"):
                 with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
                     with gr.Tab('Generated Mesh', id='gen_mesh_panel'):
                         with gr.Column(elem_id="gen_output_container"):

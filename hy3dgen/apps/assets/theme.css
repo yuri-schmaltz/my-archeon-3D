@@ -6,7 +6,7 @@
     --primary-500: #6366f1;
     --primary-600: #4f46e5;
     --secondary-500: #ec4899;
-    
+
     /* Neutral / Surface */
     --surface-bg: #ffffff;
     --surface-bg-alt: #f9fafb;
@@ -18,7 +18,7 @@
     --radius-lg: 12px;
     --radius-md: 8px;
     --radius-sm: 4px;
-    
+
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -37,16 +37,68 @@
 }
 
 /* Global Reset & Typography */
-.gradio-container { 
-    font-family: 'Inter', system-ui, sans-serif !important; 
-    min-height: 0 !important;
+* {
+    box-sizing: border-box !important;
+}
+
+html,
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    overflow: hidden !important;
+}
+
+/* Hide scrollbars specifically */
+::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px !important;
+    background: transparent !important;
+}
+
+/* For Firefox */
+* {
+    scrollbar-width: none !important;
+}
+
+.gradio-container {
+    font-family: 'Inter', system-ui, sans-serif !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    min-height: 100vh !important;
     max-width: 100% !important;
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: hidden !important;
+    /* Eliminate outer scroll */
+    box-sizing: border-box !important;
 }
 
-.app { 
+.main-row {
+    height: 100% !important;
+    max-height: 100vh !important;
+    padding-bottom: 20px !important;
+    /* Some breathing room at bottom */
+}
+
+.left-col {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    /* Scrollable inputs */
+    padding-right: 10px !important;
+}
+
+.right-col {
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.app {
     padding: 0 !important;
     max-width: 100% !important;
     width: 100% !important;
@@ -60,19 +112,36 @@
 }
 
 /* Tabs Styling */
+/* Tabs Styling */
 .tabs {
     border-radius: var(--radius-lg);
     overflow: hidden;
     border: 1px solid var(--border-color);
     background: var(--surface-bg);
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+    height: 100% !important;
+}
+
+div[id^="tab-"] {
+    /* Target tab content divs */
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+    height: 100% !important;
 }
 
 /* Spacing fixes */
-#tab_img_prompt, #tab_txt_prompt, #tab_mv_prompt { padding: 16px !important; }
+#tab_img_prompt,
+#tab_txt_prompt,
+#tab_mv_prompt {
+    padding: 16px !important;
+}
 
 /* Buttons */
-button.primary { 
-    background: linear-gradient(135deg, var(--primary-500), var(--primary-600)) !important; 
+button.primary {
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600)) !important;
     border: none !important;
     border-radius: var(--radius-md) !important;
     font-weight: 600 !important;
@@ -81,11 +150,13 @@ button.primary {
     box-shadow: var(--shadow-sm);
     color: white !important;
 }
+
 button.primary:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
     filter: brightness(1.05);
 }
+
 button.primary:active {
     transform: translateY(0);
 }
@@ -97,19 +168,19 @@ button.stop {
 }
 
 /* Output Area */
-#gen_output_container { 
-    display: flex !important; 
-    flex-direction: column !important; 
-    height: 100% !important; 
-    flex-grow: 1; 
-    min-height: 600px !important; 
+#gen_output_container {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    flex-grow: 1;
+    min-height: 600px !important;
     background: transparent;
 }
 
-#model_3d_viewer { 
-    flex-grow: 1; 
-    overflow: hidden; 
-    min-height: 0 !important; 
+#model_3d_viewer {
+    flex-grow: 1;
+    overflow: hidden;
+    min-height: 0 !important;
     border-radius: var(--radius-lg) !important;
     box-shadow: var(--shadow-lg);
     border: 1px solid var(--border-color);
@@ -123,15 +194,15 @@ button.stop {
     background: var(--surface-bg) !important;
 }
 
-iframe { 
-    width: 100% !important; 
+iframe {
+    width: 100% !important;
     height: 100% !important;
     display: block;
     border: none;
 }
 
-.download-row { 
-    margin-top: 16px; 
+.download-row {
+    margin-top: 16px;
     padding-top: 10px;
     border-top: 1px solid var(--border-color);
 }

@@ -384,8 +384,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
 
         btn_confirm_yes.click(
             fn=on_gen_finish, 
-            outputs=[btn, btn_all, btn_stop, confirm_stop_group], 
-            cancels=[succ1_2, succ2_2]
+            outputs=[btn, btn_stop, confirm_stop_group], 
+            cancels=[succ1_2]
         )
 
     return demo

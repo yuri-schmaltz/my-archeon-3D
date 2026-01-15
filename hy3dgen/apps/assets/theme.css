@@ -2,43 +2,61 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-    /* Brand Colors */
+    /* --- Premium Color Palette (Dark Theme Default) --- */
+    /* Primary Brand: Indigo/Violet */
+    --primary-400: #818cf8;
     --primary-500: #6366f1;
     --primary-600: #4f46e5;
+    --primary-700: #4338ca;
+
+    /* Secondary Accent: Pink/Rose */
     --secondary-500: #ec4899;
 
-    /* Neutral / Surface */
-    --surface-bg: #ffffff;
-    --surface-bg-alt: #f9fafb;
-    --border-color: #e5e7eb;
-    --text-main: #1f2937;
-    --text-muted: #6b7280;
+    /* Surface & Backgrounds */
+    --bg-app: #0f172a;
+    /* Slate 900 */
+    --bg-panel: #1e293b;
+    /* Slate 800 */
+    --bg-surface: #334155;
+    /* Slate 700 */
+    --bg-input: #0f172a;
 
-    /* Metrics */
-    --radius-lg: 12px;
-    --radius-md: 8px;
-    --radius-sm: 4px;
+    /* Text */
+    --text-main: #f8fafc;
+    /* Slate 50 */
+    --text-muted: #94a3b8;
+    /* Slate 400 */
+    --text-on-primary: #ffffff;
 
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    /* Borders & Dividers */
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-highlight: rgba(255, 255, 255, 0.15);
+
+    /* Dimensions */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+
+    /* Effects */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --backdrop-blur: blur(12px);
 }
 
-/* Dark Mode Overrides */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --surface-bg: #1f2937;
-        --surface-bg-alt: #111827;
-        --border-color: #374151;
-        --text-main: #f9fafb;
-        --text-muted: #9ca3af;
-    }
-}
-
-/* Global Reset & Typography */
+/* --- Global Reset & Foundation --- */
 * {
     box-sizing: border-box !important;
+    scrollbar-width: none !important;
+    /* Firefox */
+}
+
+::-webkit-scrollbar {
+    width: 0px !important;
+    background: transparent !important;
 }
 
 html,
@@ -48,135 +66,142 @@ body {
     height: 100vh !important;
     width: 100vw !important;
     overflow: hidden !important;
-}
-
-/* Hide scrollbars specifically */
-::-webkit-scrollbar {
-    width: 0px !important;
-    height: 0px !important;
-    background: transparent !important;
-}
-
-/* For Firefox */
-* {
-    scrollbar-width: none !important;
-}
-
-.gradio-container {
     font-family: 'Inter', system-ui, sans-serif !important;
+    background-color: var(--bg-app) !important;
+    color: var(--text-main) !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- Gradio Container Structure --- */
+.gradio-container {
     height: 100vh !important;
     max-height: 100vh !important;
-    min-height: 100vh !important;
-    max-width: 100% !important;
     width: 100% !important;
-    margin: 0 !important;
+    max-width: 100% !important;
     padding: 0 !important;
-    overflow: hidden !important;
-    /* Eliminate outer scroll */
-    box-sizing: border-box !important;
+    margin: 0 !important;
+    background: transparent !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 .main-row {
     height: 100% !important;
-    max-height: 100vh !important;
-    padding-bottom: 20px !important;
-    /* Some breathing room at bottom */
+    gap: 0 !important;
+    /* We control spacing via padding */
+    display: flex !important;
 }
 
+/* --- Left Column: Controls --- */
 .left-col {
+    background: var(--bg-app);
+    border-right: 1px solid var(--border-subtle);
+    padding: 24px !important;
     height: 100% !important;
-    max-height: 100% !important;
     overflow-y: auto !important;
-    /* Scrollable inputs */
-    padding-right: 6px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 24px !important;
 }
 
-/* Hide Scrollbar aesthetics */
-.left-col::-webkit-scrollbar {
-    width: 0px !important;
-    background: transparent !important;
-}
-
-.left-col {
-    scrollbar-width: none !important;
-}
-
+/* --- Right Column: Viewer --- */
 .right-col {
+    background: #000000;
+    /* Viewer usually needs absolute black or deep bg */
     height: 100% !important;
-    max-height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-.app {
+    position: relative !important;
     padding: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 !important;
+    flex-grow: 1 !important;
 }
 
-/* Accordions */
-.label-wrap.svelte-12cmxck {
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+/* --- Components: Typography --- */
+/* Headlines inside components */
+.gr-box>div>span,
+span.svelte-1gfkn6j {
+    color: var(--text-muted) !important;
+    text-transform: uppercase;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.05em;
+    font-weight: 600 !important;
 }
 
-/* Tabs Styling */
-/* Tabs Styling */
+/* --- Components: Inputs & Cards --- */
+.block {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Input Fields (Textboxes, Numbers) */
+textarea,
+input[type="text"],
+input[type="number"] {
+    background-color: var(--bg-input) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--text-main) !important;
+    padding: 10px 12px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+}
+
+textarea:focus,
+input:focus {
+    border-color: var(--primary-500) !important;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Slider */
+input[type="range"] {
+    accent-color: var(--primary-500) !important;
+}
+
+/* --- Components: Tabs --- */
 .tabs {
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-    background: var(--surface-bg);
-    display: flex !important;
-    flex-direction: column !important;
-    flex-grow: 1 !important;
-    height: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
 }
 
-/* Fix Gradio internal wrappers */
-.contain,
-.wrap {
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    flex-grow: 1 !important;
+.tab-nav {
+    border-bottom: 1px solid var(--border-subtle) !important;
+    gap: 24px !important;
+    margin-bottom: 16px !important;
 }
 
-/* Tab Content */
-div[id^="tab-"],
-.tabitem,
-#gen_mesh_panel,
-#stats_panel {
-    display: flex !important;
-    flex-direction: column !important;
-    flex-grow: 1 !important;
-    height: 100% !important;
+button.selected {
+    color: var(--primary-400) !important;
+    border-bottom: 2px solid var(--primary-500) !important;
+    background: transparent !important;
+    font-weight: 600 !important;
 }
 
-/* Spacing fixes */
-#tab_img_prompt,
-#tab_txt_prompt,
-#tab_mv_prompt {
-    padding: 16px !important;
+button {
+    color: var(--text-muted) !important;
+    transition: color 0.2s ease !important;
 }
 
-/* Buttons */
+button:hover {
+    color: var(--text-main) !important;
+}
+
+/* --- Components: Buttons --- */
 button.primary {
-    background: linear-gradient(135deg, var(--primary-500), var(--primary-600)) !important;
+    background: linear-gradient(135deg, var(--primary-600), var(--primary-500)) !important;
+    color: white !important;
     border: none !important;
     border-radius: var(--radius-md) !important;
+    padding: 12px 24px !important;
     font-weight: 600 !important;
-    padding: 10px 20px !important;
-    transition: all 0.2s ease !important;
-    box-shadow: var(--shadow-sm);
-    color: white !important;
+    font-size: 0.95rem !important;
+    box-shadow: var(--shadow-md) !important;
+    transition: transform 0.1s ease, filter 0.2s ease !important;
+    width: 100% !important;
 }
 
 button.primary:hover {
+    filter: brightness(1.1);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-    filter: brightness(1.05);
 }
 
 button.primary:active {
@@ -186,50 +211,70 @@ button.primary:active {
 /* Stop Button */
 button.stop {
     background: #ef4444 !important;
-    color: white !important;
+    /* Red-500 */
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    width: 100% !important;
 }
 
-/* Output Area */
+/* --- Components: Containers & Groups --- */
+/* The "Generation Settings" Container */
+.panel-container {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--backdrop-blur);
+    border-radius: var(--radius-lg);
+    padding: 20px !important;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Accordions/Groups within settings */
+.label-wrap {
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--bg-surface) !important;
+}
+
+/* --- Components: 3D Viewer --- */
 #gen_output_container {
-    display: flex !important;
-    flex-direction: column !important;
     height: 100% !important;
-    flex-grow: 1;
-    min-height: 600px !important;
-    background: transparent;
+    width: 100% !important;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-panel);
+    /* Fallback */
 }
 
 #model_3d_viewer {
-    flex-grow: 1;
-    overflow: hidden;
+    height: 100% !important;
+    width: 100% !important;
     min-height: 0 !important;
-    border-radius: var(--radius-lg) !important;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--border-color);
-    background: var(--surface-bg);
-    position: relative;
-}
-
-/* Fixes for dark mode in gradio defaults if needed */
-.block.svelte-90oupt {
-    border-color: var(--border-color) !important;
-    background: var(--surface-bg) !important;
+    border: none !important;
+    background: transparent !important;
 }
 
 iframe {
     width: 100% !important;
     height: 100% !important;
-    display: block;
-    border: none;
+    border: none !important;
 }
 
-.download-row {
-    margin-top: 16px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border-color);
+/* --- Image Upload Fields --- */
+/* Make drop zones cleaner */
+button.upload-button {
+    background: var(--bg-surface) !important;
+    border: 1px dashed var(--border-highlight) !important;
+    border-radius: var(--radius-md) !important;
+    min-height: 100px !important;
 }
 
-/* Slider & Inputs */
-input[type="range"] {
-    accent-color: var(--primary-500);
+button.upload-button:hover {
+    border-color: var(--primary-500) !important;
+    background: var(--bg-panel) !important;
+}
+
+/* Remove default Gradio footprint info if desired */
+footer {
+    display: none !important;
 }

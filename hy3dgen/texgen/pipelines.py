@@ -203,7 +203,7 @@ class Hunyuan3DPaintPipeline:
         return new_image
 
     @torch.no_grad()
-    def __call__(self, mesh, image):
+    def __call__(self, mesh, image, **kwargs):
         with Benchmark("Hunyuan3DPaintPipeline.__call__"):
             if not isinstance(image, List):
                 image = [image]
@@ -235,7 +235,7 @@ class Hunyuan3DPaintPipeline:
             camera_info = [(((azim // 30) + 9) % 12) // {-20: 1, 0: 1, 20: 1, -90: 3, 90: 3}[
                 elev] + {-20: 0, 0: 12, 20: 24, -90: 36, 90: 40}[elev] for azim, elev in
                            zip(selected_camera_azims, selected_camera_elevs)]
-            multiviews = self.models['multiview_model'](images_prompt, normal_maps + position_maps, camera_info)
+            multiviews = self.models['multiview_model'](images_prompt, normal_maps + position_maps, camera_info, **kwargs)
 
             for i in range(len(multiviews)):
                 # multiviews[i] = self.models['super_model'](multiviews[i])

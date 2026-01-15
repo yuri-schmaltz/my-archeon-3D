@@ -147,7 +147,7 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
     iframe_tag = f'<iframe src="/static/{rel_path}" style="width: 100%; height: 100%; min-height: 600px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
     return iframe_tag
 
-async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed, do_texture, progress):
+async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed, progress=gr.Progress()):
     mv_mode = model_key == "Multiview"
     mv_images = {}
     if mv_mode:
@@ -208,6 +208,9 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
         'do_rembg': check_box_rembg,
         'num_chunks': int(num_chunks),
         'do_texture': do_texture, # Flag to indicate if texturing is needed
+        'tex_steps': int(tex_steps),
+        'tex_guidance_scale': float(tex_guidance_scale),
+        'tex_seed': int(tex_seed),
         'progress_callback': gradio_progress_callback
     }
     
@@ -275,7 +278,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             with gr.Column(scale=4, elem_classes="left-col"):
                 
                 with gr.Group():
-                    gr.Markdown("### Input Prompt", header_links=True)
+
                     with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
                         with gr.Tab('Image Prompt', id='tab_img_prompt') as tab_ip:
                             image = gr.Image(label='Image', type='pil', image_mode='RGBA', height=250, sources=['upload', 'clipboard'])
@@ -292,8 +295,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                             caption = gr.Textbox(label='Text Prompt', placeholder='HunyuanDiT will be used to generate image.', lines=3)
                             negative_prompt = gr.Textbox(label='Negative Prompt', placeholder='Low quality, distortion, etc.', lines=2)
 
-                with gr.Group() as gen_settings_group:
-                    gr.Markdown("### Generation Settings", header_links=True)
+                with gr.Column(visible=True, elem_classes="panel-container") as gen_settings_container:
                     with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
                         with gr.Tab("Options", id='tab_options', visible=TURBO_MODE):
                             gen_mode = gr.Radio(label='Generation Mode', choices=['Turbo', 'Fast', 'Standard'], value='Turbo')
@@ -309,6 +311,12 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                             with gr.Row():
                                 cfg_scale = gr.Number(value=5.0, label='Guidance Scale')
                                 num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label='Number of Chunks')
+                            
+                            gr.Markdown("#### Texture Settings")
+                            with gr.Row():
+                                tex_steps = gr.Slider(maximum=100, minimum=1, value=30, step=1, label='Texture Steps')
+                                tex_guidance_scale = gr.Number(value=5.0, label='Texture Guidance Scale')
+                            tex_seed = gr.Slider(label="Texture Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
 
                 # Buttons Area - Vertical Stack
                 btn = gr.Button(value='Generate 3D Model', variant='primary')
@@ -339,37 +347,28 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             logger.info("UI EVENT: Generation finished (or stopped). Restoring UI.")
             return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
 
-        # Update model state based on tab selection
-        def update_model_key(evt: gr.SelectData):
-            # When Tabs have IDs, the selected value is the ID
-            model_key = "Normal"
-            settings_visible = True
+        # Explicit Tab Selection Handlers
+        def on_image_tab_select():
+            return "Normal", gr.update(visible=True)
             
-            logger.info(f"Tab Selected: {evt.value}")
+        def on_mv_tab_select():
+            return "Multiview", gr.update(visible=False)
             
-            if evt.value == "tab_mv_prompt":
-                model_key = "Multiview"
-                settings_visible = False
-            elif evt.value == "tab_txt_prompt":
-                model_key = "Normal"
-                settings_visible = False
-            elif evt.value == "tab_img_prompt":
-                model_key = "Normal"
-                settings_visible = True
-            else:
-                logger.warning(f"Unknown tab value: {evt.value}")
-                
-            logger.info(f"Setting Generation Settings Visible: {settings_visible}")
-            return model_key, gr.update(visible=settings_visible)
+        def on_text_tab_select():
+            return "Normal", gr.update(visible=False)
 
-        tabs_prompt.select(fn=update_model_key, outputs=[model_key_state, gen_settings_group])
+        # Bind events strictly to specific tabs
+        tab_ip.select(fn=on_image_tab_select, outputs=[model_key_state, gen_settings_container])
+        tab_mv_p.select(fn=on_mv_tab_select, outputs=[model_key_state, gen_settings_container])
+        if HAS_T2I:
+            tab_tp.select(fn=on_text_tab_select, outputs=[model_key_state, gen_settings_container])
 
         # Wire events
         # Event Chain: Textured Generation (Single Flow)
         succ1_1 = btn.click(on_gen_start, outputs=[btn, btn_stop])
         succ1_2 = succ1_1.then(
             generation_all, 
-            inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
+            inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed], 
             outputs=[file_out, html_gen_mesh, seed]
         )
         succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_stop, confirm_stop_group])

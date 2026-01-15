@@ -228,7 +228,16 @@ class InferencePipeline:
             
             try:
                 t1 = time.time()
-                textured_mesh = self.pipeline_tex(mesh, image)
+                
+                # Extract texture-specific parameters
+                tex_kwargs = {
+                    'steps': params.get("tex_steps", 30),
+                    'guidance_scale': params.get("tex_guidance_scale", 5.0),
+                    'seed': int(params.get("tex_seed", 0))
+                }
+                logger.info(f"[{uid}] TexGen Params: {tex_kwargs}")
+                
+                textured_mesh = self.pipeline_tex(mesh, image, **tex_kwargs)
                 stats['time']['tex_gen'] = time.time() - t1
                 logger.info(f"[{uid}] Texture generation completed in {stats['time']['tex_gen']:.2f}s")
                 logger.info(f"[{uid}] Textured mesh type: {type(textured_mesh)}")

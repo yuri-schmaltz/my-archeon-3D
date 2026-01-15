@@ -172,11 +172,12 @@ class PriorityRequestManager:
             task.cancel()
         await asyncio.gather(*self.workers, return_exceptions=True)
 
-    async def submit(self, params: Dict[str, Any], priority: int = 10) -> Any:
+    async def submit(self, params: Dict[str, Any], priority: int = 10, uid: str = None) -> Any:
         """Submit a job to the queue and wait for result."""
         loop = asyncio.get_running_loop()
         future = loop.create_future()
-        uid = str(uuid.uuid4())
+        if uid is None:
+            uid = str(uuid.uuid4())
         
         item = PrioritizedItem(
             priority=priority,

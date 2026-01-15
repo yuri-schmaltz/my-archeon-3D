@@ -48,7 +48,7 @@ def main():
             "--host", "0.0.0.0",
             "--port", "8081",
             "--model_path", "tencent/Hunyuan3D-2",
-            "--subfolder", "hunyuan3d-dit-v2-0",
+            "--subfolder", "hunyuan3d-dit-v2-0-turbo",
             "--texgen_model_path", "tencent/Hunyuan3D-2",
             "--low_vram_mode",
             "--enable_t23d"

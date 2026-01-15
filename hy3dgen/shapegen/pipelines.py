@@ -191,6 +191,7 @@ class Hunyuan3DDiTPipeline:
             image_processor=image_processor,
             device=device,
             dtype=dtype,
+            low_vram_mode=kwargs.get('low_vram_mode', False),
         )
         model_kwargs.update(kwargs)
 
@@ -241,6 +242,7 @@ class Hunyuan3DDiTPipeline:
         image_processor,
         device='cuda',
         dtype=torch.float16,
+        low_vram_mode=False,
         **kwargs
     ):
         self.vae = vae
@@ -249,7 +251,12 @@ class Hunyuan3DDiTPipeline:
         self.conditioner = conditioner
         self.image_processor = image_processor
         self.kwargs = kwargs
-        self.to(device, dtype)
+        self.low_vram_mode = low_vram_mode
+        if not low_vram_mode:
+            self.to(device, dtype)
+        else:
+            self.dtype = dtype
+            self.device = torch.device('cpu') # Default to CPU in low vram
 
     def compile(self):
         self.vae = torch.compile(self.vae)

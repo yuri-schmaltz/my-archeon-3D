@@ -68,7 +68,7 @@ class Hunyuan3DTexGenConfig:
 
 class Hunyuan3DPaintPipeline:
     @classmethod
-    def from_pretrained(cls, model_path, subfolder='hunyuan3d-paint-v2-0-turbo'):
+    def from_pretrained(cls, model_path, subfolder='hunyuan3d-paint-v2-0-turbo', low_vram_mode=False):
         original_model_path = model_path
         if not os.path.exists(model_path):
             # try local path
@@ -90,20 +90,21 @@ class Hunyuan3DPaintPipeline:
                     )
                     delight_model_path = os.path.join(model_path, 'hunyuan3d-delight-v2-0')
                     multiview_model_path = os.path.join(model_path, subfolder)
-                    return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder))
+                    return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder), low_vram_mode=low_vram_mode)
                 except Exception:
                     import traceback
                     traceback.print_exc()
                     raise RuntimeError(f"Something wrong while loading {model_path}")
             else:
-                return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder))
+                return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder), low_vram_mode=low_vram_mode)
         else:
             delight_model_path = os.path.join(model_path, 'hunyuan3d-delight-v2-0')
             multiview_model_path = os.path.join(model_path, subfolder)
-            return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder))
+            return cls(Hunyuan3DTexGenConfig(delight_model_path, multiview_model_path, subfolder), low_vram_mode=low_vram_mode)
             
-    def __init__(self, config):
+    def __init__(self, config, low_vram_mode=False):
         self.config = config
+        self.low_vram_mode = low_vram_mode
         self.models = {}
         self.render = MeshRender(
             default_resolution=self.config.render_size,
@@ -116,8 +117,14 @@ class Hunyuan3DPaintPipeline:
         torch.cuda.empty_cache()
         # Load model
         self.models['delight_model'] = Light_Shadow_Remover(self.config)
+        if self.low_vram_mode:
+            self.models['delight_model'].pipeline.enable_model_cpu_offload()
+            torch.cuda.empty_cache()
+            
         self.models['multiview_model'] = Multiview_Diffusion_Net(self.config)
-        # self.models['super_model'] = Image_Super_Net(self.config)
+        if self.low_vram_mode:
+            self.models['multiview_model'].pipeline.enable_model_cpu_offload()
+            torch.cuda.empty_cache()
 
     def enable_model_cpu_offload(self, gpu_id: Optional[int] = None, device: Union[torch.device, str] = "cuda"):
         self.models['delight_model'].pipeline.enable_model_cpu_offload(gpu_id=gpu_id, device=device)

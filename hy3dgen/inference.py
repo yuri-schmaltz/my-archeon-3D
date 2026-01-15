@@ -38,6 +38,7 @@ class InferencePipeline:
             subfolder=subfolder,
             use_safetensors=True,
             device=device,
+            low_vram_mode=low_vram_mode,
         )
         
         if use_flashvdm:
@@ -46,25 +47,29 @@ class InferencePipeline:
         if low_vram_mode:
             logger.info("Enabling CPU offload for ShapeGen model...")
             self.pipeline.enable_model_cpu_offload()
+            torch.cuda.empty_cache()
 
         self.pipeline_t2i = None
         if enable_t2i:
             logger.info("Loading Text2Image model...")
             self.pipeline_t2i = HunyuanDiTPipeline(
                 'Tencent-Hunyuan/HunyuanDiT-v1.1-Diffusers-Distilled',
-                device=device
+                device=device,
+                low_vram_mode=low_vram_mode
             )
-            if low_vram_mode:
-                logger.info("Enabling CPU offload for Text2Image model...")
-                self.pipeline_t2i.pipe.enable_model_cpu_offload()
+            torch.cuda.empty_cache()
 
         self.pipeline_tex = None
         if enable_tex:
             logger.info(f"Loading TexGen model from {tex_model_path}...")
-            self.pipeline_tex = Hunyuan3DPaintPipeline.from_pretrained(tex_model_path)
+            self.pipeline_tex = Hunyuan3DPaintPipeline.from_pretrained(
+                tex_model_path, 
+                subfolder='hunyuan3d-paint-v2-0-turbo',
+                low_vram_mode=low_vram_mode
+            )
             if low_vram_mode:
-                logger.info("Enabling CPU offload for TexGen model...")
                 self.pipeline_tex.enable_model_cpu_offload()
+                torch.cuda.empty_cache()
 
         # Helper workers
         self.floater_remover = FloaterRemover()

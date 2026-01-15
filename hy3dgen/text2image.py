@@ -31,7 +31,8 @@ class HunyuanDiTPipeline:
     def __init__(
         self,
         model_path="Tencent-Hunyuan/HunyuanDiT-v1.1-Diffusers-Distilled",
-        device='cuda'
+        device='cuda',
+        low_vram_mode=False
     ):
         self.device = device
         self.pipe = AutoPipelineForText2Image.from_pretrained(
@@ -39,7 +40,11 @@ class HunyuanDiTPipeline:
             dtype=torch.float16,
             enable_pag=True,
             pag_applied_layers=["blocks.(16|17|18|19)"]
-        ).to(device)
+        )
+        if low_vram_mode:
+            self.pipe.enable_model_cpu_offload(device=device)
+        else:
+            self.pipe.to(device)
         self.pos_txt = ", white background, 3D style, best quality"
         self.neg_txt = "lowres, text, error, cropped, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, out of frame, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
 

@@ -147,7 +147,7 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
     iframe_tag = f'<iframe src="/static/{rel_path}" style="width: 100%; height: 100%; min-height: 600px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
     return iframe_tag
 
-async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed, progress=gr.Progress()):
+async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed, do_texture=True, progress=gr.Progress()):
     mv_mode = model_key == "Multiview"
     mv_images = {}
     if mv_mode:
@@ -352,10 +352,10 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             return "Normal", gr.update(visible=True)
             
         def on_mv_tab_select():
-            return "Multiview", gr.update(visible=False)
+            return "Multiview", gr.update(visible=True)
             
         def on_text_tab_select():
-            return "Normal", gr.update(visible=False)
+            return "Normal", gr.update(visible=True)
 
         # Bind events strictly to specific tabs
         tab_ip.select(fn=on_image_tab_select, outputs=[model_key_state, gen_settings_container])

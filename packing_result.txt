@@ -1,0 +1,7 @@
+INFO:api_server:Initializing Archeon 3D API Server on 0.0.0.0:8081
+INFO:meshops.engine:Starting MeshOps request pack_test_01
+INFO:httpx:HTTP Request: POST http://testserver/v1/jobs "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/v1/jobs/pack_test_01 "HTTP/1.1 200 OK"
+Found packed texture: /tmp/pack_out_packed_orm.png
+Channel packing test passed!
+PASS

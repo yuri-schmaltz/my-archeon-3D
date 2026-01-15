@@ -1,0 +1,11 @@
+INFO:api_server:Initializing Archeon 3D API Server on 0.0.0.0:8081
+INFO:meshops.engine:Starting MeshOps request batch_tex_test_0
+INFO:meshops.ops:Applied uniform scale: 2.0
+INFO:meshops.engine:Starting MeshOps request batch_tex_test_1
+INFO:httpx:HTTP Request: POST http://testserver/v1/batches "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/v1/jobs/batch_tex_test_0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://testserver/v1/jobs/batch_tex_test_1 "HTTP/1.1 200 OK"
+Job batch_tex_test_0 passed!
+Job batch_tex_test_1 passed!
+Batch MeshOps test passed!
+PASS

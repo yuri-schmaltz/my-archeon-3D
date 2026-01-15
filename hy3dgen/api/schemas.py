@@ -1,5 +1,5 @@
 from typing import List, Optional, Literal, Dict, Any, Union
-from pydantic import BaseModel, Field, constr, conint, confloat
+from pydantic import BaseModel, Field, constr, conint, confloat, AliasChoices
 from uuid import uuid4
 from enum import Enum
 
@@ -10,6 +10,7 @@ class Mode(str, Enum):
     IMAGE_TO_3D = "image_to_3d"
     TEXT_IMAGE_TO_3D = "text_image_to_3d"
     REFINE_3D = "refine_3d"
+    MESH_OPS = "mesh_ops"
 
 class Role(str, Enum):
     REFERENCE = "reference"
@@ -89,7 +90,7 @@ class ArtifactType(str, Enum):
     PREVIEW_RENDERS = "preview_renders"
     REPORT = "report"
 
-# --- Models ---
+# --- Common Models ---
 
 class ImageItem(BaseModel):
     image_id: str = Field(..., min_length=1, max_length=64)
@@ -100,12 +101,6 @@ class ImageItem(BaseModel):
 class SourceMesh(BaseModel):
     uri: str = Field(..., min_length=3)
     format: Optional[MeshFormat] = None
-
-class Input(BaseModel):
-    text_prompt: Optional[str] = Field(default="")
-    negative_prompt: Optional[str] = None
-    images: List[ImageItem] = Field(default_factory=list)
-    source_mesh: Optional[SourceMesh] = None
 
 class RealWorldSize(BaseModel):
     x: float = Field(..., ge=0)
@@ -128,7 +123,7 @@ class UV(BaseModel):
 
 class Materials(BaseModel):
     pbr: bool
-    texture_resolution: int # Enum validation via standard validation not explicit enum due to int
+    texture_resolution: int
     maps: List[MapType]
     single_material: bool
 
@@ -141,7 +136,7 @@ class Rigging(BaseModel):
     type: RiggingType
 
 class Constraints(BaseModel):
-    target_format: List[MeshFormat]
+    target_formats: List[MeshFormat] = Field(..., validation_alias=AliasChoices("target_formats", "target_format")) # Support both for compatibility
     scale_unit: Optional[ScaleUnit] = None
     real_world_size: Optional[RealWorldSize] = None
     pivot: Optional[Pivot] = None
@@ -154,6 +149,9 @@ class Constraints(BaseModel):
     symmetry: Optional[Symmetry] = None
     lod: Optional[LOD] = None
     rigging: Optional[Rigging] = None
+
+    class Config:
+        populate_by_name = True
 
 class Quality(BaseModel):
     preset: QualityPreset
@@ -177,26 +175,6 @@ class Output(BaseModel):
     artifact_prefix: str = Field(..., min_length=1, max_length=128)
     return_preview_renders: bool
     preview_angles_deg: List[int] = Field(default=[0, 45, 90, 135, 180, 225, 270, 315])
-
-# --- Top Level ---
-
-class Batch(BaseModel):
-    enabled: bool
-    items: List[Dict[str, Any]] = Field(default_factory=list) # Recursive references are tricky, using Dict for payload
-    concurrency_hint: int = Field(1, ge=1, max=256)
-
-class JobRequest(BaseModel):
-    request_id: str = Field(..., min_length=8, max_length=128)
-    schema_version: str = Field("1.0", pattern=r"^1\.0$")
-    mode: Mode
-    input: Input
-    constraints: Constraints
-    quality: Quality
-    postprocess: Postprocess
-    batch: Batch
-    output: Output
-
-# --- Responses ---
 
 class Bounds(BaseModel):
     x: float
@@ -237,6 +215,156 @@ class JobResponse(BaseModel):
     schema_version: str = "1.0"
     status: JobStatus
     artifacts: List[Artifact] = Field(default_factory=list)
-    quality_report: Optional[Dict[str, Any]] = None # Simplified for now
+    quality_report: Optional[Dict[str, Any]] = None
     error: Optional[ErrorObject] = None
 
+
+# --- MeshOps Specific Models (Now safe to define) ---
+
+class BlendImportConfig(BaseModel):
+    enabled: bool = False
+    scene: Optional[str] = None
+    collection: Optional[str] = None
+    object_names: Optional[List[str]] = None
+    object_types: List[str] = ["MESH", "CURVE", "SURFACE", "FONT", "META", "GPENCIL"]
+    apply_modifiers: bool = True
+    modifier_evaluation: Literal["render", "viewport"] = "render"
+    convert_non_mesh_to_mesh: bool = True
+    triangulate_on_import: bool = False
+    join_strategy: Literal["none", "by_collection", "by_material", "all"] = "none"
+    include_hidden: bool = False
+    use_linked_data_policy: Literal["pack", "resolve", "fail"] = "pack"
+    external_assets_policy: Literal["pack", "resolve", "strip", "fail"] = "pack"
+    texture_path_policy: Literal["relative", "absolute", "pack"] = "pack"
+    unit_from_blend: Literal["use_scene", "override"] = "use_scene"
+    axis_from_blend: Literal["use_scene", "override"] = "use_scene"
+
+class MeshOpsSourceMesh(BaseModel):
+    mesh_id: str
+    uri: str
+    format: str # glb, gltf, obj, blend, etc.
+    name_hint: Optional[str] = None
+    units_hint: Optional[ScaleUnit] = None
+    axis_hint: Optional[Axis] = None
+    material_policy: Literal["keep", "override", "strip"] = "keep"
+    submesh_policy: Literal["keep", "merge_by_material", "merge_all"] = "keep"
+    blend_import: Optional[BlendImportConfig] = None
+
+class TextureSource(BaseModel):
+    source_id: str
+    uri: str
+    type: Literal["single_image", "multi_view", "atlas", "tileable_set"]
+    maps: List[MapType]
+    mapping_hint: Literal["project", "unwrap", "triplanar"] = "project"
+    mask_uri: Optional[str] = None
+    weight: float = 0.0
+
+class AuxInputs(BaseModel):
+    cage_mesh_uri: Optional[str] = None
+    reference_images: List[ImageItem] = Field(default_factory=list)
+    texture_sources: List[TextureSource] = Field(default_factory=list)
+
+class MeshOpsInput(BaseModel):
+    source_meshes: List[MeshOpsSourceMesh]
+    aux_inputs: Optional[AuxInputs] = None
+
+class MeshOpsPreset(BaseModel):
+    preset_id: str
+    overrides: Optional[Dict[str, Any]] = None
+
+class Operation(BaseModel):
+    op_id: str
+    type: str
+    target: Dict[str, Any]
+    params: Dict[str, Any] = Field(default_factory=dict)
+    on_fail: Literal["stop", "skip", "partial"] = "stop"
+    depends_on: List[str] = Field(default_factory=list)
+
+class BlendPolicy(BaseModel):
+    allow_blend: bool = True
+    require_headless_import: bool = True
+    max_import_time_ms: int = 600000
+
+class FileSafety(BaseModel):
+    disallow_external_refs: bool = True
+
+class Naming(BaseModel):
+    sanitize: bool = True
+    max_len: int = 64
+
+class AutoTexturing(BaseModel):
+    enabled: bool = True
+    strategy: Literal["from_images", "synthesize", "hybrid"] = "from_images"
+    style_strength: float = 0.0
+    detail_level: Literal["low", "medium", "high"] = "medium"
+    seam_reduce: bool = True
+    color_consistency: bool = True
+    tileable: bool = False
+    denoise: Literal["off", "light", "strong"] = "off"
+    upscale: Literal["off", "2x", "4x"] = "off"
+
+class BakingConfig(BaseModel):
+    enabled: bool = True
+    high_mesh_id: Optional[str] = None
+    cage_uri: Optional[str] = None
+    maps: List[str] = ["normal", "ao"]
+    ray_distance: float = 0.0
+    antialiasing: Literal["none", "2x", "4x", "8x"] = "2x"
+
+class ChannelPacking(BaseModel):
+    enabled: bool = True
+    preset: Literal["orm", "rma", "none"] = "orm"
+    outputs: List[Dict[str, Any]] = Field(default_factory=list)
+
+class MeshOpsMaterials(Materials):
+    # Extension of base materials with extra Ops configs
+    atlas: bool = False
+    auto_texturing: Optional[AutoTexturing] = None
+    baking: Optional[BakingConfig] = None
+    channel_packing: Optional[ChannelPacking] = None
+
+class MeshOpsConstraints(Constraints):
+    materials: Optional[MeshOpsMaterials] = None
+    naming: Optional[Naming] = None
+    file_safety: Optional[FileSafety] = None
+    blend_policy: Optional[BlendPolicy] = None
+
+class Engine(BaseModel):
+    engine_version: Optional[str] = None
+    determinism: Determinism = Determinism.BEST_EFFORT
+    seed: int = 0
+
+class MeshOpsRequest(BaseModel):
+    request_id: str
+    schema_version: str = "1.0"
+    mode: Literal[Mode.MESH_OPS]
+    engine: Optional[Engine] = None
+    input: MeshOpsInput
+    preset: Optional[MeshOpsPreset] = None
+    operations: List[Operation] = Field(default_factory=list)
+    constraints: MeshOpsConstraints
+    output: Output
+
+# --- Generation Request ---
+
+class Input(BaseModel):
+    text_prompt: Optional[str] = Field(default="")
+    negative_prompt: Optional[str] = None
+    images: List[ImageItem] = Field(default_factory=list)
+    source_mesh: Optional[SourceMesh] = None
+
+class Batch(BaseModel):
+    enabled: bool
+    items: List[Dict[str, Any]] = Field(default_factory=list)
+    concurrency_hint: int = Field(1, ge=1, max=256)
+
+class JobRequest(BaseModel):
+    request_id: str = Field(..., min_length=8, max_length=128)
+    schema_version: str = Field("1.0", pattern=r"^1\.0$")
+    mode: Mode
+    input: Input
+    constraints: Constraints
+    quality: Quality
+    postprocess: Postprocess
+    batch: Batch
+    output: Output

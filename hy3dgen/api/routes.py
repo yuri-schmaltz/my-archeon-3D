@@ -1,15 +1,18 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from .schemas import JobRequest, JobResponse, JobStatus, Mode, Artifact, ArtifactType, Batch
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
+from typing import Union, Dict, Any
+from .schemas import JobRequest, JobResponse, JobStatus, Mode, Artifact, ArtifactType, Batch, MeshOpsRequest
 import uuid
 import asyncio
 import traceback
 import os
 from .utils import download_image_as_pil
+from hy3dgen.meshops.engine import MeshOpsEngine
 
 router = APIRouter()
 
 request_manager = None
 jobs_db = {} 
+meshops_engine = MeshOpsEngine()
 
 def get_manager():
     if request_manager is None:
@@ -18,14 +21,14 @@ def get_manager():
 
 async def map_request_to_params(req: JobRequest) -> dict:
     params = {
-        "model_key": "Normal", # or "Primary"
+        "model_key": "Normal", 
         "text": req.input.text_prompt,
         "negative_prompt": req.input.negative_prompt,
         "image": None, 
         "mv_images": None,
-        "num_inference_steps": req.quality.steps or 30,
+        "num_inference_steps": req.quality or 30, # Handle quality object or int
         "guidance_scale": 5.0,
-        "seed": req.quality.seed,
+        "seed": req.quality.seed if req.quality else 0,
         "octree_resolution": 256,
         "do_rembg": req.constraints.background == "remove" if req.constraints.background else True,
         "num_chunks": 8000,
@@ -34,6 +37,10 @@ async def map_request_to_params(req: JobRequest) -> dict:
         "tex_guidance_scale": 5.0,
         "tex_seed": 1234
     }
+    
+    # Fix quality.steps if it exists
+    if hasattr(req.quality, 'steps'):
+        params["num_inference_steps"] = req.quality.steps
     
     if req.input.images:
         primary = req.input.images[0]
@@ -46,19 +53,20 @@ async def map_request_to_params(req: JobRequest) -> dict:
     
     return params
 
-async def background_job_wrapper(job_id: str, params: dict):
-    mgr = get_manager()
+async def background_job_wrapper(job_id: str, params: Union[dict, MeshOpsRequest]):
     jobs_db[job_id]["status"] = JobStatus.GENERATING
     
     try:
-        # Submit blocks until generation is done
+        # MeshOps Path
+        if isinstance(params, MeshOpsRequest):
+            artifacts = await meshops_engine.process_async(params)
+            jobs_db[job_id]["status"] = JobStatus.COMPLETED
+            jobs_db[job_id]["artifacts"] = artifacts
+            return
+
+        # Inference Pipeline Path
+        mgr = get_manager()
         result = await mgr.submit(params, uid=job_id)
-        
-        # Result interpretation
-        # InferencePipeline.generate returns (mesh_path, glb_path_if_any??) or just path?
-        # Usually it returns paths. If using Gradio wrapper it returns (path, html).
-        # Internal model worker returns path string or tuple.
-        # We assume it returns the mesh path (GLB/OBJ).
         
         mesh_path = None
         if isinstance(result, (list, tuple)):
@@ -86,8 +94,21 @@ async def background_job_wrapper(job_id: str, params: dict):
         jobs_db[job_id]["status"] = JobStatus.FAILED
         jobs_db[job_id]["error"] = {"code": "INTERNAL_ERROR", "message": str(e), "details": [], "retryable": True}
 
-@router.post("/v1/jobs", response_model=JobResponse)
-async def create_job(req: JobRequest, background_tasks: BackgroundTasks):
+async def _process_request_and_queue(body: Dict[str, Any], background_tasks: BackgroundTasks) -> JobResponse:
+    mode = body.get("mode")
+    
+    # Polymorphic Parsing
+    if mode == Mode.MESH_OPS:
+        try:
+            req = MeshOpsRequest.model_validate(body)
+        except Exception as e:
+            raise HTTPException(status_code=422, detail=f"MeshOps validation failed: {e}")
+    else:
+        try:
+            req = JobRequest.model_validate(body)
+        except Exception as e:
+            raise HTTPException(status_code=422, detail=f"Job validation failed: {e}")
+            
     job_id = req.request_id
     
     if job_id in jobs_db:
@@ -98,9 +119,6 @@ async def create_job(req: JobRequest, background_tasks: BackgroundTasks):
             error=jobs_db[job_id].get("error")
         )
     
-    # Check if batch was intended but submitted to single endpoint? No, schema handles it.
-    
-    # Init DB
     jobs_db[job_id] = {
         "status": JobStatus.QUEUED,
         "artifacts": [],
@@ -108,10 +126,13 @@ async def create_job(req: JobRequest, background_tasks: BackgroundTasks):
     }
     
     try:
-        params = await map_request_to_params(req)
-        background_tasks.add_task(background_job_wrapper, job_id, params)
+        if isinstance(req, MeshOpsRequest):
+            background_tasks.add_task(background_job_wrapper, job_id, req)
+        else:
+            params = await map_request_to_params(req)
+            background_tasks.add_task(background_job_wrapper, job_id, params)
+            
     except HTTPException as he:
-        # If mapping fails (e.g. image download), fail immediately
         jobs_db[job_id]["status"] = JobStatus.FAILED
         jobs_db[job_id]["error"] = {"code": "VALIDATION_ERROR", "message": he.detail, "details": [], "retryable": False}
         return JobResponse(
@@ -128,53 +149,45 @@ async def create_job(req: JobRequest, background_tasks: BackgroundTasks):
         error=None
     )
 
+@router.post("/v1/jobs", response_model=JobResponse)
+async def create_job(request: Request, background_tasks: BackgroundTasks):
+    body = await request.json()
+    return await _process_request_and_queue(body, background_tasks)
+
 @router.post("/v1/batches")
-async def create_batch(req: JobRequest, background_tasks: BackgroundTasks):
-    """
-    Experimental Batch Endpoint.
-    The Contract defines 'batch' in JobRequest, effectively making JobRequest a potential BatchRequest.
-    If 'batch.enabled' is true, we treat 'batch.items' as the payloads.
+async def create_batch(request: Request, background_tasks: BackgroundTasks):
+    body = await request.json()
     
-    However, the schemas.py defined JobRequest as a SINGLE job with a 'batch' config block.
-    If the user wants to submit multiple jobs, they often send an array or a specific BatchRequest.
-    
-    Given the schema:
-    job.batch.enabled = True
-    job.batch.items = [ { "input": ... }, { "input": ... } ] (Overriding base input)
-    
-    We will iterate items, merge with base request, and spawn jobs.
-    """
-    
-    if not req.batch or not req.batch.enabled:
-        # Just a normal job
-        return await create_job(req, background_tasks)
+    # Check for batch structure
+    batch_info = body.get("batch")
+    if not batch_info or not batch_info.get("enabled"):
+        # Fallback to single job parsing if batch is not enabled/present
+        return [await _process_request_and_queue(body, background_tasks)]
     
     responses = []
-    
-    base_id = req.request_id
-    items = req.batch.items
+    base_id = body.get("request_id", str(uuid.uuid4()))
+    items = batch_info.get("items", [])
     
     for idx, item_override in enumerate(items):
-        # Construct sub-request
-        # This is a shallow merge for MVP
         sub_id = f"{base_id}_{idx}"
         
-        # Clone req
-        sub_req = req.model_copy(deep=True)
-        sub_req.request_id = sub_id
-        sub_req.batch.enabled = False # Prevent recursion
+        # Merge override with base body
+        sub_body = body.copy()
+        # Deep merge would be better but simple copy + update for common fields
+        sub_body["request_id"] = sub_id
+        # Disable batch in sub-requests to avoid loops
+        sub_body["batch"] = {"enabled": False}
         
-        # Apply overrides from item dict
-        # item_override might have "input": {...}
+        # Apply overrides
         if "input" in item_override:
-            # Pydantic update or manual merge?
-            # For strictness, manual merge of prompt
-            if "text_prompt" in item_override["input"]:
-                sub_req.input.text_prompt = item_override["input"]["text_prompt"]
-            # ... support other overrides as needed
-            
-        # Spawn
-        resp = await create_job(sub_req, background_tasks)
+            if "input" not in sub_body: sub_body["input"] = {}
+            for k, v in item_override["input"].items():
+                sub_body["input"][k] = v
+                
+        if "quality" in item_override:
+            sub_body["quality"] = item_override["quality"]
+
+        resp = await _process_request_and_queue(sub_body, background_tasks)
         responses.append(resp)
         
     return responses
@@ -185,7 +198,6 @@ async def get_job(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
         
     entry = jobs_db[job_id]
-    
     return JobResponse(
         request_id=job_id,
         status=entry["status"],

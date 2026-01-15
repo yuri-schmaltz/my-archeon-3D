@@ -4,25 +4,25 @@ from PIL import Image
 from io import BytesIO
 from urllib.parse import urlparse
 
-async def download_image_as_pil(uri: str) -> Image.Image:
+async def download_file(uri: str) -> bytes:
     """
-    Downloads an image from a URI (http/https/file) and returns a PIL Image.
+    Downloads file bytes from URI.
     """
     parsed = urlparse(uri)
-    
     if parsed.scheme in ('http', 'https'):
         async with httpx.AsyncClient() as client:
-            resp = await client.get(uri, timeout=30.0)
+            resp = await client.get(uri, timeout=60.0)
             resp.raise_for_status()
-            data = resp.content
+            return resp.content
     elif parsed.scheme == 'file' or not parsed.scheme:
-        # Handle file:// or raw paths
         path = parsed.path
         if not os.path.exists(path):
-            raise FileNotFoundError(f"Image not found at path: {path}")
+            raise FileNotFoundError(f"File not found: {path}")
         with open(path, "rb") as f:
-            data = f.read()
+            return f.read()
     else:
-        raise ValueError(f"Unsupported URI scheme: {parsed.scheme}")
-    
+        raise ValueError(f"Unsupported URI: {uri}")
+
+async def download_image_as_pil(uri: str) -> Image.Image:
+    data = await download_file(uri)
     return Image.open(BytesIO(data)).convert("RGB")

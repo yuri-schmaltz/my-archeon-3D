@@ -278,3 +278,31 @@ button.upload-button:hover {
 footer {
     display: none !important;
 }
+/* --- Relocating Status/Loader --- */
+/* Target the loading status container within the output */
+.eta-bar {
+    position: absolute !important;
+    bottom: 0 !important; /* Align to bottom edge */
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    transform: translateY(100%); /* Push completely outside */
+    z-index: 100 !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted) !important; 
+    justify-content: center !important;
+    padding-top: 10px !important;
+}
+
+/* The timer/text specific override */
+.eta-bar > div {
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Ensure container allows overflow so we see it below */
+#gen_output_container {
+    overflow: visible !important;
+}

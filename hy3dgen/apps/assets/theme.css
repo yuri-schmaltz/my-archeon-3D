@@ -40,12 +40,17 @@
 .gradio-container { 
     font-family: 'Inter', system-ui, sans-serif !important; 
     min-height: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .app { 
-    padding: 20px !important;
-    max-width: 1400px !important;
-    margin: 0 auto !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
 }
 
 /* Accordions */

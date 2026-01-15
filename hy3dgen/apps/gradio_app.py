@@ -249,9 +249,9 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
             textured_mesh = mesh
         path_textured = export_mesh(textured_mesh, save_folder, textured=True)
         html_textured = build_model_viewer_html(save_folder, textured=True)
-        return gr.update(value=path_white), gr.update(value=path_textured), html_textured, stats, seed
+        return gr.update(value=path_white), gr.update(value=path_textured), html_textured, seed
     else:
-        return gr.update(value=path_white), html_white, stats, seed
+        return gr.update(value=path_white), html_white, seed
 
 async def shape_generation(*args, progress=gr.Progress()):
     return await unified_generation(*args, do_texture=False, progress=progress)
@@ -308,26 +308,27 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                                 cfg_scale = gr.Number(value=5.0, label='Guidance Scale')
                                 num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label='Number of Chunks')
 
-                with gr.Row():
-                    btn = gr.Button(value='Gen Shape', variant='primary')
-                    btn_all = gr.Button(value='Gen Textured Shape', variant='primary', visible=HAS_TEXTUREGEN)
-                    btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
-                    with gr.Group(visible=False) as confirm_stop_group:
-                        gr.Markdown("### ⚠️ Confirm Stop?")
-                        with gr.Row():
-                            btn_confirm_yes = gr.Button("Yes", variant="stop", size="sm")
-                            btn_confirm_no = gr.Button("No", size="sm")
+                # Buttons Area - Vertical Stack
+                btn = gr.Button(value='Gen Shape', variant='primary')
+                file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
+                
+                btn_all = gr.Button(value='Gen Textured Shape', variant='primary', visible=HAS_TEXTUREGEN)
+                file_out2 = gr.DownloadButton(label="Download Textured .glb", variant='primary', visible=True)
+                
+                btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
+                with gr.Group(visible=False) as confirm_stop_group:
+                    gr.Markdown("### ⚠️ Confirm Stop?")
+                    with gr.Row():
+                        btn_confirm_yes = gr.Button("Yes", variant="stop", size="sm")
+                        btn_confirm_no = gr.Button("No", size="sm")
 
             with gr.Column(scale=8, elem_classes="right-col"):
                 with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
                     with gr.Tab('Generated Mesh', id='gen_mesh_panel'):
                         with gr.Column(elem_id="gen_output_container"):
                             html_gen_mesh = gr.HTML(HTML_PLACEHOLDER, label='Output', elem_id="model_3d_viewer")
-                            with gr.Row(elem_classes="download-row"):
-                                file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
-                                file_out2 = gr.DownloadButton(label="Download Textured .glb", variant='primary', visible=True)
-                    with gr.Tab('Mesh Statistic', id='stats_panel'):
-                        stats = gr.Json({}, label='Mesh Stats')
+                            # Download buttons moved to left column
+
         
         # Helper to toggle buttons
         def on_gen_start():
@@ -353,7 +354,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         succ1_2 = succ1_1.then(
             shape_generation, 
             inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
-            outputs=[file_out, html_gen_mesh, stats, seed]
+            outputs=[file_out, html_gen_mesh, seed]
         )
         succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop, confirm_stop_group])
         
@@ -362,7 +363,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         succ2_2 = succ2_1.then(
             generation_all, 
             inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
-            outputs=[file_out, file_out2, html_gen_mesh, stats, seed]
+            outputs=[file_out, file_out2, html_gen_mesh, seed]
         )
         succ2_3 = succ2_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop, confirm_stop_group])
 

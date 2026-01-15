@@ -124,8 +124,20 @@ body {
     height: 100% !important;
 }
 
-div[id^="tab-"] {
-    /* Target tab content divs */
+/* Fix Gradio internal wrappers */
+.contain,
+.wrap {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+}
+
+/* Tab Content */
+div[id^="tab-"],
+.tabitem,
+#gen_mesh_panel,
+#stats_panel {
     display: flex !important;
     flex-direction: column !important;
     flex-grow: 1 !important;

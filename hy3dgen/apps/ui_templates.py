@@ -4,10 +4,8 @@ HTML_TEMPLATE_MODEL_VIEWER = """
 <!DOCTYPE html>
 <html>
 <head>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { 
-            margin: 0; 
         body { 
             margin: 0; 
             background: linear-gradient(180deg, #111827 0%, #1e293b 100%);
@@ -26,30 +24,49 @@ HTML_TEMPLATE_MODEL_VIEWER = """
             height: 4px;
             background-color: #6366f1;
         }
+        #error-log {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #ef4444;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
+    <div id="error-log"></div>
     <model-viewer src="#src#" 
                   alt="Archeon 3D Model" 
                   auto-rotate 
                   camera-controls 
-                  shadow-intensity="0.8" 
-                  exposure="1.5" 
+                  shadow-intensity="1" 
+                  exposure="1.0" 
                   tone-mapping="neutral"
-                  environment-image="neutral"
-                  interaction-prompt="auto"
                   ar
                   ar-modes="webxr scene-viewer quick-look">
         <div slot="progress-bar" style="display: none;"></div>
     </model-viewer>
     <script>
         const modelViewer = document.querySelector('model-viewer');
+        const errorLog = document.getElementById('error-log');
+
+        modelViewer.addEventListener('error', (event) => {
+            console.error("ModelViewer Error:", event);
+            errorLog.style.display = 'block';
+            errorLog.innerText = "Error loading 3D model: " + (event.detail.message || "Unknown error");
+        });
+
         modelViewer.addEventListener('load', () => {
+            console.log("Model loaded successfully");
             // Force white material for models without textures
             const model = modelViewer.model;
             if (model && model.materials) {
                 model.materials.forEach(material => {
-                    if (!material.pbrMetallicRoughness.baseColorTexture) {
+                    if (material.pbrMetallicRoughness && !material.pbrMetallicRoughness.baseColorTexture) {
                         material.pbrMetallicRoughness.setBaseColorFactor([1.0, 1.0, 1.0, 1.0]);
                         material.pbrMetallicRoughness.setRoughnessFactor(0.5);
                         material.pbrMetallicRoughness.setMetallicFactor(0.0);

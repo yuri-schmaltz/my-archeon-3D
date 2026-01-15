@@ -257,6 +257,7 @@ class Hunyuan3DDiTPipeline:
         else:
             self.dtype = dtype
             self.device = torch.device('cpu') # Default to CPU in low vram
+            self.to(dtype=dtype) # Ensure weights are cast to the correct dtype (e.g. float16)
 
     def compile(self):
         self.vae = torch.compile(self.vae)

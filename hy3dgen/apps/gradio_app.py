@@ -96,11 +96,17 @@ def export_mesh(mesh, save_folder, textured=False, file_type='glb'):
                 mesh.visual.material.metallicFactor = 0.0
                 mesh.visual.material.roughnessFactor = 0.5
             elif isinstance(mesh.visual.material, trimesh.visual.material.SimpleMaterial):
-                 # Convert SimpleMaterial to PBR for better GLB compatibility or ensure colors are bright
-                 # But simplistic approach: just set main color to white
-                 mesh.visual.material.main_color = [255, 255, 255, 255]
-                 # Also ensure ambient is not black
-                 mesh.visual.material.ambient = [255, 255, 255, 255]
+                 # Convert SimpleMaterial to PBR or ensure bright colors
+                 # SimpleMaterial properties are often read-only or specific; 
+                 # 'diffuse' is usually the color property, but trimesh might wrap it.
+                 # Let's try creating a new PBR material with the same image if possible, 
+                 # or just force diffuse color if writable. 
+                 # Safer: Set the object's diffuse color directly if it's a SimpleMaterial
+                 # Note: trimesh SimpleMaterial stores color in 'diffuse'
+                 if hasattr(mesh.visual.material, 'diffuse'):
+                     mesh.visual.material.diffuse = [255, 255, 255, 255]
+                 if hasattr(mesh.visual.material, 'ambient'):
+                     mesh.visual.material.ambient = [255, 255, 255, 255]
 
         if hasattr(mesh, 'visual') and mesh.visual is not None:
             # Check for image in visual (TextureVisuals has material.image)
@@ -421,7 +427,10 @@ def main():
         demo, 
         path="/",
         head=custom_head,
-        theme=gr.themes.Base()
+        theme=gr.themes.Base(
+            font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"],
+            font_mono=[gr.themes.GoogleFont("JetBrains Mono"), "ui-monospace", "Consolas", "monospace"],
+        )
     )
     url = f"http://{args.host}:{args.port}"
     print(f"\nHunyuan3D-2 Pro Unified is running at: {url}\n")

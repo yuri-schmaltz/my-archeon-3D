@@ -27,7 +27,7 @@ class Light_Shadow_Remover():
 
         pipeline = StableDiffusionInstructPix2PixPipeline.from_pretrained(
             config.light_remover_ckpt_path,
-            torch_dtype=torch.float16,
+            dtype=torch.float16,
             safety_checker=None,
         )
         pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(pipeline.scheduler.config)

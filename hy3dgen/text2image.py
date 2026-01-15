@@ -36,7 +36,7 @@ class HunyuanDiTPipeline:
         self.device = device
         self.pipe = AutoPipelineForText2Image.from_pretrained(
             model_path,
-            torch_dtype=torch.float16,
+            dtype=torch.float16,
             enable_pag=True,
             pag_applied_layers=["blocks.(16|17|18|19)"]
         ).to(device)

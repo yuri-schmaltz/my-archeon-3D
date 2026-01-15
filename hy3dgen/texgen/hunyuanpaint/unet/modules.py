@@ -421,6 +421,8 @@ class UNet2p5DConditionModel(torch.nn.Module):
     @staticmethod
     def from_pretrained(pretrained_model_name_or_path, **kwargs):
         torch_dtype = kwargs.pop('torch_dtype', torch.float32)
+        if 'dtype' not in kwargs:
+             kwargs['dtype'] = torch_dtype
         config_path = os.path.join(pretrained_model_name_or_path, 'config.json')
         unet_ckpt_path = os.path.join(pretrained_model_name_or_path, 'diffusion_pytorch_model.bin')
         with open(config_path, 'r', encoding='utf-8') as file:

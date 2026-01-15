@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "archeon3d"
+version = "2.2.0"
+description = "Archeon 3D 2.0: Large-scale 3D Synthesis System"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "TENCENT HUNYUAN NON-COMMERCIAL LICENSE AGREEMENT" }
+authors = [
+    { name = "Archeon 3D Team" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "numpy>=2.2.0,<2.3.0",
+    "torch>=2.9.0",
+    "torchvision>=0.24.0",
+    "diffusers>=0.36.0",
+    "transformers>=4.57.0",
+    "einops>=0.8.0",
+    "opencv-python>=4.12.0",
+    "tqdm>=4.67.0",
+    "omegaconf>=2.3.0",
+    "ninja>=1.13.0",
+    "pybind11>=3.0.0",
+    "trimesh>=4.11.0",
+    "pillow>=12.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx", "ruff", "coverage"]
+docs = ["sphinx", "sphinx-rtd-theme", "furo", "myst-parser"]
+
+[project.scripts]
+hy3dgen-api = "hy3dgen.apps.api_server:main"
+hy3dgen-gui = "hy3dgen.apps.gradio_app:main"
+
+[tool.setuptools]
+packages = ["hy3dgen"]
+include-package-data = true

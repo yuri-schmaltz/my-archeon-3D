@@ -38,35 +38,7 @@ dev_reqs = ["pytest", "httpx", "ruff", "coverage"]
 docs_reqs = ["sphinx", "sphinx-rtd-theme", "furo", "myst-parser"]
 
 setup(
-    name="archeon3d",
-    version="2.2.0",
-    description="Archeon 3D 2.0: Large-scale 3D Synthesis System",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/Tencent/Hunyuan3D-2",
-    author="Archeon 3D Team",
-    license="TENCENT HUNYUAN NON-COMMERCIAL LICENSE AGREEMENT",
     packages=find_packages(),
     include_package_data=True,
-    python_requires=">=3.9",
-    install_requires=core_reqs,
-    extras_require={
-        "dev": dev_reqs,
-        "docs": docs_reqs,
-        "all": all_reqs,
-    },
-    entry_points={
-        "console_scripts": [
-            "hy3dgen-api=hy3dgen.apps.api_server:main",
-            "hy3dgen-gui=hy3dgen.apps.gradio_app:main",
-        ],
-    },
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Science/Research",
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
-        "Programming Language :: Python :: 3",
-        "License :: Other/Proprietary License",
-    ],
 )
 

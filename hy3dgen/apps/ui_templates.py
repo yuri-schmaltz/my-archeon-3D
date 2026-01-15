@@ -8,21 +8,19 @@ HTML_TEMPLATE_MODEL_VIEWER = """
     <style>
         body { 
             margin: 0; 
-            background: radial-gradient(circle at 50% 50%, #f9fafb 0%, #e5e7eb 100%);
+        body { 
+            margin: 0; 
+            background: linear-gradient(180deg, #111827 0%, #1e293b 100%);
             height: 100vh; 
             width: 100vw; 
             overflow: hidden; 
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-        @media (prefers-color-scheme: dark) {
-            body {
-                background: radial-gradient(circle at 50% 50%, #1f2937 0%, #111827 100%);
-            }
+            font-family: ui-sans-serif, system-ui, sans-serif;
         }
         model-viewer { 
             width: 100%; 
             height: 100%; 
             --progress-bar-color: #6366f1; 
+            background: transparent;
         }
         model-viewer::part(default-progress-bar) {
             height: 4px;
@@ -32,7 +30,7 @@ HTML_TEMPLATE_MODEL_VIEWER = """
 </head>
 <body>
     <model-viewer src="#src#" 
-                  alt="Hunyuan3D Model" 
+                  alt="Archeon 3D Model" 
                   auto-rotate 
                   camera-controls 
                   shadow-intensity="0.8" 

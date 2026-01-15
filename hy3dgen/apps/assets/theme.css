@@ -42,9 +42,9 @@
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-    --glass-bg: rgba(30, 41, 59, 0.7);
+    --glass-bg: rgba(30, 41, 59, 0.4);
     --glass-border: rgba(255, 255, 255, 0.05);
-    --backdrop-blur: blur(12px);
+    --backdrop-blur: blur(16px);
 }
 
 /* --- Global Reset & Foundation --- */
@@ -94,14 +94,16 @@ body {
 
 /* --- Left Column: Controls --- */
 .left-col {
-    background: var(--bg-app);
+    background: linear-gradient(180deg, var(--bg-app) 0%, #020617 100%);
     border-right: 1px solid var(--border-subtle);
-    padding: 24px !important;
+    padding: 32px !important;
     height: 100% !important;
     overflow-y: auto !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 24px !important;
+    gap: 28px !important;
+    box-shadow: 10px 0 30px -10px rgba(0, 0, 0, 0.5);
+    z-index: 10;
 }
 
 /* --- Right Column: Viewer --- */
@@ -219,12 +221,13 @@ button.stop {
 /* --- Components: Containers & Groups --- */
 /* The "Generation Settings" Container */
 .panel-container {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--backdrop-blur);
-    border-radius: var(--radius-lg);
-    padding: 20px !important;
-    box-shadow: var(--shadow-sm);
+    background: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: var(--backdrop-blur) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: 24px !important;
+    box-shadow: var(--shadow-lg) !important;
+    margin-bottom: 8px;
 }
 
 /* Accordions/Groups within settings */
@@ -278,25 +281,28 @@ button.upload-button:hover {
 footer {
     display: none !important;
 }
+
 /* --- Relocating Status/Loader --- */
 /* Target the loading status container within the output */
 .eta-bar {
     position: absolute !important;
-    bottom: 0 !important; /* Align to bottom edge */
+    bottom: 0 !important;
+    /* Align to bottom edge */
     left: 0 !important;
     right: 0 !important;
     top: auto !important;
-    transform: translateY(100%); /* Push completely outside */
+    transform: translateY(100%);
+    /* Push completely outside */
     z-index: 100 !important;
     background: transparent !important;
     border: none !important;
-    color: var(--text-muted) !important; 
+    color: var(--text-muted) !important;
     justify-content: center !important;
     padding-top: 10px !important;
 }
 
 /* The timer/text specific override */
-.eta-bar > div {
+.eta-bar>div {
     background: transparent !important;
     color: var(--text-muted) !important;
     font-family: 'JetBrains Mono', monospace !important;
@@ -305,4 +311,18 @@ footer {
 /* Ensure container allows overflow so we see it below */
 #gen_output_container {
     overflow: visible !important;
+}
+/* --- Footer --- */
+.footer-divider {
+    border-top: 1px solid var(--border-subtle) !important;
+    margin-top: 24px !important;
+    opacity: 0.5;
+}
+
+.footer-text {
+    font-size: 0.75rem !important;
+    color: var(--text-muted) !important;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace !important;
+    opacity: 0.8;
 }

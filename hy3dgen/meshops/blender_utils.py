@@ -3,7 +3,7 @@ import os
 import logging
 import tempfile
 import asyncio
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 logger = logging.getLogger("meshops.blender")
 
@@ -144,7 +144,12 @@ async def convert_blend_to_glb(blend_path: str) -> str:
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
-        stdout, stderr = await process.communicate()
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=600.0)
+        except asyncio.TimeoutError:
+            process.kill()
+            logger.error("Blender conversion timed out after 600s")
+            raise RuntimeError("Blender conversion timed out")
         
         if process.returncode != 0:
             logger.error(f"Blender conversion failed: {stderr.decode()}")
@@ -182,8 +187,13 @@ async def bake_mesh_maps(high_poly_path: str, low_poly_path: str, maps: List[str
         ]
         
         process = await asyncio.create_subprocess_exec(*cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout, stderr = await process.communicate()
-        
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=1200.0) # Baking takes longer
+        except asyncio.TimeoutError:
+            process.kill()
+            logger.error("Blender baking timed out after 1200s")
+            raise RuntimeError("Blender baking timed out")
+            
         if process.returncode != 0:
             logger.error(f"Baking failed: {stderr.decode()}")
             raise RuntimeError(f"Baking error: {stderr.decode()}")

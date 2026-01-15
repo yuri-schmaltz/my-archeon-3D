@@ -1,0 +1,57 @@
+./home/yurix/Documentos/my-archeon-3D/hy3dgen/meshops/blender_utils.py:150: RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+Coroutine created at (most recent call last)
+  File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 674, in run_until_complete
+    self.run_forever()
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 641, in run_forever
+    self._run_once()
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 1979, in _run_once
+    handle._run()
+  File "/usr/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/lib/python3.12/unittest/mock.py", line 1407, in patched
+    return await func(*newargs, **newkeywargs)
+  File "/home/yurix/Documentos/my-archeon-3D/tests/test_security.py", line 58, in test_blender_timeout
+    await convert_blend_to_glb("/tmp/fake.blend")
+  File "/home/yurix/Documentos/my-archeon-3D/hy3dgen/meshops/blender_utils.py", line 150, in convert_blend_to_glb
+    process.kill()
+  File "/usr/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/usr/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  process.kill()
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+Blender conversion timed out after 600s
+.Security: Blocked attempt to read file outside allowed zones: /etc/hostname
+.
+----------------------------------------------------------------------
+Ran 3 tests in 0.017s
+
+OK
+Allowed zone access verified!
+Blender timeout handling verified!
+Path Traversal protection verified!
+sys:1: RuntimeWarning: coroutine 'TestSecurityAndResilience.test_blender_timeout.<locals>.slow_communicate' was never awaited
+Coroutine created at (most recent call last)
+  File "/usr/lib/python3.12/unittest/async_case.py", line 90, in _callTestMethod
+    if self._callMaybeAsync(method) is not None:
+  File "/usr/lib/python3.12/unittest/async_case.py", line 112, in _callMaybeAsync
+    return self._asyncioRunner.run(
+  File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 674, in run_until_complete
+    self.run_forever()
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 641, in run_forever
+    self._run_once()
+  File "/usr/lib/python3.12/asyncio/base_events.py", line 1979, in _run_once
+    handle._run()
+  File "/usr/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/usr/lib/python3.12/unittest/mock.py", line 1407, in patched
+    return await func(*newargs, **newkeywargs)
+  File "/home/yurix/Documentos/my-archeon-3D/tests/test_security.py", line 58, in test_blender_timeout
+    await convert_blend_to_glb("/tmp/fake.blend")
+  File "/home/yurix/Documentos/my-archeon-3D/hy3dgen/meshops/blender_utils.py", line 148, in convert_blend_to_glb
+    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=600.0)
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback

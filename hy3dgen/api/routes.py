@@ -1,15 +1,14 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks
-from .schemas import JobRequest, JobResponse, JobStatus, Mode, Artifact, ArtifactType
+from .schemas import JobRequest, JobResponse, JobStatus, Mode, Artifact, ArtifactType, Batch
 import uuid
 import asyncio
 import traceback
 import os
+from .utils import download_image_as_pil
 
 router = APIRouter()
 
-# Global reference to the manager (to be injected)
 request_manager = None
-# In-memory job store (MVP)
 jobs_db = {} 
 
 def get_manager():
@@ -17,13 +16,12 @@ def get_manager():
         raise HTTPException(status_code=503, detail="Service not initialized")
     return request_manager
 
-def map_request_to_params(req: JobRequest) -> dict:
-    # See previous logical block
+async def map_request_to_params(req: JobRequest) -> dict:
     params = {
-        "model_key": "Normal",
+        "model_key": "Normal", # or "Primary"
         "text": req.input.text_prompt,
         "negative_prompt": req.input.negative_prompt,
-        "image": None, # Needs handling
+        "image": None, 
         "mv_images": None,
         "num_inference_steps": req.quality.steps or 30,
         "guidance_scale": 5.0,
@@ -37,19 +35,14 @@ def map_request_to_params(req: JobRequest) -> dict:
         "tex_seed": 1234
     }
     
-    # Handle Image URI (Mock/Stub for now)
-    # If image URI is local path, load it?
-    # Ideally we need a 'fetcher' logic here. 
-    # For MVP we assume URI is a local path if valid, or ignore.
     if req.input.images:
         primary = req.input.images[0]
-        if primary.uri.startswith("/"):
-            # Assume local path, load PIL Image
-            try:
-                from PIL import Image
-                params["image"] = Image.open(primary.uri)
-            except Exception as e:
-                print(f"Failed to load image: {e}")
+        try:
+            pil_img = await download_image_as_pil(primary.uri)
+            params["image"] = pil_img
+        except Exception as e:
+            print(f"Failed to load image {primary.uri}: {e}")
+            raise HTTPException(status_code=400, detail=f"Failed to load image: {e}")
     
     return params
 
@@ -58,38 +51,34 @@ async def background_job_wrapper(job_id: str, params: dict):
     jobs_db[job_id]["status"] = JobStatus.GENERATING
     
     try:
-        # Submit with custom UID matching job_id
-        # This await blocks until generation is done!
+        # Submit blocks until generation is done
         result = await mgr.submit(params, uid=job_id)
         
-        # Result format? 
-        # unified_generation returns (path, html) usually?
-        # Manager returns what 'worker.generate' returns.
-        # ShapeGen worker returns... need to verify. 
-        # Assuming result contains paths.
+        # Result interpretation
+        # InferencePipeline.generate returns (mesh_path, glb_path_if_any??) or just path?
+        # Usually it returns paths. If using Gradio wrapper it returns (path, html).
+        # Internal model worker returns path string or tuple.
+        # We assume it returns the mesh path (GLB/OBJ).
         
-        # Update DB
+        mesh_path = None
+        if isinstance(result, (list, tuple)):
+            mesh_path = result[0]
+        else:
+            mesh_path = str(result)
+            
         jobs_db[job_id]["status"] = JobStatus.COMPLETED
         
-        # Mocking artifacts extraction based on result
-        # Inspect result structure to be safe? 
-        # For now, we assume result is a path string or similar tuple.
-        
         artifacts = []
-        if isinstance(result, (list, tuple)):
-            # Usually [mesh_path, html_content]
-            mesh_path = result[0]
-            artifacts.append(Artifact(
+        if mesh_path and os.path.exists(mesh_path):
+             artifacts.append(Artifact(
                 type=ArtifactType.MESH,
-                format="glb", # assumption
-                uri=str(mesh_path),
+                format="glb" if mesh_path.endswith(".glb") else "obj",
+                uri=mesh_path,
                 metadata={
-                    "tris": 0, "verts": 0, "uv_sets": 0, "materials_count": 0,
-                    "watertight": True, "manifold": True, "axis": "z_up",
-                    "unit": "m", "pivot": "center", "bounds": {"x":0,"y":0,"z":0}
+                    "path": mesh_path 
                 }
             ))
-        
+
         jobs_db[job_id]["artifacts"] = artifacts
         
     except Exception as e:
@@ -102,7 +91,6 @@ async def create_job(req: JobRequest, background_tasks: BackgroundTasks):
     job_id = req.request_id
     
     if job_id in jobs_db:
-        # Idempotency check: return existing status
         return JobResponse(
             request_id=job_id,
             status=jobs_db[job_id]["status"],
@@ -110,17 +98,28 @@ async def create_job(req: JobRequest, background_tasks: BackgroundTasks):
             error=jobs_db[job_id].get("error")
         )
     
-    # Init DB entry
+    # Check if batch was intended but submitted to single endpoint? No, schema handles it.
+    
+    # Init DB
     jobs_db[job_id] = {
         "status": JobStatus.QUEUED,
         "artifacts": [],
         "error": None
     }
     
-    params = map_request_to_params(req)
-    
-    # Launch background task
-    background_tasks.add_task(background_job_wrapper, job_id, params)
+    try:
+        params = await map_request_to_params(req)
+        background_tasks.add_task(background_job_wrapper, job_id, params)
+    except HTTPException as he:
+        # If mapping fails (e.g. image download), fail immediately
+        jobs_db[job_id]["status"] = JobStatus.FAILED
+        jobs_db[job_id]["error"] = {"code": "VALIDATION_ERROR", "message": he.detail, "details": [], "retryable": False}
+        return JobResponse(
+            request_id=job_id,
+            status=JobStatus.FAILED,
+            artifacts=[],
+            error=jobs_db[job_id]["error"]
+        )
     
     return JobResponse(
         request_id=job_id,
@@ -128,6 +127,57 @@ async def create_job(req: JobRequest, background_tasks: BackgroundTasks):
         artifacts=[],
         error=None
     )
+
+@router.post("/v1/batches")
+async def create_batch(req: JobRequest, background_tasks: BackgroundTasks):
+    """
+    Experimental Batch Endpoint.
+    The Contract defines 'batch' in JobRequest, effectively making JobRequest a potential BatchRequest.
+    If 'batch.enabled' is true, we treat 'batch.items' as the payloads.
+    
+    However, the schemas.py defined JobRequest as a SINGLE job with a 'batch' config block.
+    If the user wants to submit multiple jobs, they often send an array or a specific BatchRequest.
+    
+    Given the schema:
+    job.batch.enabled = True
+    job.batch.items = [ { "input": ... }, { "input": ... } ] (Overriding base input)
+    
+    We will iterate items, merge with base request, and spawn jobs.
+    """
+    
+    if not req.batch or not req.batch.enabled:
+        # Just a normal job
+        return await create_job(req, background_tasks)
+    
+    responses = []
+    
+    base_id = req.request_id
+    items = req.batch.items
+    
+    for idx, item_override in enumerate(items):
+        # Construct sub-request
+        # This is a shallow merge for MVP
+        sub_id = f"{base_id}_{idx}"
+        
+        # Clone req
+        sub_req = req.model_copy(deep=True)
+        sub_req.request_id = sub_id
+        sub_req.batch.enabled = False # Prevent recursion
+        
+        # Apply overrides from item dict
+        # item_override might have "input": {...}
+        if "input" in item_override:
+            # Pydantic update or manual merge?
+            # For strictness, manual merge of prompt
+            if "text_prompt" in item_override["input"]:
+                sub_req.input.text_prompt = item_override["input"]["text_prompt"]
+            # ... support other overrides as needed
+            
+        # Spawn
+        resp = await create_job(sub_req, background_tasks)
+        responses.append(resp)
+        
+    return responses
 
 @router.get("/v1/jobs/{job_id}", response_model=JobResponse)
 async def get_job(job_id: str):

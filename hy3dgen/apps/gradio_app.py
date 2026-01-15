@@ -70,6 +70,14 @@ def export_mesh(mesh, save_folder, textured=False, file_type='glb'):
     if hasattr(mesh, 'mesh_v') and hasattr(mesh, 'mesh_f'):
         mesh = trimesh.Trimesh(vertices=mesh.mesh_v, faces=mesh.mesh_f)
     
+    # [FIX] Ensure normals are consistent to prevent "x-ray" / inverted look
+    try:
+        from trimesh import repair
+        repair.fix_normals(mesh) # Standardize face winding
+        repair.fix_inversion(mesh) # Fix inverted faces
+    except Exception as e:
+        logger.warning(f"Failed to repair mesh normals: {e}")
+    
     # For non-textured meshes, apply white material
     # For textured meshes, preserve existing visual/texture data
     if not textured:

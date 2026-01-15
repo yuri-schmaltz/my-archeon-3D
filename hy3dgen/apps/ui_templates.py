@@ -71,6 +71,8 @@ HTML_TEMPLATE_MODEL_VIEWER = """
                         material.pbrMetallicRoughness.setRoughnessFactor(0.5);
                         material.pbrMetallicRoughness.setMetallicFactor(0.0);
                     }
+                    // Ensure double-sided rendering for safety
+                    material.setDoubleSided(true);
                 });
             }
         });

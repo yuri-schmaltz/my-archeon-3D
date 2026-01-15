@@ -8,7 +8,7 @@ version = "2.2.0"
 description = "Archeon 3D 2.0: Large-scale 3D Synthesis System"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "TENCENT HUNYUAN NON-COMMERCIAL LICENSE AGREEMENT" }
+license = { file = "LICENSE" }
 authors = [
     { name = "Archeon 3D Team" }
 ]

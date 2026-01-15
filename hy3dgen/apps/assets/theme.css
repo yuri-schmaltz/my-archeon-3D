@@ -88,7 +88,17 @@ body {
     max-height: 100% !important;
     overflow-y: auto !important;
     /* Scrollable inputs */
-    padding-right: 10px !important;
+    padding-right: 6px !important;
+}
+
+/* Hide Scrollbar aesthetics */
+.left-col::-webkit-scrollbar {
+    width: 0px !important;
+    background: transparent !important;
+}
+
+.left-col {
+    scrollbar-width: none !important;
 }
 
 .right-col {

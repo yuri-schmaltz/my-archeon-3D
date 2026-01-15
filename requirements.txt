@@ -16,6 +16,7 @@ trimesh>=4.11.0
 pymeshlab>=2025.0
 pygltflib>=1.16.0
 xatlas
+rtree
 
 # Training
 accelerate>=1.12.0

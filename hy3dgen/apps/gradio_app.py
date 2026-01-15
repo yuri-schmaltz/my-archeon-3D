@@ -303,16 +303,16 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                         
                 with gr.Accordion("Advanced Parameters", open=False, elem_classes="panel-container"):
                     with gr.Group():
-                            with gr.Row():
-                                check_box_rembg = gr.Checkbox(value=True, label='Remove Background')
-                                randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
-                            seed = gr.Slider(label="Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
-                            with gr.Row():
-                                num_steps = gr.Slider(maximum=100, minimum=1, value=5, step=1, label='Inference Steps', info="Higher = more detail, slower speed.")
-                                octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label='Octree Resolution', info="Higher = sharper geometry, more VRAM.")
-                            with gr.Row():
-                                cfg_scale = gr.Number(value=5.0, label='Guidance Scale')
-                                num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label='Chunks', info="Memory management for large meshes.")
+                        with gr.Row():
+                            check_box_rembg = gr.Checkbox(value=True, label='Remove Background')
+                            randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
+                        seed = gr.Slider(label="Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
+                        with gr.Row():
+                            num_steps = gr.Slider(maximum=100, minimum=1, value=5, step=1, label='Inference Steps', info="Higher = more detail, slower speed.")
+                            octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label='Octree Resolution', info="Higher = sharper geometry, more VRAM.")
+                        with gr.Row():
+                            cfg_scale = gr.Number(value=5.0, label='Guidance Scale')
+                            num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label='Chunks', info="Memory management for large meshes.")
                             
                         with gr.Accordion("Texture & Baking", open=False):
                             with gr.Row():

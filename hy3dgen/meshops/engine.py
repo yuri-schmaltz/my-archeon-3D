@@ -199,7 +199,7 @@ class MeshOpsEngine:
                                     metadata={"preset": preset}
                                 ))
                     elif op_type == "texture_bake":
-                        from . import blender_utils
+                        from . import tex_ops
                         # target_ids is the lowpoly
                         # params might have high_mesh_id
                         high_id = params.get("high_mesh_id")
@@ -209,16 +209,10 @@ class MeshOpsEngine:
                         else:
                             high_mesh = meshes[high_id]
                         
-                        # Export both to temp GLBs for Blender
-                        with tempfile.NamedTemporaryFile(suffix=".glb", delete=False) as h_tmp, \
-                             tempfile.NamedTemporaryFile(suffix=".glb", delete=False) as l_tmp:
-                            ops.export_mesh(high_mesh, h_tmp.name, "glb")
-                            ops.export_mesh(mesh, l_tmp.name, "glb")
-                            h_path, l_path = h_tmp.name, l_tmp.name
-                        
                         try:
                             bake_maps = params.get("maps", ["normal", "ao"])
-                            results = await blender_utils.bake_mesh_maps(h_path, l_path, bake_maps)
+                            resolution = params.get("resolution", 2048)
+                            results = await tex_ops.bake_maps_native(high_mesh, mesh, bake_maps, resolution=resolution)
                             
                             for mname, mpath in results.items():
                                 fname = f"{req.output.artifact_prefix}_{mid}_baked_{mname}.png"
@@ -231,9 +225,9 @@ class MeshOpsEngine:
                                     uri=final_path,
                                     metadata={"mesh_id": mid, "map_type": mname}
                                 ))
-                        finally:
-                            if os.path.exists(h_path): os.unlink(h_path)
-                            if os.path.exists(l_path): os.unlink(l_path)
+                        except Exception as bake_err:
+                            logger.error(f"Native baking failed: {bake_err}")
+                            raise bake_err
                     else:
                         logger.info(f"Skipping unimplemented op: {op_type}")
                         continue

@@ -18,7 +18,7 @@ async def download_file(uri: str) -> bytes:
             resp.raise_for_status()
             return resp.content
     elif parsed.scheme == 'file' or not parsed.scheme:
-        path = os.path.abspath(parsed.path)
+        path = os.path.realpath(parsed.path)
         # Security: Prevent reading sensitive files outside the workspace
         # For this system, we allow anything within the project root or /tmp
         allowed_prefixes = [

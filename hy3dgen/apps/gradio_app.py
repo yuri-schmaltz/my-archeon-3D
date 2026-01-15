@@ -406,7 +406,7 @@ def main():
     parser.add_argument('--cache-path', type=str, default='gradio_cache')
     parser.add_argument('--enable_t23d', action='store_true')
     parser.add_argument('--disable_tex', action='store_true', help='Disable texture generation (avoids custom_rasterizer requirement)')
-    parser.add_argument('--low_vram_mode', action='store_true')
+    parser.add_argument('--low_vram_mode', action='store_true', default=True)
     parser.add_argument('--no-browser', action='store_true', help='Do not open the browser automatically')
     args = parser.parse_args()
     SAVE_DIR = args.cache_path

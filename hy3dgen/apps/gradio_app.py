@@ -345,6 +345,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             model_key = "Normal"
             settings_visible = True
             
+            logger.info(f"Tab Selected: {evt.value}")
+            
             if evt.value == "tab_mv_prompt":
                 model_key = "Multiview"
                 settings_visible = False
@@ -354,7 +356,10 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             elif evt.value == "tab_img_prompt":
                 model_key = "Normal"
                 settings_visible = True
+            else:
+                logger.warning(f"Unknown tab value: {evt.value}")
                 
+            logger.info(f"Setting Generation Settings Visible: {settings_visible}")
             return model_key, gr.update(visible=settings_visible)
 
         tabs_prompt.select(fn=update_model_key, outputs=[model_key_state, gen_settings_group])

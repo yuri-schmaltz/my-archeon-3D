@@ -3,6 +3,7 @@ import uuid
 import time
 import torch
 import threading
+import gc
 from dataclasses import dataclass, field
 from typing import Any, Dict, Callable
 from hy3dgen.shapegen.utils import get_logger
@@ -66,8 +67,25 @@ class ModelManager:
             self.lru_order.append(model_key)
             logger.info(f"Model '{model_key}' loaded in {time.time() - start_time:.2f}s")
         except Exception as e:
-            logger.error(f"Failed to load model '{model_key}': {e}")
-            raise
+            logger.warning(f"Initial load of model '{model_key}' failed: {e}. Attempting to clear VRAM and retry...")
+            
+            # Emergency Cleanup
+            if self.device == 'cuda':
+                gc.collect()
+                torch.cuda.empty_cache()
+            
+            # Evict everything we can
+            while self.workers:
+                await self.offload_lru_model()
+            
+            # Retry load
+            try:
+                 self.workers[model_key] = self.loaders[model_key]()
+                 self.lru_order.append(model_key)
+                 logger.info(f"Model '{model_key}' loaded successfully on retry.")
+            except Exception as e2:
+                 logger.error(f"Failed to load model '{model_key}' even after cleanup: {e2}")
+                 raise e2
 
         return self.workers[model_key]
 
@@ -86,8 +104,9 @@ class ModelManager:
             del model
             
             if self.device == 'cuda':
+                gc.collect()
                 torch.cuda.empty_cache()
-                logger.info("VRAM cleared.")
+                logger.info("VRAM cleared (gc + empty_cache).")
 
     async def generate_safe(self, uid, params, loop):
         """
@@ -118,8 +137,11 @@ class ModelManager:
                 params
             )
             
-            # Optional: Aggressive cleanup if low vram mode is enforced externally
-            # but usually we rely on LRU eviction when next model is needed.
+            # Aggressive cleanup after generation
+            if self.device == 'cuda':
+                gc.collect()
+                torch.cuda.empty_cache()
+            
             return result
 
 class PriorityRequestManager:

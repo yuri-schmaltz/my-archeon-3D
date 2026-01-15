@@ -272,7 +272,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         with gr.Row():
             with gr.Column(scale=4):
                 
-                with gr.Accordion("Input Prompt", open=True):
+                with gr.Group():
+                    gr.Markdown("### Input Prompt", header_links=True)
                     with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
                         with gr.Tab('Image Prompt', id='tab_img_prompt') as tab_ip:
                             image = gr.Image(label='Image', type='pil', image_mode='RGBA', height=250)
@@ -289,7 +290,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                             caption = gr.Textbox(label='Text Prompt', placeholder='HunyuanDiT will be used to generate image.', lines=3)
                             negative_prompt = gr.Textbox(label='Negative Prompt', placeholder='Low quality, distortion, etc.', lines=2)
 
-                with gr.Accordion("Generation Settings", open=False):
+                with gr.Group():
+                    gr.Markdown("### Generation Settings", header_links=True)
                     with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
                         with gr.Tab("Options", id='tab_options', visible=TURBO_MODE):
                             gen_mode = gr.Radio(label='Generation Mode', choices=['Turbo', 'Fast', 'Standard'], value='Turbo')
@@ -310,6 +312,11 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                     btn = gr.Button(value='Gen Shape', variant='primary')
                     btn_all = gr.Button(value='Gen Textured Shape', variant='primary', visible=HAS_TEXTUREGEN)
                     btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
+                    with gr.Group(visible=False) as confirm_stop_group:
+                        gr.Markdown("### ⚠️ Confirm Stop?")
+                        with gr.Row():
+                            btn_confirm_yes = gr.Button("Yes", variant="stop", size="sm")
+                            btn_confirm_no = gr.Button("No", size="sm")
 
             with gr.Column(scale=8):
                 with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
@@ -329,7 +336,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         
         def on_gen_finish():
             logger.info("UI EVENT: Generation finished (or stopped). Restoring UI.")
-            return gr.update(visible=True), gr.update(visible=HAS_TEXTUREGEN), gr.update(visible=False)
+            return gr.update(visible=True), gr.update(visible=HAS_TEXTUREGEN), gr.update(visible=False), gr.update(visible=False)
 
         # Update model state based on tab selection
         def update_model_key(evt: gr.SelectData):
@@ -348,7 +355,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
             outputs=[file_out, html_gen_mesh, stats, seed]
         )
-        succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop])
+        succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop, confirm_stop_group])
         
         # Event Chain 2: Textured Generation
         succ2_1 = btn_all.click(on_gen_start, outputs=[btn, btn_all, btn_stop])
@@ -357,12 +364,22 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, randomize_seed], 
             outputs=[file_out, file_out2, html_gen_mesh, stats, seed]
         )
-        succ2_3 = succ2_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop])
+        succ2_3 = succ2_2.then(on_gen_finish, outputs=[btn, btn_all, btn_stop, confirm_stop_group])
 
         # Stop Button
         btn_stop.click(
+            fn=lambda: (gr.update(visible=False), gr.update(visible=True)),
+            outputs=[btn_stop, confirm_stop_group]
+        )
+
+        btn_confirm_no.click(
+            fn=lambda: (gr.update(visible=True), gr.update(visible=False)),
+            outputs=[btn_stop, confirm_stop_group]
+        )
+
+        btn_confirm_yes.click(
             fn=on_gen_finish, 
-            outputs=[btn, btn_all, btn_stop], 
+            outputs=[btn, btn_all, btn_stop, confirm_stop_group], 
             cancels=[succ1_2, succ2_2]
         )
 

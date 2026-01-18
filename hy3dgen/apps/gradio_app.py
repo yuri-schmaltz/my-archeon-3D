@@ -425,8 +425,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         
         def on_gen_finish():
             logger.info("UI EVENT: Generation finished (or stopped). Restoring UI.")
-            # Show Generate, Hide Stop
-            return gr.update(visible=True), gr.update(visible=False)
+            # Show Generate, Hide Stop, Hide Progress
+            return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False, value="")
 
         # Explicit Tab Selection Handlers
         def on_image_tab_select():
@@ -457,12 +457,12 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         )
         
         # 3. Finish: Swap Back
-        succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_stop])
+        succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_stop, progress_html])
         
         # Stop Action: Cancel Generation and Swap Back
         btn_stop.click(
             fn=on_gen_finish,
-            outputs=[btn, btn_stop],
+            outputs=[btn, btn_stop, progress_html],
             cancels=[succ1_2]
         )
 

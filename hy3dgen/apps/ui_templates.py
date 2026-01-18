@@ -24,10 +24,13 @@ HTML_TEMPLATE_MODEL_VIEWER = """
             font-family: var(--font-family);
         }
         model-viewer {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%; 
             height: 100%; 
-            --progress-bar-color: var(--primary-500); 
             background: transparent;
+            --progress-bar-color: var(--primary-500); 
         }
         model-viewer:focus {
             outline: none; 
@@ -64,6 +67,10 @@ HTML_TEMPLATE_MODEL_VIEWER = """
                   aria-label="Interactive 3D model viewer. Use mouse or touch to rotate, zoom, and pan."
                   auto-rotate 
                   camera-controls 
+                  bounds="tight" 
+                  min-field-of-view="10deg"
+                  max-field-of-view="45deg"
+                  interpolation-quality="high"
                   shadow-intensity="1" 
                   exposure="1.0" 
                   tone-mapping="neutral"

@@ -13,13 +13,13 @@
     --secondary-500: #ec4899;
 
     /* Surface & Backgrounds */
-    --bg-app: #0f172a;
-    /* Slate 900 */
-    --bg-panel: #1e293b;
-    /* Slate 800 */
-    --bg-surface: #334155;
-    /* Slate 700 */
-    --bg-input: #0f172a;
+    --bg-app: #090B1F;
+    /* Slate 900 -> changed to Custom Dark Blue */
+    --bg-panel: #141829;
+    /* Slightly lighter than bg-app for contrast */
+    --bg-surface: #1e243d;
+    /* Slate 700 -> Lighter variants */
+    --bg-input: #090B1F;
 
     /* Text */
     --text-main: #f8fafc;
@@ -42,7 +42,7 @@
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
-    --glass-bg: rgba(30, 41, 59, 0.4);
+    --glass-bg: rgba(9, 11, 31, 0.4);
     --glass-border: rgba(255, 255, 255, 0.05);
     --backdrop-blur: blur(16px);
 }
@@ -80,40 +80,46 @@ body {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
-    background: transparent !important;
+    background: var(--bg-app) !important;
     display: flex !important;
     flex-direction: column !important;
+    gap: 0 !important;
+    overflow: hidden !important;
 }
 
 .main-row {
+    flex-grow: 1 !important;
     height: 100% !important;
     gap: 0 !important;
-    /* We control spacing via padding */
     display: flex !important;
+    overflow: hidden !important;
 }
 
 /* --- Left Column: Controls --- */
 .left-col {
-    background: linear-gradient(180deg, var(--bg-app) 0%, #020617 100%);
-    border-right: 1px solid var(--border-subtle);
+    background: var(--bg-app) !important;
+    border-right: none !important;
     padding: 32px !important;
     height: 100% !important;
     overflow-y: auto !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 28px !important;
-    box-shadow: 10px 0 30px -10px rgba(0, 0, 0, 0.5);
+    box-shadow: none !important;
+    /* Removed shadow to eliminate "black border" effect */
     z-index: 10;
 }
 
 /* --- Right Column: Viewer --- */
 .right-col {
-    background: #000000;
-    /* Viewer usually needs absolute black or deep bg */
+    background: var(--bg-app) !important;
     height: 100% !important;
     position: relative !important;
     padding: 0 !important;
     flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
 }
 
 /* --- Components: Typography --- */
@@ -237,109 +243,23 @@ button.stop {
     background: var(--bg-surface) !important;
 }
 
-/* --- Components: 3D Viewer --- */
-#gen_output_container {
-    height: 100% !important;
-    width: 100% !important;
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    position: relative;
-    background: var(--bg-panel);
-    /* Fallback */
-    display: flex !important;
-    flex-direction: column !important;
-    padding-bottom: 24px !important; /* Reserve space for progress bar */
-}
-
-#model_3d_viewer {
-    flex-grow: 1 !important;
-    height: auto !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    border: none !important;
-    background: transparent !important;
-}
-
-iframe {
-    width: 100% !important;
-    height: 100% !important;
-    border: none !important;
-}
-
-/* --- Image Upload Fields --- */
-/* Make drop zones cleaner */
-button.upload-button {
-    background: var(--bg-surface) !important;
-    border: 1px dashed var(--border-highlight) !important;
-    border-radius: var(--radius-md) !important;
-    min-height: 100px !important;
-}
-
-button.upload-button:hover {
-    border-color: var(--primary-500) !important;
-    background: var(--bg-panel) !important;
-}
-
-/* Remove default Gradio footprint info if desired */
-footer {
-    display: none !important;
-}
-
-/* --- Relocating Status/Loader --- */
-/* Target the loading status container within the output */
-.eta-bar {
-    position: absolute !important;
-    bottom: 0 !important;
-    /* Align to bottom edge */
-    left: 0 !important;
-    right: 0 !important;
-    top: auto !important;
-    height: 24px !important;
-    transform: none !important;
-    /* Push completely outside */
-    z-index: 100 !important;
-    background: transparent !important;
-    border: none !important;
-    color: var(--text-muted) !important;
-    justify-content: center !important;
-    padding: 0 !important;
-    align-items: center !important;
-}
-
-/* The timer/text specific override */
-.eta-bar>div {
-    background: transparent !important;
-    color: var(--text-muted) !important;
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 0.75rem !important;
-}
-
-/* Ensure container allows overflow so we see it below */
-#gen_output_container {
-    overflow: hidden !important; /* Keep internal, but allow bar at bottom */
-}
-/* --- Footer --- */
-.footer-divider {
-    border-top: 1px solid var(--border-subtle) !important;
-    margin-top: 24px !important;
-    opacity: 0.5;
-}
-
-.footer-text {
-    font-size: 0.75rem !important;
-    color: var(--text-muted) !important;
-    text-align: center;
-    font-family: 'JetBrains Mono', monospace !important;
-    opacity: 0.8;
-}
-
 /* --- Global Tab Fill Fixes --- */
-/* Make tabs container fill height */
 .tabs {
     display: flex !important;
     flex-direction: column !important;
     height: 100% !important;
+    min-height: 0 !important;
+    flex-grow: 1 !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+.tab-nav {
+    border-bottom: 1px solid var(--border-subtle) !important;
+    gap: 24px !important;
+    margin: 0 !important;
+    padding: 16px 24px 0 24px !important;
+    /* Move padding to nav only */
 }
 
 /* Make tab content area fill remaining height */
@@ -348,9 +268,93 @@ footer {
     display: flex !important;
     flex-direction: column !important;
     border: none !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    padding: 0 !important;
+    /* Remove internal padding */
+    background: transparent !important;
 }
 
 /* Specific fix for the generated mesh tab */
 #gen_mesh_panel {
     height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+}
+
+/* Target ANY direct child of the panel to force growth */
+#gen_mesh_panel>* {
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}
+
+/* Ensure the output container takes all space */
+#gen_output_container {
+    flex-grow: 1 !important;
+    height: 100% !important;
+    width: 100% !important;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0 !important;
+    /* Remove radius for full bleed or keep? Keep, but margin? */
+    border-left: none !important;
+    /* Clean integration */
+    border-right: none !important;
+    border-bottom: none !important;
+    margin: 0 !important;
+
+    /* Re-add border-radius and margin if we want it to look like a card,
+       BUT the user wants it to fill. Let's make it full bleed or close. 
+       Let's keep it full bleed for "App" feel. */
+    border: none !important;
+    border-radius: 0 !important;
+
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-panel);
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 24px !important;
+    /* Content padding */
+    padding-bottom: 48px !important;
+    /* Space for progress bar */
+}
+
+/* Ensure the model viewer (Gradio HTML component) fills the container */
+#model_3d_viewer {
+    flex-grow: 1 !important;
+    height: 100% !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    display: flex !important;
+    flex-direction: column !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Ensure the inner prose/HTML div fills the viewer */
+#model_3d_viewer .prose {
+    flex-grow: 1 !important;
+    height: 100% !important;
+    width: 100% !important;
+    max-width: none !important;
+    /* Override prose max-width */
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#model_3d_viewer .prose>div {
+    flex-grow: 1 !important;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
 }

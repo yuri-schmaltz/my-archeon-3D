@@ -10,6 +10,23 @@ from hy3dgen.meshops.engine import MeshOpsEngine
 
 router = APIRouter()
 
+@router.get("/v1/system/health")
+async def health_check():
+    return {"status": "online", "version": "1.0.0"}
+
+@router.post("/v1/system/shutdown")
+async def shutdown_server():
+    """Gracefully shutdown the server - useful for Tauri sidecar cleanup"""
+    import os, signal, time
+    # Schedule kill in a separate task to allow response to return
+    def kill_self():
+        time.sleep(1)
+        os.kill(os.getpid(), signal.SIGTERM)
+    
+    asyncio.create_task(asyncio.to_thread(kill_self))
+    return {"status": "shutting_down"}
+
+
 request_manager = None
 jobs_db = {} 
 meshops_engine = MeshOpsEngine()

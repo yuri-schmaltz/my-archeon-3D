@@ -422,7 +422,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         def on_gen_start():
             logger.info("UI EVENT: Generation started.")
             # Hide Generate, Show Stop with Init Timer
-            return gr.update(visible=False), gr.update(visible=True, value="Stop (0.0s)")
+            return gr.update(visible=False), gr.update(visible=True, value="Stop (Preparing...)")
         
         def on_gen_finish():
             logger.info("UI EVENT: Generation finished (or stopped). Restoring UI.")

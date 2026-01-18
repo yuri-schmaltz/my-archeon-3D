@@ -160,6 +160,16 @@ body, .gradio-container {
     background: var(--primary-500);
 }
 
+/* Stop Button Styling */
+button.stop {
+    background-color: #ef4444 !important;
+    color: white !important;
+    border: 1px solid #dc2626 !important;
+}
+button.stop:hover {
+    background-color: #dc2626 !important;
+}
+
 /* Main Layout Fixes */
 /* Main Layout Fixes - Flexbox Architecture */
 .main-row {
@@ -386,15 +396,18 @@ iframe {
 
 .archeon-progress-text {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 12px;
     color: white;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-    z-index: 1;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    z-index: 10;
+    pointer-events: none;
 }
 """

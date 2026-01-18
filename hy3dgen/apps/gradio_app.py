@@ -303,12 +303,11 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                             image = gr.Image(label=i18n.get('lbl_image'), type='pil', image_mode='RGBA', height=250, sources=['upload', 'clipboard'])
                         
                         with gr.Tab(i18n.get('tab_mv_prompt'), id='tab_mv_prompt') as tab_mv_p:
-                            with gr.Row():
-                                mv_image_front = gr.Image(label=i18n.get('lbl_front'), type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
-                                mv_image_back = gr.Image(label=i18n.get('lbl_back'), type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
-                            with gr.Row():
-                                mv_image_left = gr.Image(label=i18n.get('lbl_left'), type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
-                                mv_image_right = gr.Image(label=i18n.get('lbl_right'), type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
+                            with gr.Row(variant='compact'):
+                                mv_image_front = gr.Image(label=i18n.get('lbl_front'), type='pil', image_mode='RGBA', height=100, sources=['upload', 'clipboard'])
+                                mv_image_left = gr.Image(label=i18n.get('lbl_left'), type='pil', image_mode='RGBA', height=100, sources=['upload', 'clipboard'])
+                                mv_image_back = gr.Image(label=i18n.get('lbl_back'), type='pil', image_mode='RGBA', height=100, sources=['upload', 'clipboard'])
+                                mv_image_right = gr.Image(label=i18n.get('lbl_right'), type='pil', image_mode='RGBA', height=100, sources=['upload', 'clipboard'])
 
                         with gr.Tab(i18n.get('tab_text_prompt'), id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
                             caption = gr.Textbox(label=i18n.get('tab_text_prompt'), placeholder=i18n.get('ph_text_prompt'), lines=3)

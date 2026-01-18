@@ -184,7 +184,7 @@ body, .gradio-container {
 .right-col .tabitem, 
 .right-col .group,
 .right-col .form {
-    height: 100% !important;
+    height: auto !important; /* Allow sharing space with footer */
     min-height: 0 !important; /* Critical for Flexbox scrolling */
     flex: 1 1 0% !important;
     display: flex !important;
@@ -213,6 +213,7 @@ body, .gradio-container {
     display: flex !important;
     flex-direction: column !important;
     min-height: 0 !important;
+    position: relative !important; /* Anchor for absolute placeholder */
 }
 
 /* Ensure Iframe container (Gradio HTML) fills space recursively */
@@ -330,14 +331,18 @@ iframe {
 
 /* Empty Placeholder Polish */
 .empty-placeholder {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.3;
-    text-align: center;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 0.3 !important;
+    text-align: center !important;
+    pointer-events: none !important; /* Let clicks pass through if needed */
 }
 .empty-placeholder-icon svg {
     width: 64px;

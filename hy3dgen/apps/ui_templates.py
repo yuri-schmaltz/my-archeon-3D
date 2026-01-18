@@ -179,12 +179,14 @@ body, .gradio-container {
 }
 
 /* Force Tab Content to Fill Space */
+.right-col > .form, 
 .right-col .tabarea, 
 .right-col .tabitem, 
 .right-col .group,
 .right-col .form {
     height: 100% !important;
-    flex: 1 !important;
+    min-height: 0 !important; /* Critical for Flexbox scrolling */
+    flex: 1 1 0% !important;
     display: flex !important;
     flex-direction: column !important;
 }
@@ -192,22 +194,31 @@ body, .gradio-container {
 /* Specific Height for Output Containers */
 #gen_output_container {
     height: 100% !important;
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+#gen_output_container > .form {
+    height: 100% !important;
     flex: 1 !important;
     display: flex !important;
     flex-direction: column !important;
 }
 
 #model_3d_viewer {
-    flex: 1 !important;
+    flex: 1 1 auto !important; /* Grow to fill available space */
     height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
+    min-height: 0 !important;
 }
 
-/* Ensure Iframe container (Gradio HTML) fills space */
+/* Ensure Iframe container (Gradio HTML) fills space recursively */
 #model_3d_viewer,
-#model_3d_viewer .prose, 
-#model_3d_viewer .prose > div,
+#model_3d_viewer > .prose, 
+#model_3d_viewer > .prose > div,
 #model_3d_viewer > div,
 #model_3d_viewer iframe {
     height: 100% !important;
@@ -337,5 +348,41 @@ iframe {
     font-size: 1.5em;
     font-weight: 600;
     margin-bottom: 8px;
+}
+
+/* Custom Archeon Progress Bar */
+.archeon-progress-container {
+    width: 100%;
+    margin-top: 8px; /* Space from viewer */
+    margin-bottom: 8px; /* Space from footer */
+    background: var(--surface-200);
+    border-radius: 4px;
+    height: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.archeon-progress-fill {
+    background: var(--primary-500);
+    height: 100%;
+    width: 0%;
+    transition: width 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.archeon-progress-text {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    z-index: 1;
 }
 """

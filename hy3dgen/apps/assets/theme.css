@@ -12,6 +12,10 @@
     /* Secondary Accent: Pink/Rose */
     --secondary-500: #ec4899;
 
+    /* Semantic: Danger/Error */
+    --danger-500: #ef4444;
+    --danger-600: #dc2626;
+
     /* Surface & Backgrounds */
     --bg-app: #090B1F;
     /* Slate 900 -> changed to Custom Dark Blue */
@@ -24,7 +28,7 @@
     /* Text */
     --text-main: #f8fafc;
     /* Slate 50 */
-    --text-muted: #94a3b8;
+    --text-muted: #cbd5e1;
     /* Slate 400 */
     --text-on-primary: #ffffff;
 
@@ -50,12 +54,26 @@
 /* --- Global Reset & Foundation --- */
 * {
     box-sizing: border-box !important;
-    scrollbar-width: none !important;
-    /* Firefox */
+    scrollbar-width: thin !important;
+    scrollbar-color: var(--primary-600) var(--bg-app) !important;
 }
 
 ::-webkit-scrollbar {
-    width: 0px !important;
+    width: 8px !important;
+    height: 8px !important;
+    background: var(--bg-app) !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-600) !important;
+    border-radius: var(--radius-sm) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-500) !important;
+}
+
+::-webkit-scrollbar-track {
     background: transparent !important;
 }
 
@@ -95,6 +113,29 @@ body {
     overflow: hidden !important;
 }
 
+/* --- DEFINITIVE FULL SCREEN LAYOUT (WIDTH & HEIGHT FIX) --- */
+
+/* 1. Global Width/Height Reset for Gradio Roots */
+.gradio-container {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+.main-row {
+    flex-grow: 1 !important;
+    height: 100% !important;
+    gap: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    /* Default desktop row */
+    overflow: hidden !important;
+}
+
 /* --- Left Column: Controls --- */
 .left-col {
     background: var(--bg-app) !important;
@@ -106,10 +147,15 @@ body {
     flex-direction: column !important;
     gap: 28px !important;
     box-shadow: none !important;
-    /* Removed shadow to eliminate "black border" effect */
     z-index: 10;
+    /* Desktop: Fixed width or proportional, handled by Python scale but reset here just in case */
+    min-width: 380px !important;
+    width: 380px !important;
+    /* Force width on desktop to prevent squashing */
+    max-width: 450px !important;
 }
 
+/* --- Right Column: Viewer --- */
 /* --- Right Column: Viewer --- */
 .right-col {
     background: var(--bg-app) !important;
@@ -120,201 +166,137 @@ body {
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
+    /* Flexbox fix for dynamic width content */
+    width: 0 !important;
+    min-width: 0 !important;
+    flex-basis: 0 !important;
 }
 
-/* --- Components: Typography --- */
-/* Headlines inside components */
-.gr-box>div>span,
-span.svelte-1gfkn6j {
-    color: var(--text-muted) !important;
-    text-transform: uppercase;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em;
-    font-weight: 600 !important;
+/* --- RESPONSIVE MEDIA QUERIES --- */
+
+/* Tablet & Mobile (<= 1024px) */
+@media (max-width: 1024px) {
+    .main-row {
+        flex-direction: column !important;
+        overflow-y: auto !important;
+        /* Allow vertical scroll for stacked layout */
+        height: auto !important;
+        /* Allow height to grow */
+    }
+
+    .gradio-container {
+        overflow-y: auto !important;
+        /* Container scroll */
+    }
+
+    .left-col {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        /* Collapse height to content */
+        padding: 24px !important;
+        border-bottom: 1px solid var(--border-subtle) !important;
+        flex-shrink: 0 !important;
+        overflow-y: visible !important;
+        /* Let container scroll */
+    }
+
+    .right-col {
+        width: 100% !important;
+        height: 60vh !important;
+        /* Fixed height for viewer in stacked mode */
+        min-height: 400px !important;
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+    }
 }
 
-/* --- Components: Inputs & Cards --- */
-.block {
-    background: transparent !important;
-    border: none !important;
+/* Mobile Specific (<= 768px) */
+@media (max-width: 768px) {
+    .left-col {
+        padding: 16px !important;
+        gap: 20px !important;
+    }
+
+    .right-col {
+        height: 50vh !important;
+        min-height: 350px !important;
+    }
+
+    /* Stack tabs buttons vertically if needed or scroll */
+    .tabs {
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .tab-nav {
+        overflow-x: auto !important;
+        justify-content: flex-start !important;
+        gap: 16px !important;
+        padding-bottom: 8px !important;
+    }
+
+    /* Reduce button padding */
+    button.primary {
+        padding: 10px 16px !important;
+    }
+
+    /* Ensure generated result doesn't overflow */
+    #gen_output_container {
+        padding: 16px !important;
+    }
 }
 
-/* Input Fields (Textboxes, Numbers) */
-textarea,
-input[type="text"],
-input[type="number"] {
-    background-color: var(--bg-input) !important;
-    border: 1px solid var(--border-subtle) !important;
-    border-radius: var(--radius-sm) !important;
-    color: var(--text-main) !important;
-    padding: 10px 12px !important;
-    transition: all 0.2s ease !important;
-    box-shadow: none !important;
-}
-
-textarea:focus,
-input:focus {
-    border-color: var(--primary-500) !important;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
-}
-
-/* Slider */
-input[type="range"] {
-    accent-color: var(--primary-500) !important;
-}
-
-/* --- Components: Tabs --- */
-.tabs {
-    background: transparent !important;
-    border: none !important;
-    gap: 8px !important;
-    margin-bottom: 16px !important;
-}
-
-.tab-nav {
-    border-bottom: 1px solid var(--border-subtle) !important;
-    gap: 24px !important;
-    margin-bottom: 16px !important;
-}
-
-button.selected {
-    color: var(--primary-400) !important;
-    border-bottom: 2px solid var(--primary-500) !important;
-    background: transparent !important;
-    font-weight: 600 !important;
-}
-
-button {
-    color: var(--text-muted) !important;
-    transition: color 0.2s ease !important;
-}
-
-button:hover {
-    color: var(--text-main) !important;
-}
-
-/* --- Components: Buttons --- */
-button.primary {
-    background: linear-gradient(135deg, var(--primary-600), var(--primary-500)) !important;
-    color: white !important;
-    border: none !important;
-    border-radius: var(--radius-md) !important;
-    padding: 12px 24px !important;
-    font-weight: 600 !important;
-    font-size: 0.95rem !important;
-    box-shadow: var(--shadow-md) !important;
-    transition: transform 0.1s ease, filter 0.2s ease !important;
-    width: 100% !important;
-}
-
-button.primary:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
-}
-
-button.primary:active {
-    transform: translateY(0);
-}
-
-/* Stop Button */
-button.stop {
-    background: #ef4444 !important;
-    /* Red-500 */
-    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-    width: 100% !important;
-}
-
-/* --- Components: Containers & Groups --- */
-/* The "Generation Settings" Container */
-.panel-container {
-    background: var(--glass-bg) !important;
-    border: 1px solid var(--glass-border) !important;
-    backdrop-filter: var(--backdrop-blur) !important;
-    border-radius: var(--radius-lg) !important;
-    padding: 24px !important;
-    box-shadow: var(--shadow-lg) !important;
-    margin-bottom: 8px;
-}
-
-/* Accordions/Groups within settings */
-.label-wrap {
-    border: 1px solid var(--border-subtle) !important;
-    border-radius: var(--radius-md) !important;
-    background: var(--bg-surface) !important;
-}
-
-/* --- FORCE FULL HEIGHT HIERARCHY (NUCLEAR OPTION) --- */
-
-/* 1. Root & Main Row */
-.gradio-container,
-.main-row,
-.right-col {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    min-height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-}
-
-/* 2. Tabs Container (The invisible wrapper) */
-.tabs {
-    flex-grow: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    height: 100% !important;
-    overflow: hidden !important;
-}
-
-/* 3. The Tab Content Wrapper (Gradio internal) */
-.tabitem,
-.tab-nav+div {
-    flex-grow: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    height: 100% !important;
-    min-height: 0 !important;
-}
-
-/* 4. The Specific Tab Panel */
-#gen_mesh_panel {
-    flex-grow: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    height: 100% !important;
-    overflow: hidden !important;
-}
-
-/* 5. Gradio Internal Wrappers (Form, Wrap, Contain, Block) -- The likely culprits */
-#gen_mesh_panel>div,
-#gen_mesh_panel .form,
-#gen_mesh_panel .wrap,
-#gen_mesh_panel .contain,
-#gen_mesh_panel .block {
-    flex-grow: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    height: 100% !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-}
-
-/* 6. The Output Container (Our target Column) */
+/* 5. The Output Container */
 #gen_output_container {
-    flex-grow: 1 !important;
     display: flex !important;
     flex-direction: column !important;
-    height: 100% !important;
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
     width: 100% !important;
     background: var(--bg-panel) !important;
     padding: 24px !important;
     padding-bottom: 48px !important;
-    /* Space for progress bar */
     border-radius: 0 !important;
     overflow: hidden !important;
     position: relative !important;
+}
+
+/* 5b. Force Height Propagation */
+#gen_output_container * {
+    min-height: 0 !important;
+    height: 100% !important;
+    flex-grow: 1 !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+}
+
+/* 5c. Exception for SVG/Icons */
+#gen_output_container svg,
+#gen_output_container svg *,
+#gen_output_container h3,
+#gen_output_container p {
+    height: auto !important;
+    flex-grow: 0 !important;
+    min-height: auto !important;
+}
+
+/* 6. Form/Block wrappers inside the panel */
+#gen_mesh_panel>div,
+#gen_mesh_panel .form,
+#gen_mesh_panel .block,
+#gen_mesh_panel .wrap {
+    height: 100% !important;
+    width: 100% !important;
+    max-width: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* 7. The Model Viewer (HTML Component) */
@@ -324,6 +306,7 @@ button.stop {
     flex-direction: column !important;
     height: 100% !important;
     width: 100% !important;
+    max-width: none !important;
     padding: 0 !important;
     margin: 0 !important;
     border: none !important;
@@ -331,7 +314,8 @@ button.stop {
 
 /* 8. The Prose/Internal HTML Wrapper */
 #model_3d_viewer .prose,
-#model_3d_viewer .prose>div {
+#model_3d_viewer .prose>div,
+.prose {
     flex-grow: 1 !important;
     display: flex !important;
     flex-direction: column !important;
@@ -340,10 +324,56 @@ button.stop {
     max-width: none !important;
 }
 
-/* 9. The Iframe itself */
+/* 9. The Iframe */
 iframe {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
     flex-grow: 1 !important;
+}
+
+/* --- Components: Placeholders --- */
+.empty-placeholder {
     height: 100% !important;
     width: 100% !important;
-    display: block !important;
+    border-radius: var(--radius-lg) !important;
+    border: 2px dashed var(--border-subtle) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background-color: transparent !important;
+    transition: all 0.3s ease !important;
+    padding: 24px !important;
+}
+
+.empty-placeholder-icon {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 64px !important;
+    height: 64px !important;
+    background-color: rgba(99, 102, 241, 0.1) !important;
+    border-radius: 50% !important;
+    margin-bottom: 16px !important;
+}
+
+.empty-placeholder-icon svg {
+    stroke: var(--primary-500) !important;
+}
+
+.empty-placeholder-title {
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    color: var(--text-main) !important;
+    margin: 0 0 8px 0 !important;
+}
+
+.empty-placeholder-text {
+    font-size: 0.875rem !important;
+    color: var(--text-muted) !important;
+    margin: 0 !important;
+    text-align: center !important;
+    max-width: 260px !important;
 }

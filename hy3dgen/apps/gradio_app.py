@@ -239,6 +239,11 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
     try:
         result = await request_manager.submit(params)
         mesh, stats = result["mesh"], result["stats"]
+    except Exception as e:
+        logger.error(f"Generation failed: {e}")
+        # Return fallback values to reset UI state if everything crashes
+        # Raising gr.Error is the best way to show a visible toast in Gradio
+        raise gr.Error(f"Generation Failed: {str(e)}")
     finally:
         # Para o progress updater
         stop_updater['value'] = True
@@ -284,7 +289,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         model_key_state = gr.State("Normal")
 
         with gr.Row(elem_classes="main-row"):
-            with gr.Column(scale=1, min_width=320, elem_classes="left-col"):
+            with gr.Column(scale=1, elem_classes="left-col"):
                 
                 with gr.Group():
 
@@ -310,6 +315,12 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                             gen_mode = gr.Radio(label='Generation Mode', choices=['Turbo', 'Fast', 'Standard'], value='Turbo')
                             decode_mode = gr.Radio(label='Decoding Mode', choices=['Low', 'Standard', 'High'], value='Standard')
                         
+                # Exposed Critical Parameters (Moved out of Advanced)
+                with gr.Group(elem_classes="panel-container"):
+                   with gr.Row():
+                       num_steps = gr.Slider(maximum=100, minimum=1, value=50, step=1, label='Inference Steps', info="Quality vs Speed (Default: 50)")
+                       cfg_scale = gr.Number(value=5.0, label='Guidance', info="Prompt strictness")
+
                 with gr.Accordion("Advanced Parameters", open=False, elem_classes="panel-container"):
                     with gr.Group():
                         with gr.Row():
@@ -317,10 +328,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                             randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
                         seed = gr.Slider(label="Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
                         with gr.Row():
-                            num_steps = gr.Slider(maximum=100, minimum=1, value=5, step=1, label='Inference Steps', info="Higher = more detail, slower speed.")
                             octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label='Octree Resolution', info="Higher = sharper geometry, more VRAM.")
-                        with gr.Row():
-                            cfg_scale = gr.Number(value=5.0, label='Guidance Scale')
                             num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label='Chunks', info="Memory management for large meshes.")
                             
                         with gr.Accordion("Texture & Baking", open=False):

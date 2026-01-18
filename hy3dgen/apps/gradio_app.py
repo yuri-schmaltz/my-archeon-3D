@@ -29,16 +29,21 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from hy3dgen.shapegen.utils import logger
+from hy3dgen.utils.system import get_user_cache_dir, setup_logging
 from hy3dgen.manager import PriorityRequestManager, ModelManager
 from hy3dgen.inference import InferencePipeline
 from hy3dgen.apps.ui_templates import HTML_TEMPLATE_MODEL_VIEWER, HTML_PLACEHOLDER, CSS_STYLES
+import hy3dgen.i18n as i18n
+
+# Global Log Setup
+logger = setup_logging("gradio_app")
 
 # Global Manager
 request_manager = None
 
 MAX_SEED = int(1e7)
-SAVE_DIR = 'gradio_cache'
+# Use robust cross-platform cache dir
+SAVE_DIR = str(get_user_cache_dir() / "gradio_cache")
 HAS_T2I = False
 TURBO_MODE = True
 HAS_TEXTUREGEN = True
@@ -281,7 +286,7 @@ async def generation_all(*args, progress=gr.Progress()):
 def build_app(example_is=None, example_ts=None, example_mvs=None):
     # Gradio 6.3+: theme and css are handled in mount_gradio_app
     with gr.Blocks(
-        title='Archeon 3D Pro',
+        title=i18n.get('app_title'),
         analytics_enabled=False,
         fill_height=True
     ) as demo:
@@ -294,42 +299,42 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                 with gr.Group():
 
                     with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
-                        with gr.Tab('Image Prompt', id='tab_img_prompt') as tab_ip:
-                            image = gr.Image(label='Image', type='pil', image_mode='RGBA', height=250, sources=['upload', 'clipboard'])
+                        with gr.Tab(i18n.get('tab_img_prompt'), id='tab_img_prompt') as tab_ip:
+                            image = gr.Image(label=i18n.get('lbl_image'), type='pil', image_mode='RGBA', height=250, sources=['upload', 'clipboard'])
                         
-                        with gr.Tab('MultiView Prompt', id='tab_mv_prompt') as tab_mv_p:
+                        with gr.Tab(i18n.get('tab_mv_prompt'), id='tab_mv_prompt') as tab_mv_p:
                             with gr.Row():
-                                mv_image_front = gr.Image(label='Front', type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
-                                mv_image_back = gr.Image(label='Back', type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
+                                mv_image_front = gr.Image(label=i18n.get('lbl_front'), type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
+                                mv_image_back = gr.Image(label=i18n.get('lbl_back'), type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
                             with gr.Row():
-                                mv_image_left = gr.Image(label='Left', type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
-                                mv_image_right = gr.Image(label='Right', type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
+                                mv_image_left = gr.Image(label=i18n.get('lbl_left'), type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
+                                mv_image_right = gr.Image(label=i18n.get('lbl_right'), type='pil', image_mode='RGBA', height=120, sources=['upload', 'clipboard'])
 
-                        with gr.Tab('Text Prompt', id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
-                            caption = gr.Textbox(label='Text Prompt', placeholder='HunyuanDiT will be used to generate image.', lines=3)
-                            negative_prompt = gr.Textbox(label='Negative Prompt', placeholder='Low quality, distortion, etc.', lines=2)
+                        with gr.Tab(i18n.get('tab_text_prompt'), id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
+                            caption = gr.Textbox(label=i18n.get('tab_text_prompt'), placeholder=i18n.get('ph_text_prompt'), lines=3)
+                            negative_prompt = gr.Textbox(label='Negative Prompt', placeholder=i18n.get('ph_negative_prompt'), lines=2)
 
                 with gr.Column(visible=True, elem_classes="panel-container") as gen_settings_container:
                     with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
                         with gr.Tab("Quality", id='tab_options', visible=TURBO_MODE):
-                            gen_mode = gr.Radio(label='Generation Mode', choices=['Turbo', 'Fast', 'Standard'], value='Turbo')
+                            gen_mode = gr.Radio(label=i18n.get('lbl_gen_mode'), choices=['Turbo', 'Fast', 'Standard'], value='Turbo')
                             decode_mode = gr.Radio(label='Decoding Mode', choices=['Low', 'Standard', 'High'], value='Standard')
                         
                 # Exposed Critical Parameters (Moved out of Advanced)
                 with gr.Group(elem_classes="panel-container"):
                    with gr.Row():
-                       num_steps = gr.Slider(maximum=100, minimum=1, value=50, step=1, label='Inference Steps', info="Quality vs Speed (Default: 50)")
-                       cfg_scale = gr.Number(value=5.0, label='Guidance', info="Prompt strictness")
+                       num_steps = gr.Slider(maximum=100, minimum=1, value=50, step=1, label=i18n.get('lbl_steps'), info=i18n.get('info_steps'))
+                       cfg_scale = gr.Number(value=5.0, label=i18n.get('lbl_guidance'), info="Prompt strictness")
 
                 with gr.Accordion("Advanced Parameters", open=False, elem_classes="panel-container"):
                     with gr.Group():
                         with gr.Row():
-                            check_box_rembg = gr.Checkbox(value=True, label='Remove Background')
+                            check_box_rembg = gr.Checkbox(value=True, label=i18n.get('lbl_rembg'))
                             randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
-                        seed = gr.Slider(label="Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
+                        seed = gr.Slider(label=i18n.get('lbl_seed'), minimum=0, maximum=MAX_SEED, step=1, value=1234)
                         with gr.Row():
-                            octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label='Octree Resolution', info="Higher = sharper geometry, more VRAM.")
-                            num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label='Chunks', info="Memory management for large meshes.")
+                            octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label=i18n.get('lbl_octree'), info="Higher = sharper geometry, more VRAM.")
+                            num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label=i18n.get('lbl_chunks'), info="Memory management for large meshes.")
                             
                         with gr.Accordion("Texture & Baking", open=False):
                             with gr.Row():
@@ -339,7 +344,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
 
                 # Buttons Area - Vertical Stack
                 with gr.Row():
-                    btn = gr.Button(value='Generate 3D Model', variant='primary')
+                    btn = gr.Button(value=i18n.get('btn_generate'), variant='primary')
                     file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
                 
                 # Premium Footer
@@ -348,7 +353,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                     elem_classes="footer-divider"
                 )
                 gr.Markdown(
-                    "**Archeon 3D Pro** v1.0 | Tencent Hunyuan-3D Engine | Antigravity AI Powered",
+                    i18n.get('footer_text'),
                     elem_classes="footer-text"
                 )
                 
@@ -362,7 +367,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
 
             with gr.Column(scale=1, elem_classes="right-col"):
                 with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
-                    with gr.Tab('Generated Mesh', id='gen_mesh_panel'):
+                    with gr.Tab(i18n.get('lbl_output'), id='gen_mesh_panel'):
                         with gr.Column(elem_id="gen_output_container"):
                             html_gen_mesh = gr.HTML(HTML_PLACEHOLDER, label='Output', elem_id="model_3d_viewer")
                             # Download buttons moved to left column
@@ -430,16 +435,22 @@ def main():
     parser.add_argument("--model_path", type=str, default='tencent/Hunyuan3D-2')
     parser.add_argument("--subfolder", type=str, default='hunyuan3d-dit-v2-0-turbo')
     parser.add_argument("--texgen_model_path", type=str, default='tencent/Hunyuan3D-2')
+    # Default port will be handled dynamically if not set, but argparse defaults to 7860 here if we don't change logic. 
+    # Better to allow 7860 as default preference but find another if taken.
     parser.add_argument('--port', type=int, default=7860)
     parser.add_argument('--host', type=str, default='127.0.0.1')
     parser.add_argument('--device', type=str, default='cuda')
-    parser.add_argument('--cache-path', type=str, default='gradio_cache')
+    parser.add_argument('--cache-path', type=str, default=None)
     parser.add_argument('--enable_t23d', action='store_true')
     parser.add_argument('--disable_tex', action='store_true', help='Disable texture generation (avoids custom_rasterizer requirement)')
     parser.add_argument('--low_vram_mode', action='store_true', default=True)
     parser.add_argument('--no-browser', action='store_true', help='Do not open the browser automatically')
     args = parser.parse_args()
-    SAVE_DIR = args.cache_path
+    
+    if args.cache_path:
+        SAVE_DIR = args.cache_path
+    # Else SAVE_DIR is already set to XDG location by global init
+    
     os.makedirs(SAVE_DIR, exist_ok=True)
     HAS_T2I = args.enable_t23d
     HAS_TEXTUREGEN = not args.disable_tex

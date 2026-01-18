@@ -114,13 +114,99 @@ HTML_PLACEHOLDER = """
 </div>
 """
 
-def load_css():
-    try:
-        css_path = Path(__file__).parent / "assets" / "theme.css"
-        if css_path.exists():
-            return css_path.read_text(encoding="utf-8")
-        return ""
-    except Exception:
-        return ""
+# Embedded AEGIS UI Theme (Pixel Perfect Fit-to-Screen)
+CSS_STYLES = """
+/* AEGIS UI Reset */
+:root {
+    --bg-app: #090B1F;
+    --primary-500: #6366f1;
+    --surface-100: #1a1b26;
+    --surface-200: #24283b;
+    --text-main: #c0caf5;
+}
 
-CSS_STYLES = load_css()
+body, .gradio-container {
+    background-color: var(--bg-app) !important;
+    color: var(--text-main) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    overflow: hidden !important; /* Prevent double scrollbars */
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--surface-200);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-500);
+}
+
+/* Main Layout Fixes */
+.main-row {
+    height: calc(100vh - 60px) !important; /* Leave room for header/footer if needed, usually 100vh is fine with fill_height */
+    gap: 0 !important;
+}
+
+.left-col, .right-col {
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+}
+
+/* Panel Containers */
+.panel-container {
+    background: var(--surface-100);
+    border: 1px solid var(--surface-200);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+/* Compact Tabs */
+.tabs {
+    margin-bottom: 0 !important;
+}
+.tab-nav {
+    border-bottom: 1px solid var(--surface-200) !important;
+}
+button.selected {
+    border-bottom: 2px solid var(--primary-500) !important;
+    color: var(--primary-500) !important;
+    background: transparent !important;
+}
+
+/* Model Viewer Iframe Polish */
+iframe {
+    width: 100% !important; 
+    height: 100% !important; 
+    border-radius: 8px; 
+    background: #000;
+}
+
+/* Footer Polish */
+.footer-divider {
+    margin: 12px 0 !important;
+    border-color: var(--surface-200) !important;
+}
+.footer-text {
+    text-align: center;
+    font-size: 0.8em;
+    opacity: 0.6;
+}
+
+/* Input Compaction */
+.block.form {
+    background: transparent !important;
+    border: none !important;
+}
+"""

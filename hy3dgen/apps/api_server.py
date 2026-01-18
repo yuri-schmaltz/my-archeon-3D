@@ -12,8 +12,19 @@ from hy3dgen.api.routes import router
 import hy3dgen.api.routes as routes_module
 
 # Logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("api_server")
+import logging
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
+import asyncio
+
+from hy3dgen.manager import ModelManager, PriorityRequestManager
+
+from hy3dgen.api.routes import router
+import hy3dgen.api.routes as routes_module
+from hy3dgen.utils.system import setup_logging
+
+# Logging
+logger = setup_logging("api_server")
 
 def create_app(args=None):
     if args is None:
@@ -23,7 +34,7 @@ def create_app(args=None):
          parser.add_argument("--subfolder", type=str, default='hunyuan3d-dit-v2-0-turbo')
          parser.add_argument("--texgen_model_path", type=str, default='tencent/Hunyuan3D-2')
          parser.add_argument('--port', type=int, default=8081)
-         parser.add_argument('--host', type=str, default='0.0.0.0')
+         parser.add_argument('--host', type=str, default='127.0.0.1')
          parser.add_argument('--device', type=str, default='cuda')
          parser.add_argument('--low_vram_mode', action='store_true', default=True)
          args, _ = parser.parse_known_args()

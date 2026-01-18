@@ -10,6 +10,7 @@ transformers>=4.57.0
 torchvision>=0.24.0
 omegaconf>=2.3.0
 tqdm>=4.67.0
+platformdirs>=4.0.0
 
 # Mesh Processing
 trimesh>=4.11.0

@@ -20,12 +20,22 @@ def main():
     # Quick check for API mode before importing heavy libraries
     is_api = "--api" in sys.argv
     
+    # Setup global logging
+    from hy3dgen.utils.system import setup_logging, find_free_port
+    setup_logging("archeon_launcher")
+
+    # Find free port if default 8081 (API) or 7860 (Gradio) is taken
+    # We will let the sub-apps handle the port argument if passed, 
+    # but we can try to facilitate dynamic allocation here if we want to inject it.
+    # However, archeon_3d.py calls the 'main' of submodules which parse args again.
+    # The best way is to inject the --port arg if not present or if collision.
+
     if is_api:
         sys.argv.remove("--api")
         # Defaults for API Server
         defaults = [
-            "--host", "0.0.0.0",
-            "--port", "8081", # Default to 8081 for API to avoid conflict if both run
+            "--host", "127.0.0.1",
+            "--port", "8081",
             "--model_path", "tencent/Hunyuan3D-2",
             "--tex_model_path", "tencent/Hunyuan3D-2",
             # API server usually needs explicit enable_tex
@@ -44,9 +54,16 @@ def main():
         api_main()
     else:
         # Defaults for Gradio App
+        # Try to find a free port starting from 7860
+        port = 7860
+        try:
+            port = find_free_port(7860)
+        except Exception as e:
+            logging.warning(f"Could not find free port: {e}, falling back to 7860")
+            
         defaults = [
-            "--host", "0.0.0.0",
-            "--port", "8081",
+            "--host", "127.0.0.1",
+            "--port", str(port),
             "--model_path", "tencent/Hunyuan3D-2",
             "--subfolder", "hunyuan3d-dit-v2-0-turbo",
             "--texgen_model_path", "tencent/Hunyuan3D-2",

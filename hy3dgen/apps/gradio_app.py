@@ -164,10 +164,11 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
 # Helper for HTML Progress
 def render_progress_bar(percent, message):
      p = max(0, min(100, int(percent)))
+     # Format: Message - 50%
      return f"""
      <div class="archeon-progress-container">
          <div class="archeon-progress-fill" style="width: {p}%;"></div>
-         <div class="archeon-progress-text">{message} ({p}%)</div>
+         <div class="archeon-progress-text">{message} &nbsp; <b>{p}%</b></div>
      </div>
      """
 
@@ -420,8 +421,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         # Helper to toggle buttons
         def on_gen_start():
             logger.info("UI EVENT: Generation started.")
-            # Hide Generate, Show Stop
-            return gr.update(visible=False), gr.update(visible=True)
+            # Hide Generate, Show Stop with Init Timer
+            return gr.update(visible=False), gr.update(visible=True, value="Stop (0.0s)")
         
         def on_gen_finish():
             logger.info("UI EVENT: Generation finished (or stopped). Restoring UI.")

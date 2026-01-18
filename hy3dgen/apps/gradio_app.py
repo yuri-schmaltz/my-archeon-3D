@@ -301,20 +301,20 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                     with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
                         with gr.Tab(i18n.get('tab_img_prompt'), id='tab_img_prompt') as tab_ip:
                             with gr.Column(elem_classes="prompt-container"):
-                                image = gr.Image(label=i18n.get('lbl_image'), type='pil', image_mode='RGBA', height=250, sources=['upload', 'clipboard'])
+                                image = gr.Image(label=i18n.get('lbl_image'), type='pil', image_mode='RGBA', height=300, sources=['upload', 'clipboard'])
                         
                         with gr.Tab(i18n.get('tab_mv_prompt'), id='tab_mv_prompt') as tab_mv_p:
                             with gr.Column(elem_classes="prompt-container"):
                                 with gr.Row(variant='compact'):
-                                    mv_image_front = gr.Image(label=i18n.get('lbl_front'), type='pil', image_mode='RGBA', height=100, sources=['upload', 'clipboard'])
-                                    mv_image_left = gr.Image(label=i18n.get('lbl_left'), type='pil', image_mode='RGBA', height=100, sources=['upload', 'clipboard'])
-                                    mv_image_back = gr.Image(label=i18n.get('lbl_back'), type='pil', image_mode='RGBA', height=100, sources=['upload', 'clipboard'])
-                                    mv_image_right = gr.Image(label=i18n.get('lbl_right'), type='pil', image_mode='RGBA', height=100, sources=['upload', 'clipboard'])
+                                    mv_image_front = gr.Image(label=i18n.get('lbl_front'), type='pil', image_mode='RGBA', height=300, sources=['upload', 'clipboard'])
+                                    mv_image_left = gr.Image(label=i18n.get('lbl_left'), type='pil', image_mode='RGBA', height=300, sources=['upload', 'clipboard'])
+                                    mv_image_back = gr.Image(label=i18n.get('lbl_back'), type='pil', image_mode='RGBA', height=300, sources=['upload', 'clipboard'])
+                                    mv_image_right = gr.Image(label=i18n.get('lbl_right'), type='pil', image_mode='RGBA', height=300, sources=['upload', 'clipboard'])
 
                         with gr.Tab(i18n.get('tab_text_prompt'), id='tab_txt_prompt', visible=HAS_T2I) as tab_tp:
                             with gr.Column(elem_classes="prompt-container"):
-                                caption = gr.Textbox(label=i18n.get('tab_text_prompt'), placeholder=i18n.get('ph_text_prompt'), lines=3)
-                                negative_prompt = gr.Textbox(label='Negative Prompt', placeholder=i18n.get('ph_negative_prompt'), lines=2)
+                                caption = gr.Textbox(label=i18n.get('tab_text_prompt'), placeholder=i18n.get('ph_text_prompt'), lines=5, max_lines=5)
+                                negative_prompt = gr.Textbox(label='Negative Prompt', placeholder=i18n.get('ph_negative_prompt'), lines=4, max_lines=4)
 
                 with gr.Column(visible=True, elem_classes="panel-container") as gen_settings_container:
                     with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
@@ -332,11 +332,12 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                                     octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label=i18n.get('lbl_octree'), info="Higher = sharper geometry, more VRAM.")
                                     num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label=i18n.get('lbl_chunks'), info="Memory management for large meshes.")
                                     
-                                with gr.Accordion("Texture & Baking", open=False):
-                                    with gr.Row():
-                                        tex_steps = gr.Slider(maximum=100, minimum=1, value=30, step=1, label='Steps', info="Texture refinement steps.")
-                                        tex_guidance_scale = gr.Number(value=5.0, label='Guidance', info="Texture prompt adherence.")
-                                    tex_seed = gr.Slider(label="Texture Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
+                        with gr.Tab("Texture"):
+                             with gr.Group():
+                                with gr.Row():
+                                    tex_steps = gr.Slider(maximum=100, minimum=1, value=30, step=1, label='Steps', info="Texture refinement steps.")
+                                    tex_guidance_scale = gr.Number(value=5.0, label='Guidance', info="Texture prompt adherence.")
+                                tex_seed = gr.Slider(label="Texture Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
 
                 # Exposed Critical Parameters (Moved out of Advanced)
                 with gr.Group(elem_classes="panel-container"):
@@ -345,7 +346,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                        cfg_scale = gr.Number(value=5.0, label=i18n.get('lbl_guidance'), info="Prompt strictness")
 
                 # Buttons Area - Vertical Stack
-                with gr.Row():
+                with gr.Row(elem_classes="sticky-actions"):
                     btn = gr.Button(value=i18n.get('btn_generate'), variant='primary')
                     file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
                 

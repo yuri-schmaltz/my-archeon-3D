@@ -226,4 +226,20 @@ iframe {
 .prompt-container .gradio-image {
     max-height: 100% !important;
 }
+
+/* Sticky Action Buttons */
+.sticky-actions {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: var(--bg-app) !important;
+    z-index: 100 !important;
+    padding-top: 10px !important;
+    padding-bottom: 0px !important;
+    border-top: 1px solid var(--surface-200) !important;
+}
+
+/* Fix "Missing Icon" squares in block labels */
+.block-label img, .block-title img {
+    display: none !important;
+}
 """

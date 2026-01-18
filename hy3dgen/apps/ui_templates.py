@@ -132,7 +132,8 @@ body, .gradio-container {
     padding: 0 !important;
     max-width: 100% !important;
     height: 100vh !important;
-    overflow: hidden !important; /* Prevent double scrollbars */
+    overflow-x: hidden !important; /* Prevent horizontal scrollbars */
+    overflow-y: hidden !important; /* Prevent double scrollbars */
 }
 
 /* Scrollbar Styling */
@@ -155,11 +156,13 @@ body, .gradio-container {
 .main-row {
     height: calc(100vh - 60px) !important; /* Leave room for header/footer if needed, usually 100vh is fine with fill_height */
     gap: 0 !important;
+    overflow-x: hidden !important;
 }
 
 .left-col, .right-col {
     height: 100% !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important; /* Ensure no horizontal scroll inside columns */
     padding: 16px !important;
 }
 
@@ -208,5 +211,19 @@ iframe {
 .block.form {
     background: transparent !important;
     border: none !important;
+}
+
+/* Prompt Container Standardization */
+.prompt-container {
+    height: 320px !important; /* Fixed height for consistency */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+/* Ensure images inside prompt container don't overflow */
+.prompt-container .gradio-image {
+    max-height: 100% !important;
 }
 """

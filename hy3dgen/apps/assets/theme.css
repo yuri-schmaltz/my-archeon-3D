@@ -243,118 +243,107 @@ button.stop {
     background: var(--bg-surface) !important;
 }
 
-/* --- Global Tab Fill Fixes --- */
+/* --- FORCE FULL HEIGHT HIERARCHY (NUCLEAR OPTION) --- */
+
+/* 1. Root & Main Row */
+.gradio-container,
+.main-row,
+.right-col {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* 2. Tabs Container (The invisible wrapper) */
 .tabs {
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+/* 3. The Tab Content Wrapper (Gradio internal) */
+.tabitem,
+.tab-nav+div {
+    flex-grow: 1 !important;
     display: flex !important;
     flex-direction: column !important;
     height: 100% !important;
     min-height: 0 !important;
-    flex-grow: 1 !important;
-    border: none !important;
-    background: transparent !important;
 }
 
-.tab-nav {
-    border-bottom: 1px solid var(--border-subtle) !important;
-    gap: 24px !important;
-    margin: 0 !important;
-    padding: 16px 24px 0 24px !important;
-    /* Move padding to nav only */
-}
-
-/* Make tab content area fill remaining height */
-.tabitem {
-    flex-grow: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    border: none !important;
-    min-height: 0 !important;
-    height: 100% !important;
-    padding: 0 !important;
-    /* Remove internal padding */
-    background: transparent !important;
-}
-
-/* Specific fix for the generated mesh tab */
+/* 4. The Specific Tab Panel */
 #gen_mesh_panel {
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    flex-grow: 1 !important;
-}
-
-/* Target ANY direct child of the panel to force growth */
-#gen_mesh_panel>* {
     flex-grow: 1 !important;
     display: flex !important;
     flex-direction: column !important;
     height: 100% !important;
+    overflow: hidden !important;
 }
 
-/* Ensure the output container takes all space */
+/* 5. Gradio Internal Wrappers (Form, Wrap, Contain, Block) -- The likely culprits */
+#gen_mesh_panel>div,
+#gen_mesh_panel .form,
+#gen_mesh_panel .wrap,
+#gen_mesh_panel .contain,
+#gen_mesh_panel .block {
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+/* 6. The Output Container (Our target Column) */
 #gen_output_container {
     flex-grow: 1 !important;
-    height: 100% !important;
-    width: 100% !important;
-    border: 1px solid var(--border-subtle);
-    border-radius: 0 !important;
-    /* Remove radius for full bleed or keep? Keep, but margin? */
-    border-left: none !important;
-    /* Clean integration */
-    border-right: none !important;
-    border-bottom: none !important;
-    margin: 0 !important;
-
-    /* Re-add border-radius and margin if we want it to look like a card,
-       BUT the user wants it to fill. Let's make it full bleed or close. 
-       Let's keep it full bleed for "App" feel. */
-    border: none !important;
-    border-radius: 0 !important;
-
-    overflow: hidden;
-    position: relative;
-    background: var(--bg-panel);
     display: flex !important;
     flex-direction: column !important;
+    height: 100% !important;
+    width: 100% !important;
+    background: var(--bg-panel) !important;
     padding: 24px !important;
-    /* Content padding */
     padding-bottom: 48px !important;
     /* Space for progress bar */
+    border-radius: 0 !important;
+    overflow: hidden !important;
+    position: relative !important;
 }
 
-/* Ensure the model viewer (Gradio HTML component) fills the container */
+/* 7. The Model Viewer (HTML Component) */
 #model_3d_viewer {
     flex-grow: 1 !important;
-    height: 100% !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    border: none !important;
-    background: transparent !important;
     display: flex !important;
     flex-direction: column !important;
-    margin: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
     padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
 }
 
-/* Ensure the inner prose/HTML div fills the viewer */
-#model_3d_viewer .prose {
+/* 8. The Prose/Internal HTML Wrapper */
+#model_3d_viewer .prose,
+#model_3d_viewer .prose>div {
     flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
     height: 100% !important;
     width: 100% !important;
     max-width: none !important;
-    /* Override prose max-width */
-    display: flex !important;
-    flex-direction: column !important;
 }
 
-#model_3d_viewer .prose>div {
+/* 9. The Iframe itself */
+iframe {
     flex-grow: 1 !important;
     height: 100% !important;
     width: 100% !important;
-}
-
-iframe {
-    width: 100% !important;
-    height: 100% !important;
-    border: none !important;
+    display: block !important;
 }

@@ -153,7 +153,7 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
         template_html = template_html.replace('#src#', f'{related_path}')
         f.write(template_html)
     rel_path = os.path.relpath(output_html_path, SAVE_DIR)
-    iframe_tag = f'<iframe src="/static/{rel_path}" style="width: 100%; height: 100%; min-height: 600px; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
+    iframe_tag = f'<iframe src="/static/{rel_path}" style="width: 100%; height: 100%; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
     return iframe_tag
 
 async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed, do_texture=True, progress=gr.Progress()):
@@ -330,8 +330,9 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                             tex_seed = gr.Slider(label="Texture Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
 
                 # Buttons Area - Vertical Stack
-                btn = gr.Button(value='Generate 3D Model', variant='primary')
-                file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
+                with gr.Row():
+                    btn = gr.Button(value='Generate 3D Model', variant='primary')
+                    file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
                 
                 # Premium Footer
                 gr.Markdown(

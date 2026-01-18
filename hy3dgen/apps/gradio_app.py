@@ -313,11 +313,24 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
             textured_mesh = mesh
         path_textured = export_mesh(textured_mesh, save_folder, textured=True)
         html_textured = build_model_viewer_html(save_folder, textured=True)
-        return gr.update(value=path_textured), html_textured, seed
+        
+        # Yield Final Textured Result
+        yield (
+             gr.DownloadButton(value=path_textured, visible=True),
+             html_textured,
+             seed,
+             gr.update(visible=False),
+             gr.update(value="Stop Generation")
+        )
     else:
-        # Fallback if somehow called without texture, but user requested ONLY texture.
-        # We'll just return white path as if it were the main result.
-        return gr.update(value=path_white), html_white, seed
+        # Yield Final White Mesh Result (as default fallback)
+        yield (
+            gr.DownloadButton(value=path_white, visible=True),
+            html_white,
+            seed,
+            gr.update(visible=False),
+            gr.update(value="Stop Generation")
+        )
 
 async def shape_generation(*args, progress=gr.Progress()):
     return await unified_generation(*args, do_texture=False, progress=progress)

@@ -12,6 +12,7 @@
 # fine-tuning enabling code and other elements of the foregoing made publicly available
 # by Tencent in accordance with TENCENT HUNYUAN COMMUNITY LICENSE AGREEMENT.
 
+import sys
 import os
 import random
 import asyncio
@@ -283,7 +284,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         model_key_state = gr.State("Normal")
 
         with gr.Row(elem_classes="main-row"):
-            with gr.Column(scale=3, min_width=320, elem_classes="left-col"):
+            with gr.Column(scale=1, min_width=320, elem_classes="left-col"):
                 
                 with gr.Group():
 
@@ -350,7 +351,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                         btn_confirm_yes = gr.Button("Yes", variant="stop", size="sm")
                         btn_confirm_no = gr.Button("No", size="sm")
 
-            with gr.Column(scale=9, elem_classes="right-col"):
+            with gr.Column(scale=1, elem_classes="right-col"):
                 with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
                     with gr.Tab('Generated Mesh', id='gen_mesh_panel'):
                         with gr.Column(elem_id="gen_output_container"):
@@ -481,7 +482,23 @@ def main():
     url = f"http://{args.host}:{args.port}"
     print(f"\nHunyuan3D-2 Pro Unified is running at: {url}\n")
     if not args.no_browser:
-        webbrowser.open(url)
+        # Redirect stderr to devnull to suppress browser logs (e.g. DEPRECATED_ENDPOINT)
+        try:
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            old_stderr = os.dup(2)
+            sys.stderr.flush()
+            os.dup2(devnull, 2)
+            os.close(devnull)
+            
+            webbrowser.open(url)
+        except Exception:
+            # Fallback if redirection fails
+            webbrowser.open(url)
+        finally:
+            # Restore stderr
+            if 'old_stderr' in locals():
+                os.dup2(old_stderr, 2)
+                os.close(old_stderr)
     uvicorn.run(app, host=args.host, port=args.port, workers=1)
 
 if __name__ == '__main__':

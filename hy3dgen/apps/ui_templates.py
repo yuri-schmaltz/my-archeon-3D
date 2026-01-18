@@ -153,17 +153,46 @@ body, .gradio-container {
 }
 
 /* Main Layout Fixes */
+/* Main Layout Fixes - Flexbox Architecture */
 .main-row {
-    height: calc(100vh - 60px) !important; /* Leave room for header/footer if needed, usually 100vh is fine with fill_height */
+    height: calc(100vh - 60px) !important; 
     gap: 0 !important;
-    overflow-x: hidden !important;
+    overflow: hidden !important; /* Block all outer scroll */
 }
 
-.left-col, .right-col {
+/* Left Column: converts to Flex Container to Dock Footer */
+.left-col {
     height: 100% !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important; /* Ensure no horizontal scroll inside columns */
     padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important; /* No scroll on container itself */
+}
+
+.right-col {
+    height: 100% !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+/* Scroll Area: Takes all available space */
+.scroll-area {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 8px !important; /* Space for scrollbar */
+    min-height: 0 !important; /* Firefox flex fix */
+}
+
+/* Footer Area: Doc at bottom */
+.footer-area {
+    flex: 0 0 auto !important;
+    padding-top: 12px !important;
+    border-top: 1px solid var(--surface-200) !important;
+    background: var(--bg-app) !important;
+    z-index: 50 !important;
 }
 
 /* Panel Containers */
@@ -229,8 +258,8 @@ iframe {
 
 /* Sticky Action Buttons */
 .sticky-actions {
-    position: sticky !important;
-    bottom: 0 !important;
+    position: relative !important; /* Reverting sticky to ensure visibility */
+    /* bottom: 0 !important; REMOVED */
     background: var(--bg-app) !important;
     z-index: 100 !important;
     padding-top: 10px !important;

@@ -296,7 +296,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         with gr.Row(elem_classes="main-row"):
             with gr.Column(scale=1, elem_classes="left-col"):
                 
-                with gr.Group():
+                with gr.Group(elem_classes="scroll-area"):
 
                     with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
                         with gr.Tab(i18n.get('tab_img_prompt'), id='tab_img_prompt') as tab_ip:
@@ -339,31 +339,32 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                                     tex_guidance_scale = gr.Number(value=5.0, label='Guidance', info="Texture prompt adherence.")
                                 tex_seed = gr.Slider(label="Texture Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
 
-                # Exposed Critical Parameters (Moved out of Advanced)
-                with gr.Group(elem_classes="panel-container"):
-                   with gr.Row():
-                       num_steps = gr.Slider(maximum=100, minimum=1, value=50, step=1, label=i18n.get('lbl_steps'), info=i18n.get('info_steps'))
-                       cfg_scale = gr.Number(value=5.0, label=i18n.get('lbl_guidance'), info="Prompt strictness")
-
-                # Buttons Area - Vertical Stack
-                with gr.Row(elem_classes="sticky-actions"):
-                    btn = gr.Button(value=i18n.get('btn_generate'), variant='primary')
-                    file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True)
-                
-                # btn_all and file_out2 removed for single-flow
-                btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
-                with gr.Group(visible=False) as confirm_stop_group:
-                    gr.Markdown("### ⚠️ Confirm Stop?")
-                    with gr.Row():
-                        btn_confirm_yes = gr.Button("Yes", variant="stop", size="sm")
-                        btn_confirm_no = gr.Button("No", size="sm")
+                    # Exposed Critical Parameters (Moved into Scroll Area)
+                    with gr.Group(elem_classes="panel-container"):
+                       with gr.Row():
+                           num_steps = gr.Slider(maximum=100, minimum=1, value=50, step=1, label=i18n.get('lbl_steps'), info=i18n.get('info_steps'))
+                           cfg_scale = gr.Number(value=5.0, label=i18n.get('lbl_guidance'), info="Prompt strictness")
+            
+            # Left Column Ends Here
 
             with gr.Column(scale=1, elem_classes="right-col"):
-                with gr.Tabs(selected='gen_mesh_panel') as tabs_output:
+                with gr.Tabs(selected='gen_mesh_panel', elem_classes="scroll-area") as tabs_output:
                     with gr.Tab(i18n.get('lbl_output'), id='gen_mesh_panel'):
                         with gr.Column(elem_id="gen_output_container"):
                             html_gen_mesh = gr.HTML(HTML_PLACEHOLDER, label='Output', elem_id="model_3d_viewer")
-                            # Download buttons moved to left column
+                
+                # Footer Action Area (Moved from Left)
+                with gr.Row(elem_classes="footer-area"):
+                    btn = gr.Button(value=i18n.get('btn_generate'), variant='primary', scale=2)
+                    file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True, scale=1)
+                
+                # Stop Controls (Hidden by default)
+                btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
+                with gr.Group(visible=False) as confirm_stop_group:
+                     gr.Markdown("### ⚠️ Confirm Stop?")
+                     with gr.Row():
+                         btn_confirm_yes = gr.Button("Yes", variant="stop", size="sm")
+                         btn_confirm_no = gr.Button("No", size="sm")
 
         
         # Helper to toggle buttons

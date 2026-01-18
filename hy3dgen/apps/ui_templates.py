@@ -23,6 +23,7 @@ HTML_TEMPLATE_MODEL_VIEWER = """
             overflow: hidden; 
             font-family: var(--font-family);
         }
+        model-viewer {
             width: 100%; 
             height: 100%; 
             --progress-bar-color: var(--primary-500); 
@@ -177,6 +178,50 @@ body, .gradio-container {
     overflow: hidden !important;
 }
 
+/* Force Tab Content to Fill Space */
+.right-col .tabarea, 
+.right-col .tabitem, 
+.right-col .group,
+.right-col .form {
+    height: 100% !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Specific Height for Output Containers */
+#gen_output_container {
+    height: 100% !important;
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#model_3d_viewer {
+    flex: 1 !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Ensure Iframe container (Gradio HTML) fills space */
+#model_3d_viewer,
+#model_3d_viewer .prose, 
+#model_3d_viewer .prose > div,
+#model_3d_viewer > div,
+#model_3d_viewer iframe {
+    height: 100% !important;
+    width: 100% !important;
+    max-width: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex-grow: 1 !important;
+}
+
 /* Scroll Area: Takes all available space */
 .scroll-area {
     flex: 1 1 auto !important;
@@ -270,5 +315,27 @@ iframe {
 /* Fix "Missing Icon" squares in block labels */
 .block-label img, .block-title img {
     display: none !important;
+}
+
+/* Empty Placeholder Polish */
+.empty-placeholder {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.3;
+    text-align: center;
+}
+.empty-placeholder-icon svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+}
+.empty-placeholder-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-bottom: 8px;
 }
 """

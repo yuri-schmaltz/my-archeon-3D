@@ -339,11 +339,11 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                                     tex_guidance_scale = gr.Number(value=5.0, label='Guidance', info="Texture prompt adherence.")
                                 tex_seed = gr.Slider(label="Texture Seed", minimum=0, maximum=MAX_SEED, step=1, value=1234)
 
-                    # Exposed Critical Parameters (Moved into Scroll Area)
-                    with gr.Group(elem_classes="panel-container"):
-                       with gr.Row():
-                           num_steps = gr.Slider(maximum=100, minimum=1, value=50, step=1, label=i18n.get('lbl_steps'), info=i18n.get('info_steps'))
-                           cfg_scale = gr.Number(value=5.0, label=i18n.get('lbl_guidance'), info="Prompt strictness")
+                # Exposed Critical Parameters (Moved to Footer)
+                with gr.Group(elem_classes="footer-area"):
+                   with gr.Row():
+                       num_steps = gr.Slider(maximum=100, minimum=1, value=50, step=1, label=i18n.get('lbl_steps'), info=i18n.get('info_steps'))
+                       cfg_scale = gr.Number(value=5.0, label=i18n.get('lbl_guidance'), info="Prompt strictness")
             
             # Left Column Ends Here
 
@@ -356,25 +356,19 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                 # Footer Action Area (Moved from Left)
                 with gr.Row(elem_classes="footer-area"):
                     btn = gr.Button(value=i18n.get('btn_generate'), variant='primary', scale=2)
+                    btn_stop = gr.Button(value="Stop Generation", variant='stop', visible=False, scale=2)
                     file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True, scale=1)
                 
-                # Stop Controls (Hidden by default)
-                btn_stop = gr.Button(value='Stop Generation', variant='stop', visible=False)
-                with gr.Group(visible=False) as confirm_stop_group:
-                     gr.Markdown("### ⚠️ Confirm Stop?")
-                     with gr.Row():
-                         btn_confirm_yes = gr.Button("Yes", variant="stop", size="sm")
-                         btn_confirm_no = gr.Button("No", size="sm")
-
-        
         # Helper to toggle buttons
         def on_gen_start():
             logger.info("UI EVENT: Generation started.")
+            # Hide Generate, Show Stop
             return gr.update(visible=False), gr.update(visible=True)
         
         def on_gen_finish():
             logger.info("UI EVENT: Generation finished (or stopped). Restoring UI.")
-            return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False)
+            # Show Generate, Hide Stop
+            return gr.update(visible=True), gr.update(visible=False)
 
         # Explicit Tab Selection Handlers
         def on_image_tab_select():
@@ -394,30 +388,23 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
 
         # Wire events
         # Event Chain: Textured Generation (Single Flow)
+        # 1. Start: Swap Buttons
         succ1_1 = btn.click(on_gen_start, outputs=[btn, btn_stop])
+        
+        # 2. Generate
         succ1_2 = succ1_1.then(
-            generation_all, 
+            unified_generation, 
             inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed], 
             outputs=[file_out, html_gen_mesh, seed]
         )
-        succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_stop, confirm_stop_group])
         
-        # Event Chain 2 Removed
-
-        # Stop Button
+        # 3. Finish: Swap Back
+        succ1_3 = succ1_2.then(on_gen_finish, outputs=[btn, btn_stop])
+        
+        # Stop Action: Cancel Generation and Swap Back
         btn_stop.click(
-            fn=lambda: (gr.update(visible=False), gr.update(visible=True)),
-            outputs=[btn_stop, confirm_stop_group]
-        )
-
-        btn_confirm_no.click(
-            fn=lambda: (gr.update(visible=True), gr.update(visible=False)),
-            outputs=[btn_stop, confirm_stop_group]
-        )
-
-        btn_confirm_yes.click(
-            fn=on_gen_finish, 
-            outputs=[btn, btn_stop, confirm_stop_group], 
+            fn=on_gen_finish,
+            outputs=[btn, btn_stop],
             cancels=[succ1_2]
         )
 

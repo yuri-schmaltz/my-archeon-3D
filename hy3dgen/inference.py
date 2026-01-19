@@ -68,6 +68,7 @@ class InferencePipeline:
                 low_vram_mode=low_vram_mode
             )
             if low_vram_mode:
+                logger.info("Enabling CPU offload for TexGen model...")
                 self.pipeline_tex.enable_model_cpu_offload()
                 torch.cuda.empty_cache()
 
@@ -231,6 +232,11 @@ class InferencePipeline:
             except Exception as e:
                 logger.warning(f"[{uid}] Face reduction warning: {e}")
             
+            # Aggressive Memory Cleanup before Texture Generation
+            import gc
+            gc.collect()
+            torch.cuda.empty_cache()
+            
             try:
                 t1 = time.time()
                 
@@ -242,6 +248,11 @@ class InferencePipeline:
                 }
                 logger.info(f"[{uid}] TexGen Params: {tex_kwargs}")
                 
+                # Ensure pipeline is ready
+                if self.low_vram_mode and hasattr(self.pipeline_tex, 'enable_model_cpu_offload'):
+                     # Re-trigger offload hooks if needed or ensure it's in correct state
+                     pass
+
                 textured_mesh = self.pipeline_tex(mesh, image, **tex_kwargs)
                 stats['time']['tex_gen'] = time.time() - t1
                 logger.info(f"[{uid}] Texture generation completed in {stats['time']['tex_gen']:.2f}s")

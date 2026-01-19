@@ -1,7 +1,10 @@
+
 import sys
+import argparse
 import os
 import warnings
 import logging
+from hy3dgen.utils.system import setup_logging, find_free_port, cleanup_old_cache
 
 # Suppress Warnings
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -15,40 +18,55 @@ logging.getLogger("torch").setLevel(logging.ERROR)
 logging.getLogger("numba").setLevel(logging.ERROR)
 
 def main():
+    # Quick check for API mode before importing heavy libraries
+    is_api = "--api" in sys.argv
+    
     # Setup global logging
-    from hy3dgen.utils.system import setup_logging, cleanup_old_cache
     logger = setup_logging("archeon_launcher")
     
     # [DATA GOVERNANCE] Cleanup old files
     cleanup_old_cache(max_age_days=7)
 
-    logger.info("Starting Archeon 3D in API-Only Mode (Gradio UI removed)")
-    
-    # Inject defaults if not present
-    # This allows users to override them with command line args
-    defaults = [
-        "--host", "127.0.0.1",
-        "--port", "8081",
-        "--model_path", "tencent/Hunyuan3D-2",
-        "--tex_model_path", "tencent/Hunyuan3D-2",
-    ]
-    
-    # Only insert defaults if they aren't provided
-    # A simple check: if the key isn't in argv, add the key and value
-    # But argparse handles defaults well. api_server.py has defaults.
-    # However, to be safe and explicit about the "Launcher" behavior:
-    
-    # We will just delegate to api_main. 
-    # It parses sys.argv.
-    
-    from hy3dgen.apps.api_server import main as api_main
-    try:
+    if is_api:
+        sys.argv.remove("--api")
+        # Defaults for API Server
+        defaults = [
+            "--host", "127.0.0.1",
+            "--port", "8081",
+            "--model_path", "tencent/Hunyuan3D-2",
+            "--tex_model_path", "tencent/Hunyuan3D-2",
+            # API server usually needs explicit enable_tex
+        ]
+        
+        # Inject defaults at start of argv so user can override
+        sys.argv[1:1] = defaults
+        
+        from hy3dgen.apps.api_server import main as api_main
+        print("Starting Archeon 3D API Server...")
         api_main()
-    except KeyboardInterrupt:
-        logger.info("Archeon 3D stopped by user.")
-    except Exception as e:
-        logger.critical(f"Archeon 3D crashed: {e}", exc_info=True)
-        sys.exit(1)
+    else:
+        # Defaults for Archeon UI
+        # Try to find a free port starting from 7860
+        port = 7860
+        try:
+            port = find_free_port(7860)
+        except Exception as e:
+            logger.warning(f"Could not find free port: {e}, falling back to 7860")
+            
+        defaults = [
+            "--host", "127.0.0.1",
+            "--port", str(port),
+            "--model_path", "tencent/Hunyuan3D-2",
+            "--subfolder", "hunyuan3d-dit-v2-0-turbo",
+            "--texgen_model_path", "tencent/Hunyuan3D-2",
+            "--low_vram_mode",
+            "--enable_t23d"
+        ]
+        sys.argv[1:1] = defaults
+        
+        from hy3dgen.apps.archeon_app import main as app_main
+        print("Starting Archeon 3D UI...")
+        app_main()
 
 if __name__ == "__main__":
     main()

@@ -40,7 +40,7 @@ docs = ["sphinx", "sphinx-rtd-theme", "furo", "myst-parser"]
 
 [project.scripts]
 hy3dgen-api = "hy3dgen.apps.api_server:main"
-hy3dgen-gui = "hy3dgen.apps.gradio_app:main"
+archeon-3d-app = "hy3dgen.apps.archeon_app:main"
 
 [tool.setuptools]
 packages = ["hy3dgen"]

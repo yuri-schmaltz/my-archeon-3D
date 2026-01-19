@@ -45,7 +45,7 @@ class PerformanceBenchmark:
             ('hy3dgen.inference', 'InferencePipeline'),
             ('hy3dgen.shapegen.pipelines', 'ShapeGenPipeline'),
             ('hy3dgen.texgen.pipelines', 'TextureGenPipeline'),
-            ('hy3dgen.apps.gradio_app', 'build_app'),
+            ('hy3dgen.apps.archeon_app', 'build_app'),
         ]
         
         for module_name, item in modules:
@@ -131,7 +131,7 @@ class PerformanceBenchmark:
         results = {}
         
         try:
-            from hy3dgen.apps.gradio_app import build_app
+            from hy3dgen.apps.archeon_app import build_app
             
             mem_before = self._get_memory_info()
             start = time.time()

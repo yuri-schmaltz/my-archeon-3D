@@ -72,7 +72,7 @@ def main():
         ]
         sys.argv[1:1] = defaults
         
-        from hy3dgen.apps.gradio_app import main as gradio_main
+        from hy3dgen.apps.archeon_app import main as gradio_main
         print("Starting Archeon 3D Gradio App...")
         gradio_main()
 

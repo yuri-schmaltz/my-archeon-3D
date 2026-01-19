@@ -16,7 +16,7 @@ sys.modules["transformers"] = MagicMock()
 sys.modules["torch"] = MagicMock()
 sys.modules["numba"] = MagicMock()
 
-from hy3dgen.apps.gradio_app import build_app, request_manager
+from hy3dgen.apps.archeon_app import build_app, request_manager
 import gradio as gr
 from fastapi import FastAPI
 import uvicorn
@@ -24,9 +24,9 @@ import uvicorn
 class TestUISmoke(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        # We need to mock request_manager since it's global in gradio_app
-        import hy3dgen.apps.gradio_app as gradio_app
-        gradio_app.request_manager = MagicMock()
+        # We need to mock request_manager since it's global in archeon_app
+        import hy3dgen.apps.archeon_app as archeon_app
+        archeon_app.request_manager = MagicMock()
         
         cls.demo = build_app()
         cls.port = 7865

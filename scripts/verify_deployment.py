@@ -270,7 +270,7 @@ class DeploymentVerifier:
         critical_modules = [
             ('hy3dgen.manager', 'ModelManager'),
             ('hy3dgen.inference', 'InferencePipeline'),
-            ('hy3dgen.apps.gradio_app', 'build_app'),
+            ('hy3dgen.apps.archeon_app', 'main'),
             ('hy3dgen.apps.api_server', 'app'),
         ]
         

@@ -32,11 +32,11 @@ from fastapi.staticfiles import StaticFiles
 from hy3dgen.utils.system import get_user_cache_dir, setup_logging
 from hy3dgen.manager import PriorityRequestManager, ModelManager
 from hy3dgen.inference import InferencePipeline
-from hy3dgen.apps.ui_templates import HTML_TEMPLATE_MODEL_VIEWER, HTML_PLACEHOLDER, CSS_STYLES
+from hy3dgen.apps.ui_templates import HTML_TEMPLATE_MODEL_VIEWER, HTML_PLACEHOLDER, CSS_STYLES, HTML_PROCESSING
 import hy3dgen.i18n as i18n
 
 # Global Log Setup
-logger = setup_logging("gradio_app")
+logger = setup_logging("archeon_app")
 
 # Global Manager
 request_manager = None

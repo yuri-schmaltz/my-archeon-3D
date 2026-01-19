@@ -340,11 +340,15 @@ button.stop:hover {
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    gap: 0 !important;
 }
 #gen_settings_container .tab-nav button, 
 #gen_settings_container .tab-container button {
-    font-size: 0.95em !important;
-    padding: 8px 2px !important;
+    font-size: 13px !important;
+    padding: 6px 1px !important;
+    min-width: 0 !important;
+    gap: 2px !important;
+    letter-spacing: -0.3px !important;
 }
 #gen_settings_container .tab-wrapper {
     flex-grow: 1 !important;

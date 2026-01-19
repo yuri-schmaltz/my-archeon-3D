@@ -345,7 +345,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                 with gr.Tabs(selected='gen_mesh_panel', elem_classes="scroll-area") as tabs_output:
                     with gr.Tab(i18n.get('lbl_output'), id='gen_mesh_panel'):
                         with gr.Column(elem_id="gen_output_container"):
-                            html_gen_mesh = gr.HTML(HTML_PLACEHOLDER, label='Output', elem_id="model_3d_viewer")
+                            html_gen_mesh = gr.HTML(HTML_PLACEHOLDER, label=None, elem_id="model_3d_viewer")
                 
                 # Custom Progress Bar (Between Viewer and Footer)
                 progress_html = gr.HTML(visible=False, elem_id="progress_bar_container")

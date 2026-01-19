@@ -210,11 +210,12 @@ button.stop:hover {
 }
 
 .right-col {
-    height: 100% !important; /* Total parent height */
-    padding: 16px 0 !important; /* Keep vertical padding, remove horizontal */
+    height: 100% !important;
+    padding: 0 !important; /* Start with zero to build up */
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
+    position: relative !important;
 }
 
 /* Force Gradio Tabs and their containers to fill height but respect siblings */
@@ -252,7 +253,8 @@ button.stop:hover {
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
-    padding: 0 !important; /* Ensure no internal padding */
+    padding: 0 !important;
+    position: relative !important; /* Anchor for absolute viewer */
 }
 
 #gen_output_container > .form {
@@ -263,12 +265,14 @@ button.stop:hover {
 }
 
 #model_3d_viewer {
-    flex: 1 1 auto !important; /* Grow to fill available space */
-    height: 100% !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    min-height: 0 !important;
-    position: relative !important; /* Anchor for absolute placeholder */
+    z-index: 10 !important;
 }
 
 /* Ensure Iframe container (Gradio HTML) fills space recursively but allows siblings like footer */
@@ -277,8 +281,8 @@ button.stop:hover {
 #model_3d_viewer > .prose > div,
 #model_3d_viewer > div,
 #model_3d_viewer iframe {
-    flex: 1 1 auto !important; /* Grow and shrink as needed */
     width: 100% !important;
+    height: 100% !important;
     max-width: none !important;
     display: flex !important;
     flex-direction: column !important;
@@ -286,7 +290,6 @@ button.stop:hover {
     border: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    min-height: 0 !important; /* Critical for flex to shrink/fit */
 }
 
 /* Footer should always be docked at bottom */
@@ -307,11 +310,11 @@ button.stop:hover {
 /* Footer Area: Docked via Flexbox */
 .footer-area {
     flex: 0 0 auto !important;
-    padding: 12px 16px 0 16px !important; /* Restore horizontal padding for items within footer */
+    padding: 12px 16px !important; 
     border-top: 1px solid var(--surface-200) !important;
     background: var(--bg-app) !important;
     z-index: 50 !important;
-    margin-top: 12px !important;
+    margin-top: 0 !important; /* Flush with viewer */
 }
 
 /* Panel Containers */
@@ -419,13 +422,14 @@ iframe {
 
 /* Custom Archeon Progress Bar */
 .archeon-progress-container {
-    width: calc(100% - 32px); /* Compensation for column horizontal padding removal */
-    margin: 8px 16px !important; /* Centering with restored horizontal padding */
+    width: calc(100% - 32px);
+    margin: 4px 16px !important;
     background: var(--surface-200);
     border-radius: 4px;
     height: 20px;
     position: relative;
     overflow: hidden;
+    z-index: 60; /* Above viewer */
 }
 
 .archeon-progress-fill {

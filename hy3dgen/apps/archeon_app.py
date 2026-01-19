@@ -137,7 +137,15 @@ async def unified_generation(
         # We can pass a callback if we want updates, but manager.py needs to use it.
         # For now, we await the final result.
         
-        mesh = await request_manager.submit(params, priority=10)
+        result = await request_manager.submit(params, priority=10)
+        
+        if isinstance(result, dict):
+            if result.get("textured_mesh"):
+                mesh = result["textured_mesh"]
+            else:
+                mesh = result.get("mesh")
+        else:
+            mesh = result
         
         # --- Post Processing & Export ---
         save_folder = gen_save_folder()

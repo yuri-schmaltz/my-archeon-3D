@@ -47,7 +47,7 @@ SAVE_DIR = str(get_user_cache_dir() / "gradio_cache")
 HAS_T2I = False
 TURBO_MODE = True
 HAS_TEXTUREGEN = True
-SUPPORTED_FORMATS = ['glb', 'obj']
+SUPPORTED_FORMATS = ['glb', 'obj', 'stl']
 
 HTML_HEIGHT = 650
 HTML_WIDTH = 500
@@ -161,7 +161,7 @@ def render_progress_bar(percent, message):
          <div class="archeon-progress-text">{message} &nbsp; <b>{p}%</b></div>
      </div>
      """
-async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed, do_texture=True):
+async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed, file_type='glb', do_texture=True):
     import time
     mv_mode = model_key == "Multiview"
     mv_images = {}
@@ -249,7 +249,7 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
     
     # [FIX] Logic Cleanup: Handle both textured and untextured cases cleanly
     if do_texture and HAS_TEXTUREGEN:
-        path = export_mesh(mesh, save_folder, textured=True)
+        path = export_mesh(mesh, save_folder, textured=True, file_type=file_type)
         final_html = build_model_viewer_html(save_folder, textured=True)
         yield (
             gr.DownloadButton(value=path, visible=True),
@@ -259,7 +259,7 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
             gr.update(value="Stop Generation")
         )
     else:
-        path_white = export_mesh(mesh, save_folder, textured=False)
+        path_white = export_mesh(mesh, save_folder, textured=False, file_type=file_type)
         html_white = build_model_viewer_html(save_folder, textured=False)
         yield (
             gr.DownloadButton(value=path_white, visible=True),
@@ -321,8 +321,10 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                                     randomize_seed = gr.Checkbox(label="Randomize seed", value=True)
                                 seed = gr.Slider(label=i18n.get('lbl_seed'), minimum=0, maximum=MAX_SEED, step=1, value=1234)
                                 with gr.Row():
-                                    octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label=i18n.get('lbl_octree'), info="Higher = sharper geometry, more VRAM.")
-                                    num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label=i18n.get('lbl_chunks'), info="Memory management for large meshes.")
+                                     octree_resolution = gr.Slider(maximum=512, minimum=16, value=256, label=i18n.get('lbl_octree'), info="Higher = sharper geometry, more VRAM.")
+                                     num_chunks = gr.Slider(maximum=5000000, minimum=1000, value=8000, label=i18n.get('lbl_chunks'), info="Memory management for large meshes.")
+                                with gr.Row():
+                                     export_format = gr.Dropdown(label=i18n.get('lbl_export_format'), choices=SUPPORTED_FORMATS, value='glb')
                                     
                         with gr.Tab("Texture"):
                              with gr.Group():
@@ -390,7 +392,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         # 2. Generate
         succ1_2 = succ1_1.then(
             unified_generation, 
-            inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed], 
+            inputs=[model_key_state, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, num_steps, cfg_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed, export_format], 
             outputs=[file_out, html_gen_mesh, seed, progress_html, btn_stop]
         )
         

@@ -184,15 +184,31 @@ button.stop:hover {
     padding: 16px !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important; /* No scroll on container itself */
+    overflow-y: auto !important; /* Allow scrolling if content exceeds height */
+    overflow-x: hidden !important;
 }
 
 .right-col {
-    height: 100% !important;
+    height: 100% !important; /* Total parent height */
     padding: 16px !important;
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
+}
+
+/* Force Gradio Tabs and their containers to fill height but respect siblings */
+.right-col .tabs {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important; /* Fill available space */
+    min-height: 0 !important; /* Allow shrinking */
+}
+
+.right-col .tabitem {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
 }
 
 /* Force Tab Content to Fill Space */
@@ -233,13 +249,13 @@ button.stop:hover {
     position: relative !important; /* Anchor for absolute placeholder */
 }
 
-/* Ensure Iframe container (Gradio HTML) fills space recursively */
+/* Ensure Iframe container (Gradio HTML) fills space recursively but allows siblings like footer */
 #model_3d_viewer,
 #model_3d_viewer > .prose, 
 #model_3d_viewer > .prose > div,
 #model_3d_viewer > div,
 #model_3d_viewer iframe {
-    height: 100% !important;
+    flex: 1 1 auto !important; /* Grow and shrink as needed */
     width: 100% !important;
     max-width: none !important;
     display: flex !important;
@@ -248,7 +264,13 @@ button.stop:hover {
     border: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    flex-grow: 1 !important;
+    min-height: 0 !important; /* Critical for flex to shrink/fit */
+}
+
+/* Footer should always be docked at bottom */
+.footer-area {
+    flex: 0 0 auto !important; /* Stay fixed height */
+    padding-top: 12px !important;
 }
 
 /* Scroll Area: Takes all available space */
@@ -260,13 +282,14 @@ button.stop:hover {
     min-height: 0 !important; /* Firefox flex fix */
 }
 
-/* Footer Area: Doc at bottom */
+/* Footer Area: Docked via Flexbox */
 .footer-area {
     flex: 0 0 auto !important;
     padding-top: 12px !important;
     border-top: 1px solid var(--surface-200) !important;
     background: var(--bg-app) !important;
     z-index: 50 !important;
+    margin-top: 12px !important;
 }
 
 /* Panel Containers */

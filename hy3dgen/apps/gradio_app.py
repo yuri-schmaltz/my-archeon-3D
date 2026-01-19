@@ -86,23 +86,22 @@ def export_mesh(mesh, save_folder, textured=False, file_type='glb'):
     
     # For non-textured meshes, apply white material
     # For textured meshes, preserve existing visual/texture data
-    if not textured:
+    # [FIX] For textured meshes, we must clear/override vertex colors to avoid clashing in GLB viewers
+    if textured:
         import numpy as np
-        # Create a copy to avoid modifying the original mesh
-        mesh = mesh.copy()
-        # Create white vertex colors with full opacity
-        white_color = np.array([255, 255, 255, 255], dtype=np.uint8)
-        mesh.visual = trimesh.visual.ColorVisuals(mesh=mesh)
-        # Set face colors (more reliable than vertex colors)
-        mesh.visual.face_colors = np.tile(white_color, (len(mesh.faces), 1))
-    else:
-        # For textured mesh, preserve existing visual/texture data
         # Log the visual type for debugging
         visual_type = mesh.visual.__class__.__name__ if hasattr(mesh, 'visual') else 'None'
         logger.info(f"Exporting textured mesh with visual type: {visual_type}")
         
+        # If the mesh has vertex colors but we want to show a texture, 
+        # some viewers will multiply them or show colors if texture fails.
+        # Best practice: ensure vertex colors are white when a texture is present.
+        if hasattr(mesh.visual, 'kind') and mesh.visual.kind == 'vertex':
+             logger.info("Texture export: vertex colors detected, overriding with white to prevent clashing.")
+             white_color = np.array([255, 255, 255, 255], dtype=np.uint8)
+             mesh.visual.vertex_colors = np.tile(white_color, (len(mesh.vertices), 1))
+
         # FIX: Ensure PBR material is correctly set up for GLB export
-        # Sometimes trimesh SimpleMaterial exports as black if ambient/diffuse are 0
         if hasattr(mesh, 'visual') and hasattr(mesh.visual, 'material'):
             if isinstance(mesh.visual.material, trimesh.visual.material.PBRMaterial):
                 # Ensure base color is white so texture shows
@@ -110,26 +109,17 @@ def export_mesh(mesh, save_folder, textured=False, file_type='glb'):
                 mesh.visual.material.metallicFactor = 0.0
                 mesh.visual.material.roughnessFactor = 0.5
             elif isinstance(mesh.visual.material, trimesh.visual.material.SimpleMaterial):
-                 # Convert SimpleMaterial to PBR or ensure bright colors
-                 # SimpleMaterial properties are often read-only or specific; 
-                 # 'diffuse' is usually the color property, but trimesh might wrap it.
-                 # Let's try creating a new PBR material with the same image if possible, 
-                 # or just force diffuse color if writable. 
-                 # Safer: Set the object's diffuse color directly if it's a SimpleMaterial
-                 # Note: trimesh SimpleMaterial stores color in 'diffuse'
                  if hasattr(mesh.visual.material, 'diffuse'):
                      mesh.visual.material.diffuse = [255, 255, 255, 255]
                  if hasattr(mesh.visual.material, 'ambient'):
                      mesh.visual.material.ambient = [255, 255, 255, 255]
-
-        if hasattr(mesh, 'visual') and mesh.visual is not None:
-            # Check for image in visual (TextureVisuals has material.image)
-            if hasattr(mesh.visual, 'material') and mesh.visual.material is not None:
-                has_image = hasattr(mesh.visual.material, 'image') and mesh.visual.material.image is not None
-                logger.info(f"Visual material has texture image: {has_image}")
-            elif hasattr(mesh.visual, 'image'):
-                has_image = mesh.visual.image is not None
-                logger.info(f"Visual has direct texture image: {has_image}")
+    else:
+        # Non-textured: apply white material
+        import numpy as np
+        mesh = mesh.copy()
+        white_color = np.array([255, 255, 255, 255], dtype=np.uint8)
+        mesh.visual = trimesh.visual.ColorVisuals(mesh=mesh)
+        mesh.visual.face_colors = np.tile(white_color, (len(mesh.faces), 1))
     
     if file_type not in ['glb', 'obj']:
         mesh.export(path)
@@ -158,7 +148,7 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
         template_html = template_html.replace('#src#', f'{related_path}')
         f.write(template_html)
     rel_path = os.path.relpath(output_html_path, SAVE_DIR)
-    iframe_tag = f'<iframe src="/static/{rel_path}" style="width: 100%; height: 100%; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
+    iframe_tag = f'<iframe src="/outputs/{rel_path}" style="width: 100%; height: 100%; border: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);"></iframe>'
     return iframe_tag
 
 # Helper for HTML Progress
@@ -171,17 +161,6 @@ def render_progress_bar(percent, message):
          <div class="archeon-progress-text">{message} &nbsp; <b>{p}%</b></div>
      </div>
      """
-
-async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed, do_texture=True, progress=gr.Progress()):
-    mv_mode = model_key == "Multiview"
-    mv_images = {}
-    if mv_mode:
-        if mv_image_front: mv_images['front'] = mv_image_front
-        if mv_image_back: mv_images['back'] = mv_image_back
-        if mv_image_left: mv_images['left'] = mv_image_left
-        if mv_image_right: mv_images['right'] = mv_image_right
-    seed = int(randomize_seed_fn(seed, randomize_seed))
-    
 async def unified_generation(model_key, caption, negative_prompt, image, mv_image_front, mv_image_back, mv_image_left, mv_image_right, steps, guidance_scale, seed, octree_resolution, check_box_rembg, num_chunks, tex_steps, tex_guidance_scale, tex_seed, randomize_seed, do_texture=True):
     import time
     mv_mode = model_key == "Multiview"
@@ -265,66 +244,21 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
         raise gr.Error(f"Generation Failed: {str(e)}")
     
     save_folder = gen_save_folder()
-    path_white = export_mesh(mesh, save_folder, textured=False)
-    html_white = build_model_viewer_html(save_folder, textured=False)
     
+    # [FIX] Logic Cleanup: Handle both textured and untextured cases cleanly
     if do_texture and HAS_TEXTUREGEN:
-         # Similar logic for texture if it was embedded, but here unification handles it
-         pass 
-
-    # Look for textured result if available
-    final_html = html_white
-    final_path = None # Download button expects None or file
-    
-    # Simplified return based on existing logic logic...
-    # Actually unified_generation returns textured if do_texture was True in manager
-    # We check file existence or rely on logic inside export_mesh
-    # Assuming manager returns fully processed mesh.
-    
-    # Re-using logic from original function for file paths:
-    # Original: path_white = export_mesh(...) -> html_white
-    # If textured, likely handled inside manager or we need to export textured
-    
-    # Wait, the original function exports white mesh. 
-    # Let's ensure we maintain the original logic for export.
-    # Original lines 263-264 export white mesh.
-    
-    # We need to detect if texture was generated. 
-    # The existing code logic was truncated in view, but assuming 'mesh' contains texture data if present.
-    
-    # Let's verify export logic. 
-    # export_mesh implementation:
-    path = export_mesh(mesh, save_folder, textured=do_texture)
-    final_html = build_model_viewer_html(save_folder, textured=do_texture)
-    
-    # Final Yield
-    yield (
-        gr.DownloadButton(value=path, visible=True),
-        final_html,
-        seed,
-        gr.update(visible=False), # Hide progress bar
-        gr.update(value="Stop Generation") # Reset Timer Text
-    )
-    
-    if do_texture:
-        textured_mesh = result["textured_mesh"]
-        # If texturing failed, use white mesh as fallback
-        if textured_mesh is None:
-            logger.warning("Texture generation failed, using untextured mesh")
-            textured_mesh = mesh
-        path_textured = export_mesh(textured_mesh, save_folder, textured=True)
-        html_textured = build_model_viewer_html(save_folder, textured=True)
-        
-        # Yield Final Textured Result
+        path = export_mesh(mesh, save_folder, textured=True)
+        final_html = build_model_viewer_html(save_folder, textured=True)
         yield (
-             gr.DownloadButton(value=path_textured, visible=True),
-             html_textured,
-             seed,
-             gr.update(visible=False),
-             gr.update(value="Stop Generation")
+            gr.DownloadButton(value=path, visible=True),
+            final_html,
+            seed,
+            gr.update(visible=False),
+            gr.update(value="Stop Generation")
         )
     else:
-        # Yield Final White Mesh Result (as default fallback)
+        path_white = export_mesh(mesh, save_folder, textured=False)
+        html_white = build_model_viewer_html(save_folder, textured=False)
         yield (
             gr.DownloadButton(value=path_white, visible=True),
             html_white,
@@ -524,7 +458,7 @@ def main():
     app = FastAPI(lifespan=lifespan)
     
     static_dir = Path(SAVE_DIR).absolute()
-    app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
+    app.mount("/outputs", StaticFiles(directory=static_dir, html=True), name="outputs")
     demo = build_app()
     
     # Injeta CSS via head customizada (Gradio 6.3+)

@@ -192,7 +192,7 @@ class HunyuanPaintPipeline(StableDiffusionPipeline):
         vae: AutoencoderKL,
         text_encoder: CLIPTextModel,
         tokenizer: CLIPTokenizer,
-        unet: UNet2p5DConditionModel,
+        unet: Any,
         scheduler: KarrasDiffusionSchedulers,
         feature_extractor: CLIPImageProcessor,
         safety_checker=None,

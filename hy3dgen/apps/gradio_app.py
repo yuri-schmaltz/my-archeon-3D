@@ -216,14 +216,16 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
              last_pct, last_msg = progress_queue.get()
         
         elapsed = time.time() - start_time
-        timer_text = f"Stop ({elapsed:.1f}s)"
+        timer_text = f"Stop     ({elapsed:.1f}s)"
         progress_html = render_progress_bar(last_pct, last_msg)
         
+        # New: Use HTML_PROCESSING to wow the user
+        processing_html = HTML_PROCESSING.replace("Synthesizing Geometry...", last_msg)
+        
         # Yield updates: [file_out, html_gen_mesh, seed, progress_html, btn_stop]
-        # Use gr.skip() for outputs we don't want to change yet
         yield (
             gr.skip(), 
-            gr.skip(), 
+            processing_html, 
             gr.skip(), 
             gr.update(visible=True, value=progress_html), 
             gr.update(value=timer_text)
@@ -351,6 +353,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                     btn = gr.Button(value=i18n.get('btn_generate'), variant='primary', scale=2)
                     btn_stop = gr.Button(value="Stop Generation", variant='stop', visible=False, scale=2)
                     file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True, scale=1)
+                
                 
         # Helper to toggle buttons
         def on_gen_start():

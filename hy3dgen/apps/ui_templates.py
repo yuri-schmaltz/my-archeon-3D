@@ -122,6 +122,24 @@ HTML_PLACEHOLDER = """
 </div>
 """
 
+HTML_PROCESSING = """
+<div class="processing-container">
+    <div class="cube-wrapper">
+        <div class="cube">
+            <div class="face front"></div>
+            <div class="face back"></div>
+            <div class="face left"></div>
+            <div class="face right"></div>
+            <div class="face top"></div>
+            <div class="face bottom"></div>
+        </div>
+        <div class="scanner-line"></div>
+    </div>
+    <h3 class="processing-title">Archeon 3D Core</h3>
+    <p class="processing-status">Synthesizing Geometry...</p>
+</div>
+"""
+
 # Embedded AEGIS UI Theme (Pixel Perfect Fit-to-Screen)
 CSS_STYLES = """
 /* AEGIS UI Reset */
@@ -165,6 +183,9 @@ button.stop {
     background-color: #ef4444 !important;
     color: white !important;
     border: 1px solid #dc2626 !important;
+    text-align: center !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
 }
 button.stop:hover {
     background-color: #dc2626 !important;
@@ -433,4 +454,105 @@ iframe {
     z-index: 10;
     pointer-events: none;
 }
+
+/* Hide Default Gradio Footer and Style Custom Branding */
+footer {
+    display: none !important;
+}
+
+    opacity: 0.8;
+}
+
+/* Premium 3D Processing Animation */
+.processing-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+}
+
+.cube-wrapper {
+    width: 100px;
+    height: 100px;
+    perspective: 800px;
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.cube {
+    width: 60px;
+    height: 60px;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    transform-style: preserve-3d;
+    animation: rotateCube 4s infinite linear, pulseCube 2s infinite ease-in-out;
+}
+
+.face {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.6);
+    box-shadow: inset 0 0 15px rgba(99, 102, 241, 0.3);
+}
+
+.front  { transform: translateZ(30px); }
+.back   { transform: rotateY(180deg) translateZ(30px); }
+.left   { transform: rotateY(-90deg) translateZ(30px); }
+.right  { transform: rotateY(90deg) translateZ(30px); }
+.top    { transform: rotateX(90deg) translateZ(30px); }
+.bottom { transform: rotateX(-90deg) translateZ(30px); }
+
+.scanner-line {
+    position: absolute;
+    top: 0;
+    left: -20px;
+    width: 140px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary-500), transparent);
+    box-shadow: 0 0 15px var(--primary-500);
+    animation: scanLine 2s infinite ease-in-out;
+}
+
+.processing-title {
+    font-size: 1.4em;
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+    text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+.processing-status {
+    font-size: 0.9em;
+    opacity: 0.7;
+    margin-top: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+@keyframes rotateCube {
+    from { transform: rotateX(0deg) rotateY(0deg); }
+    to { transform: rotateX(360deg) rotateY(360deg); }
+}
+
+@keyframes pulseCube {
+    0%, 100% { scale: 1; }
+    50% { scale: 1.15; }
+}
+
+@keyframes scanLine {
+    0% { top: -10px; opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { top: 110px; opacity: 0; }
+}
+"""
 """

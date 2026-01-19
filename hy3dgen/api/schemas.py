@@ -150,8 +150,9 @@ class Constraints(BaseModel):
     lod: Optional[LOD] = None
     rigging: Optional[Rigging] = None
 
-    class Config:
-        populate_by_name = True
+    model_config = {
+        "populate_by_name": True
+    }
 
 class Quality(BaseModel):
     preset: QualityPreset

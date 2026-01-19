@@ -33,7 +33,10 @@ class Multiview_Diffusion_Net():
 
         pipeline = DiffusionPipeline.from_pretrained(
             multiview_ckpt_path,
-            custom_pipeline=custom_pipeline_path, dtype=torch.float16)
+            custom_pipeline=custom_pipeline_path, 
+            dtype=torch.float16,
+            use_safetensors=False # Avoid noisy fetch errors when safetensors are missing
+        )
 
         if config.pipe_name in ['hunyuanpaint']:
             pipeline.scheduler = EulerAncestralDiscreteScheduler.from_config(pipeline.scheduler.config,

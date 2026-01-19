@@ -32,8 +32,17 @@ from fastapi.staticfiles import StaticFiles
 from hy3dgen.utils.system import get_user_cache_dir, setup_logging
 from hy3dgen.manager import PriorityRequestManager, ModelManager
 from hy3dgen.inference import InferencePipeline
-from hy3dgen.apps.ui_templates import HTML_TEMPLATE_MODEL_VIEWER, HTML_PLACEHOLDER, CSS_STYLES, HTML_PROCESSING
+from hy3dgen.apps.ui_templates import HTML_TEMPLATE_MODEL_VIEWER, HTML_PLACEHOLDER, CSS_STYLES, HTML_PROCESSING, HTML_ERROR_TEMPLATE
 import hy3dgen.i18n as i18n
+# [SECURITY] Safe Static Files to prevent Symlink Traversal
+from starlette.exceptions import HTTPException
+class SafeStaticFiles(StaticFiles):
+    def file_response(self, full_path: str, stat_result: os.stat_result, scope, status_code: int = 200):
+        # Prevent following symlinks to outside directories
+        if os.path.islink(full_path):
+            logger.warning(f"Security Alert: Attempted symlink access to {full_path}")
+            raise HTTPException(status_code=404)
+        return super().file_response(full_path, stat_result, scope, status_code)
 
 # Global Log Setup
 logger = setup_logging("archeon_app")
@@ -58,8 +67,16 @@ def get_example_mv_list(): return []
 
 def gen_save_folder():
     os.makedirs(SAVE_DIR, exist_ok=True)
+    # [SECURITY] Enforce permissions on parent too if possible, but definitely on new folders
+    try:
+        os.chmod(SAVE_DIR, 0o700)
+    except: pass
+    
     new_folder = os.path.join(SAVE_DIR, str(uuid.uuid4()))
     os.makedirs(new_folder, exist_ok=True)
+    try:
+        os.chmod(new_folder, 0o700)
+    except: pass
     return new_folder
 
 def export_mesh(mesh, save_folder, textured=False, file_type='glb'):
@@ -152,12 +169,13 @@ def build_model_viewer_html(save_folder, height=660, width=790, textured=False):
     return iframe_tag
 
 # Helper for HTML Progress
-def render_progress_bar(percent, message):
+def render_progress_bar(percent, message, error=False):
      p = max(0, min(100, int(percent)))
      # Format: Message - 50%
+     bar_class = "archeon-progress-fill error" if error else "archeon-progress-fill"
      return f"""
      <div class="archeon-progress-container">
-         <div class="archeon-progress-fill" style="width: {p}%;"></div>
+         <div class="{bar_class}" style="width: {p}%;"></div>
          <div class="archeon-progress-text">{message} &nbsp; <b>{p}%</b></div>
      </div>
      """
@@ -210,31 +228,31 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
     last_msg = "Initializing..."
     last_pct = 0
     
-    while not task.done():
-        # Process all pending progress messages
-        while not progress_queue.empty():
-             last_pct, last_msg = progress_queue.get()
-        
-        elapsed = time.time() - start_time
-        timer_text = f"Stop     ({elapsed:.1f}s)"
-        progress_html = render_progress_bar(last_pct, last_msg)
-        
-        # New: Use HTML_PROCESSING to wow the user
-        processing_html = HTML_PROCESSING.replace("Synthesizing Geometry...", last_msg)
-        
-        # Yield updates: [file_out, html_gen_mesh, seed, progress_html, btn_stop]
-        yield (
-            gr.skip(), 
-            processing_html, 
-            gr.skip(), 
-            gr.update(visible=True, value=progress_html), 
-            gr.update(value=timer_text)
-        )
-        
-        await asyncio.sleep(0.1)
-        
-    # Task Finished
     try:
+        while not task.done():
+            # Process all pending progress messages
+            while not progress_queue.empty():
+                 last_pct, last_msg = progress_queue.get()
+            
+            progress_html = render_progress_bar(last_pct, last_msg)
+            
+            # New: Use HTML_PROCESSING to wow the user
+            # Ensure safe replacement
+            safe_msg = last_msg.replace("'", "").replace('"', "")
+            processing_html = HTML_PROCESSING.replace("Synthesizing Geometry...", safe_msg)
+            
+            # Yield updates: [file_out, html_gen_mesh, seed, progress_html, btn_stop]
+            yield (
+                gr.skip(), 
+                processing_html, 
+                gr.skip(), 
+                gr.update(visible=True, value=progress_html), 
+                gr.update(value=i18n.get('btn_stop'))
+            )
+            
+            await asyncio.sleep(0.1)
+            
+        # Task Finished
         result = await task
         mesh, stats = result["mesh"], result["stats"]
     except asyncio.CancelledError:
@@ -243,7 +261,21 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
         return
     except Exception as e:
         logger.error(f"Generation failed: {e}")
-        raise gr.Error(f"Generation Failed: {str(e)}")
+        # Build Error UI
+        error_msg = str(e)
+        error_html = HTML_ERROR_TEMPLATE.replace("#error_message#", error_msg)
+        error_progress = render_progress_bar(last_pct, "Generation Failed", error=True)
+        
+        yield (
+            gr.update(visible=False), # No download button
+            error_html,               # Show Error in Viewer Center
+            gr.skip(),
+            gr.update(visible=True, value=error_progress), # Red Progress Bar
+            gr.update(visible=False)  # Hide Stop Button
+        )
+        # Re-raise to ensure Gradio logs it, or suppress if we handled it cleanly? 
+        # Raising gr.Error might override our beautiful UI. Let's just return.
+        return
     
     save_folder = gen_save_folder()
     
@@ -365,7 +397,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         def on_gen_start():
             logger.info("UI EVENT: Generation started.")
             # Hide Generate, Show Stop with Init Timer
-            return gr.update(visible=False), gr.update(visible=True, value="Stop (Preparing...)")
+            return gr.update(visible=False), gr.update(visible=True, value=i18n.get('btn_stop'))
         
         def on_gen_finish():
             logger.info("UI EVENT: Generation finished (or stopped). Restoring UI.")
@@ -407,7 +439,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
         btn_stop.click(
             fn=on_gen_finish,
             outputs=[btn, btn_stop, progress_html],
-            cancels=[succ1_2]
+            cancels=[succ1_2],
+            _js=f"() => {{ if (!confirm('{i18n.get('msg_stop_confirm')}')) throw new Error('Cancelled'); }}"
         )
 
     return archeon_ui
@@ -435,6 +468,11 @@ def main():
     # Else SAVE_DIR is already set to XDG location by global init
     
     os.makedirs(SAVE_DIR, exist_ok=True)
+    try:
+        os.chmod(SAVE_DIR, 0o700)
+    except Exception as e:
+        logger.warning(f"Could not set secure permissions on {SAVE_DIR}: {e}")
+        
     HAS_T2I = args.enable_t23d
     HAS_TEXTUREGEN = not args.disable_tex
     
@@ -467,7 +505,8 @@ def main():
     app = FastAPI(lifespan=lifespan)
     
     static_dir = Path(SAVE_DIR).absolute()
-    app.mount("/outputs", StaticFiles(directory=static_dir, html=True), name="outputs")
+    # [SECURITY] Use SafeStaticFiles
+    app.mount("/outputs", SafeStaticFiles(directory=static_dir, html=True), name="outputs")
     archeon_ui = build_app()
     
     # Inject CSS via customized head

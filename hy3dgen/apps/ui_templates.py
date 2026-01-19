@@ -686,9 +686,64 @@ button.secondary.flag {
 }
 
 @keyframes scanLine {
-    0% { top: -10px; opacity: 0; }
-    20% { opacity: 1; }
-    80% { opacity: 1; }
     100% { top: 110px; opacity: 0; }
 }
+
+/* Error State Styling */
+.error-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, rgba(239, 68, 68, 0.1) 0%, transparent 70%);
+    text-align: center;
+    padding: 20px;
+}
+
+.error-icon svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+    color: #ef4444;
+    filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5));
+}
+
+.error-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #ef4444;
+    margin-bottom: 12px;
+}
+
+.error-message {
+    font-size: 1em;
+    color: var(--text-main);
+    opacity: 0.8;
+    max-width: 80%;
+    line-height: 1.5;
+    background: rgba(0,0,0,0.4);
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.archeon-progress-fill.error {
+    background: #ef4444 !important;
+    box-shadow: 0 0 10px #ef4444;
+}
+"""
+
+HTML_ERROR_TEMPLATE = """
+<div class="error-container">
+    <div class="error-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    </div>
+    <h3 class="error-title">Generation Failed</h3>
+    <p class="error-message">#error_message#</p>
+</div>
 """

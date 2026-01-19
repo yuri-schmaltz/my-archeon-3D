@@ -53,6 +53,12 @@ def setup_logging(name: str = None) -> logging.Logger:
 
     logger.info(f"Logging initialized. Logs written to matching OS standard path: {log_file}")
     
+    # [SECURITY] Enforce 700 permissions on log dir
+    try:
+        os.chmod(log_dir, 0o700)
+    except Exception:
+        pass # Best effort
+    
     # Hook into system exceptions to log crashes
     def handle_exception(exc_type, exc_value, exc_traceback):
         if issubclass(exc_type, KeyboardInterrupt):

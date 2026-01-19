@@ -27,6 +27,7 @@ _translations = {
         "btn_stop": "Stop Generation",
         "lbl_output": "Generated Mesh",
         "lbl_export_format": "Export Format",
+        "msg_stop_confirm": "Are you sure you want to stop the generation?",
         "footer_text": "**Archeon 3D Pro** v2.0 | Tencent Hunyuan-3D Engine | Antigravity AI Powered"
     },
     "pt": {
@@ -53,6 +54,7 @@ _translations = {
         "btn_stop": "Parar Geração",
         "lbl_output": "Malha Gerada",
         "lbl_export_format": "Formato de Exportação",
+        "msg_stop_confirm": "Tem certeza que deseja parar a geração?",
         "footer_text": "**Archeon 3D Pro** v2.0 | Tencent Hunyuan-3D Engine | Antigravity AI Powered"
     },
     "zh": {
@@ -78,6 +80,7 @@ _translations = {
         "btn_generate": "生成 3D 模型",
         "btn_stop": "停止生成",
         "lbl_output": "生成的网格",
+        "msg_stop_confirm": "您确定要停止生成吗？",
         "footer_text": "**Archeon 3D Pro** v2.0 | Tencent Hunyuan-3D Engine | Antigravity AI Powered"
     }
 }

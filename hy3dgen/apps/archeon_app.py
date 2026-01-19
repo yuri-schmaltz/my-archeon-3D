@@ -217,6 +217,22 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
         'tex_seed': int(tex_seed),
         'progress_callback': archeon_progress_callback
     }
+
+    # [SECURITY] Validate Input Sizes (DoS Protection)
+    MAX_FILE_SIZE = 100 * 1024 * 1024 # 100MB
+    
+    def check_size(img):
+        if hasattr(img, 'size') and img.size: # PIL Image
+             # Approx memory check: w * h * 4 (RGBA)
+             w, h = img.size
+             if w * h * 4 > MAX_FILE_SIZE * 2: # Allow some buffer for raw pixel data
+                 raise gr.Error("Input image too large (Resolution > 100MB raw)")
+    
+    if image and not isinstance(image, dict):
+        check_size(image)
+    if mv_images:
+        for k, v in mv_images.items():
+            check_size(v)
     
     logger.info("ACTION: Generation Request Submitted")
     

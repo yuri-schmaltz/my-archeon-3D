@@ -327,49 +327,112 @@ button.stop:hover {
 }
 
 /* Compact Tabs */
+/* Nuclear Option for Settings Tabs: Force Visibility */
 #gen_settings_container {
-    flex-grow: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
     padding: 0 !important;
-    /* Negative margin trick to increase available width */
-    width: calc(100% + 10px) !important;
-    margin-left: -5px !important;
-    margin-right: -5px !important;
+    width: 100% !important;
     overflow: visible !important;
-}
-#gen_settings_container > .tabs {
-    flex-grow: 1 !important;
     display: flex !important;
     flex-direction: column !important;
+    flex-grow: 1 !important;
+}
+
+#gen_settings_container > .tabs {
     width: 100% !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex-grow: 1 !important;
+    padding: 0 !important;
     margin: 0 !important;
+    border: none !important;
+}
+
+/* Force nav bar to be a single single flex row, no wrapping */
+#gen_settings_container .tab-nav {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    overflow: visible !important;
+    margin-top: 12px !important;
+    border-bottom: 1px solid var(--surface-200) !important;
     padding: 0 !important;
     gap: 0 !important;
-    min-width: 0 !important;
 }
-#gen_settings_container .tab-nav button, 
-#gen_settings_container .tab-container button {
+
+/* Force buttons to share space equally and shrink indefinitely */
+#gen_settings_container .tab-nav button {
+    flex: 1 1 0px !important;
+    min-width: 0 !important; /* Allow shrinking to nothing if needed */
+    width: auto !important;
+    max-width: none !important;
+    padding: 6px 0 !important;
+    margin: 0 !important;
     font-size: 12px !important;
-    padding: 4px 1px !important;
-    min-width: 0 !important;
-    gap: 1px !important;
-    letter-spacing: -0.5px !important;
-}
-#gen_settings_container .tab-wrapper {
-    flex-grow: 1 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important; /* Prevent ellipsis logic? */
     display: flex !important;
-    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    border: none !important;
+    border-radius: 4px 4px 0 0 !important;
 }
+
+/* Ensure selected state is still visible */
+#gen_settings_container .tab-nav button.selected {
+    border-bottom: 2px solid var(--primary-500) !important;
+    background: rgba(99, 102, 241, 0.05) !important;
+    color: var(--primary-500) !important;
+    font-weight: 600 !important;
+}
+
+/* Hide the overflow dropdown button if it tries to spawn */
+#gen_settings_container .tab-nav button.options {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Ensure content fills space */
 #gen_settings_container .tabitem {
-    flex-grow: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    padding-bottom: 20px !important;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    border: none !important;
+    height: auto !important;
 }
+
+/* 
+   CRITICAL FIX: Gradio toggles visibility via inline style="display: none". 
+   We must ensuring our CSS does not override this with !important.
+   However, we need !important to force Flexbox when it IS visible.
+   Solution: Explicitly force hide if Gradio tries to hide it.
+*/
+#gen_settings_container .tabitem[style*="display: none"] {
+    display: none !important;
+}
+
+#gen_settings_container .tabitem[style*="display: block"] {
+    display: flex !important;
+}
+
+/* Fallback if Gradio uses classes */
+#gen_settings_container .tabitem.hidden {
+    display: none !important;
+}
+
 #gen_settings_container .tabitem > .form, 
 #gen_settings_container .tabitem > .gr-group {
     flex-grow: 1 !important;
+    border: none !important;
+    background: transparent !important;
 }
 
 /* Tab labels polish */

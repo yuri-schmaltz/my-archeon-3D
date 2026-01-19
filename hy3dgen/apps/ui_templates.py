@@ -460,9 +460,6 @@ footer {
     display: none !important;
 }
 
-    opacity: 0.8;
-}
-
 /* Premium 3D Processing Animation */
 .processing-container {
     position: absolute;
@@ -554,5 +551,4 @@ footer {
     80% { opacity: 1; }
     100% { top: 110px; opacity: 0; }
 }
-"""
 """

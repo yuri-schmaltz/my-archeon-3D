@@ -26,8 +26,7 @@ _translations = {
         "btn_generate": "Generate 3D Model",
         "btn_stop": "Stop Generation",
         "lbl_output": "Generated Mesh",
-        "footer_text": "**Archeon 3D Pro** v2.0 | Tencent Hunyuan-3D Engine | Antigravity AI Powered",
-        "footer_branding": "Usar via API 🚀 · Archeon 3D Core 💠 · Configurações ⚙️"
+        "footer_text": "**Archeon 3D Pro** v2.0 | Tencent Hunyuan-3D Engine | Antigravity AI Powered"
     },
     "pt": {
         "app_title": "Archeon 3D Pro",
@@ -52,8 +51,7 @@ _translations = {
         "btn_generate": "Gerar Modelo 3D",
         "btn_stop": "Parar Geração",
         "lbl_output": "Malha Gerada",
-        "footer_text": "**Archeon 3D Pro** v2.0 | Tencent Hunyuan-3D Engine | Antigravity AI Powered",
-        "footer_branding": "Usar via API 🚀 · Archeon 3D Core 💠 · Configurações ⚙️"
+        "footer_text": "**Archeon 3D Pro** v2.0 | Tencent Hunyuan-3D Engine | Antigravity AI Powered"
     },
     "zh": {
         "app_title": "Archeon 3D Pro",

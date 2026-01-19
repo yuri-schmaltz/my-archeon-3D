@@ -332,6 +332,11 @@ button.stop:hover {
     display: flex !important;
     flex-direction: column !important;
     padding: 0 !important;
+    /* Negative margin trick to increase available width */
+    width: calc(100% + 10px) !important;
+    margin-left: -5px !important;
+    margin-right: -5px !important;
+    overflow: visible !important;
 }
 #gen_settings_container > .tabs {
     flex-grow: 1 !important;
@@ -341,14 +346,15 @@ button.stop:hover {
     margin: 0 !important;
     padding: 0 !important;
     gap: 0 !important;
+    min-width: 0 !important;
 }
 #gen_settings_container .tab-nav button, 
 #gen_settings_container .tab-container button {
-    font-size: 13px !important;
-    padding: 6px 1px !important;
+    font-size: 12px !important;
+    padding: 4px 1px !important;
     min-width: 0 !important;
-    gap: 2px !important;
-    letter-spacing: -0.3px !important;
+    gap: 1px !important;
+    letter-spacing: -0.5px !important;
 }
 #gen_settings_container .tab-wrapper {
     flex-grow: 1 !important;

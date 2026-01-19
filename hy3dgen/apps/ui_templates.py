@@ -327,20 +327,58 @@ button.stop:hover {
 }
 
 /* Compact Tabs */
-.tabs {
-    margin-bottom: 0 !important;
+#gen_settings_container {
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
 }
-.tab-nav {
+#gen_settings_container > .tabs {
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+#gen_settings_container .tab-nav button, 
+#gen_settings_container .tab-container button {
+    font-size: 0.95em !important;
+    padding: 8px 2px !important;
+}
+#gen_settings_container .tab-wrapper {
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+#gen_settings_container .tabitem {
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding-bottom: 20px !important;
+}
+#gen_settings_container .tabitem > .form, 
+#gen_settings_container .tabitem > .gr-group {
+    flex-grow: 1 !important;
+}
+
+/* Tab labels polish */
+.tab-nav, .tab-container {
     border-bottom: 1px solid var(--surface-200) !important;
     display: flex !important;
     width: 100% !important;
+    margin-top: 12px !important;
 }
-.tab-nav button {
-    flex: 1 !important;
+.tab-nav button, .tab-container button {
+    flex: 1 1 0% !important;
     font-size: 1.05em !important;
     font-weight: 500 !important;
     padding: 10px 4px !important;
     transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
 }
 button.selected {
     border-bottom: 3px solid var(--primary-500) !important;

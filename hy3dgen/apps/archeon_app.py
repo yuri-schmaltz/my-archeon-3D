@@ -312,7 +312,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                             with gr.Column(elem_classes="prompt-container"):
                                 gr.Markdown("Mesh Prompt content coming soon...")
 
-                with gr.Column(visible=True, elem_classes="panel-container") as gen_settings_container:
+                with gr.Column(visible=True, elem_classes="panel-container", elem_id="gen_settings_container") as gen_settings_container:
                     with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
                         with gr.Tab("Quality", id='tab_options', visible=TURBO_MODE):
                             gen_mode = gr.Radio(label=i18n.get('lbl_gen_mode'), choices=['Turbo', 'Fast', 'Standard'], value='Turbo')

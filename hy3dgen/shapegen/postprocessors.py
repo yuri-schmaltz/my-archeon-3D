@@ -188,10 +188,24 @@ class MeshSimplifier:
         self,
         mesh: Union[trimesh.Trimesh],
     ) -> Union[trimesh.Trimesh]:
+        import subprocess
+        
         with tempfile.NamedTemporaryFile(suffix='.obj', delete=False) as temp_input:
             with tempfile.NamedTemporaryFile(suffix='.obj', delete=False) as temp_output:
                 mesh.export(temp_input.name)
-                os.system(f'{self.executable} {temp_input.name} {temp_output.name}')
+                # [SECURITY FIX] Use subprocess.run with list args (no shell injection)
+                try:
+                    subprocess.run(
+                        [self.executable, temp_input.name, temp_output.name],
+                        check=True,
+                        capture_output=True,
+                        timeout=300.0
+                    )
+                except subprocess.TimeoutExpired:
+                    raise RuntimeError("MeshSimplifier timed out after 300 seconds")
+                except subprocess.CalledProcessError as e:
+                    raise RuntimeError(f"MeshSimplifier failed: {e.stderr.decode() if e.stderr else str(e)}")
+                
                 ms = trimesh.load(temp_output.name, process=False)
                 if isinstance(ms, trimesh.Scene):
                     combined_mesh = trimesh.Trimesh()

@@ -280,7 +280,8 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
     with gr.Blocks(
         title=i18n.get('app_title'),
         analytics_enabled=False,
-        fill_height=True
+        fill_height=True,
+        flagging_mode='never'
     ) as demo:
         # State to track current model mode based on tab
         model_key_state = gr.State("Normal")
@@ -468,16 +469,20 @@ def main():
     
     # Injeta CSS via head customizada (Gradio 6.3+)
     custom_head = f"<style>{CSS_STYLES}</style>"
+    favicon_path = os.path.join(os.getcwd(), "app/src-tauri/icons/Square30x30Logo.png")
     app = gr.mount_gradio_app(
         app, 
         demo, 
         path="/",
         head=custom_head,
+        show_api=False,
+        favicon_path=favicon_path if os.path.exists(favicon_path) else None,
         theme=gr.themes.Base(
             font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"],
             font_mono=[gr.themes.GoogleFont("JetBrains Mono"), "ui-monospace", "Consolas", "monospace"],
         )
     )
+    return app
     url = f"http://{args.host}:{args.port}"
     print(f"\nHunyuan3D-2 Pro Unified is running at: {url}\n")
     if not args.no_browser:

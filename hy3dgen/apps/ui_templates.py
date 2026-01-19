@@ -459,8 +459,24 @@ iframe {
     pointer-events: none;
 }
 
-/* Hide Default Gradio Footer and Style Custom Branding */
-footer {
+/* Hide Default Gradio Footer, API Link, and Framework Metadata */
+footer, 
+.gradio-container footer, 
+#api-link, 
+.show-api, 
+.meta-text, 
+.built-with,
+.gr-pro-branding {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Hide Flagging buttons if they leak */
+.flag-button, 
+button.secondary.flag {
     display: none !important;
 }
 

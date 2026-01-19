@@ -292,11 +292,6 @@ button.stop:hover {
     padding: 0 !important;
 }
 
-/* Footer should always be docked at bottom */
-.footer-area {
-    flex: 0 0 auto !important; /* Stay fixed height */
-    padding-top: 12px !important;
-}
 
 /* Scroll Area: Takes all available space */
 .scroll-area {
@@ -314,7 +309,9 @@ button.stop:hover {
     border-top: 1px solid var(--surface-200) !important;
     background: var(--bg-app) !important;
     z-index: 50 !important;
-    margin-top: 0 !important; /* Flush with viewer */
+    margin-top: auto !important; /* Force to bottom of flex container */
+    width: 100% !important; /* Ensure full width */
+    box-sizing: border-box !important;
 }
 
 /* Panel Containers */

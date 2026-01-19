@@ -405,7 +405,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                 # Footer Action Area (Moved from Left)
                 with gr.Row(elem_classes="footer-area"):
                     btn = gr.Button(value=i18n.get('btn_generate'), variant='primary', scale=2)
-                    btn_stop = gr.Button(value="Stop Generation", variant='stop', visible=False, scale=2)
+                    btn_stop = gr.Button(value="STOP", variant='stop', visible=False, scale=2)
                     file_out = gr.DownloadButton(label="DOWNLOAD", variant='primary', visible=True, scale=1)
                 
                 

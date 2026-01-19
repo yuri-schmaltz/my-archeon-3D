@@ -130,62 +130,46 @@ async def unified_generation(
     logger.info(f"ACTION: Generation Request Submitted")
     
     try:
-        # Request generation from manager
-        # Note: request_manager.process_request might need to be awaited or returns a generator
-        # Assuming it returns an async generator for progress
+        # Request generation from manager using submit()
+        # Note: submit() awaits the result (mesh)
+        progress(0.1, desc="Request queued...")
         
-        generator = request_manager.process_request(params)
+        # We can pass a callback if we want updates, but manager.py needs to use it.
+        # For now, we await the final result.
         
-        mesh = None
-        html_output = HTML_PLACEHOLDER
+        mesh = await request_manager.submit(params, priority=10)
         
-        async for update in generator:
-            if isinstance(update, str):
-                # Status message
-                progress(0, desc=update)
-            elif isinstance(update, tuple) and len(update) == 2:
-                # Progress update (percentage, message)
-                pct, msg = update
-                progress(pct / 100.0, desc=msg)
-            elif hasattr(update, 'vertices') or hasattr(update, 'scene'):
-                # It's the final mesh!
-                mesh = update
-                
         # --- Post Processing & Export ---
         save_folder = gen_save_folder()
         
         # [ROBUSTNESS] Try/Except Block for Export
-        try:
-            if mesh is None:
-                 raise ValueError("Generation finished but returned No Mesh.")
+        if mesh is None:
+             raise ValueError("Generation finished but returned No Mesh.")
 
-            path = export_mesh(mesh, save_folder, textured=HAS_TEXTUREGEN, file_type=export_format)
-            
-            if not os.path.exists(path) or os.path.getsize(path) == 0:
-                 raise ValueError(f"Exported file missing/empty: {path}")
+        path = export_mesh(mesh, save_folder, textured=HAS_TEXTUREGEN, file_type=export_format)
+        
+        if not os.path.exists(path) or os.path.getsize(path) == 0:
+             raise ValueError(f"Exported file missing/empty: {path}")
 
-            logger.info(f"Yielding Final Result. Path: {path}")
-            
-            # Success Yield
-            yield (
-                gr.DownloadButton(value=path, visible=True, label="Download 3D Model"),
-                gr.Model3D(value=path, visible=True), # Using standard Model3D component instead of raw HTML for safety
-                seed,
-                gr.update(visible=False), # Hide progress container if any
-                gr.update(value="Generate") # Reset button
-            )
-
-        except Exception as e:
-            logger.error(f"Export Error: {e}")
-            raise gr.Error(f"Export Failed: {e}")
+        logger.info(f"Yielding Final Result. Path: {path}")
+        
+        # Success Yield
+        yield (
+            gr.DownloadButton(value=path, visible=True, label="Download 3D Model"),
+            gr.Model3D(value=path, visible=True),
+            seed,
+            gr.update(visible=False), # Hide status
+            gr.update(value="Generate") # Reset button
+        )
 
     except Exception as e:
         logger.error(f"Generation Error: {e}", exc_info=True)
+        error_msg = f"Error: {str(e)}"
         yield (
             gr.update(visible=False),
-            HTML_ERROR_TEMPLATE.replace("#error_message#", str(e)),
+            None, # Clear Model3D
             seed,
-            gr.update(visible=False),
+            gr.Markdown(f"### {error_msg}", visible=True), # Show error in status component
             gr.update(value="Generation Failed")
         )
 
@@ -246,19 +230,15 @@ def build_app():
                     clear_color=[0, 0, 0, 0],
                     elem_id="model-3d-viewer"
                 )
-                # Or use HTML for custom viewer if preferred, but Model3D is safer for now.
-                # error_box = gr.HTML(visible=True) # For errors
+                
+                status_box = gr.Markdown(visible=False) # Status/Error message area
 
         # Binding
         
         # Generator wrapper to matching outputs
-        # outputs=[file_out, html_gen_mesh, seed, progress_html, btn_stop] in original
-        # Here: [output_file_btn, output_viewer, seed_input, ???, btn_gen status?]
-        
-        # Generator wrapper to matching outputs
         gen_event = btn_gen.click(
-            fn=lambda: (gr.update(value="Generating...", interactive=False), gr.update(visible=True)),
-            outputs=[btn_gen, btn_stop]
+            fn=lambda: (gr.update(value="Generating...", interactive=False), gr.update(visible=True), gr.update(value="", visible=False)),
+            outputs=[btn_gen, btn_stop, status_box]
         ).then(
             fn=unified_generation,
             inputs=[
@@ -267,7 +247,7 @@ def build_app():
                 num_steps, cfg_scale, seed_input, octree_res, rembg_check, 
                 gr.State(8000), tex_steps, tex_guidance, tex_seed, randomize_seed, export_fmt
             ],
-            outputs=[output_file_btn, output_viewer, seed_input, gr.State(None), btn_gen]
+            outputs=[output_file_btn, output_viewer, seed_input, status_box, btn_gen]
         )
         
         btn_stop.click(

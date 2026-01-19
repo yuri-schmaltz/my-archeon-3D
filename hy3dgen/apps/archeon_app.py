@@ -280,8 +280,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
     with gr.Blocks(
         title=i18n.get('app_title'),
         analytics_enabled=False,
-        fill_height=True,
-        flagging_mode='never'
+        fill_height=True
     ) as demo:
         # State to track current model mode based on tab
         model_key_state = gr.State("Normal")

@@ -24,7 +24,7 @@ def main():
     from hy3dgen.utils.system import setup_logging, find_free_port
     setup_logging("archeon_launcher")
 
-    # Find free port if default 8081 (API) or 7860 (Gradio) is taken
+    # Find free port if default 8081 (API) or 7860 (UI) is taken
     # We will let the sub-apps handle the port argument if passed, 
     # but we can try to facilitate dynamic allocation here if we want to inject it.
     # However, archeon_3d.py calls the 'main' of submodules which parse args again.
@@ -53,7 +53,7 @@ def main():
         print("Starting Archeon 3D API Server...")
         api_main()
     else:
-        # Defaults for Gradio App
+        # Defaults for Archeon UI
         # Try to find a free port starting from 7860
         port = 7860
         try:
@@ -72,9 +72,9 @@ def main():
         ]
         sys.argv[1:1] = defaults
         
-        from hy3dgen.apps.archeon_app import main as gradio_main
-        print("Starting Archeon 3D Gradio App...")
-        gradio_main()
+        from hy3dgen.apps.archeon_app import main as app_main
+        print("Starting Archeon 3D UI...")
+        app_main()
 
 if __name__ == "__main__":
     main()

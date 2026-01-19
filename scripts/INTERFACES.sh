@@ -9,7 +9,7 @@ echo "=========================================="
 source .venv/bin/activate
 
 echo ""
-echo "1️⃣  GUI WEB (Gradio + FastAPI Backend)"
+echo "1️⃣  GUI WEB (Archeon UI + FastAPI Backend)"
 echo "   Comando: python archeon_3d.py"
 echo "   Acessar: http://localhost:7860"
 echo "   Descrição: Interface completa com upload, preview 3D, download"

@@ -90,7 +90,7 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-/* --- Gradio Container Structure --- */
+/* --- Archeon UI Container Structure --- */
 .gradio-container {
     height: 100vh !important;
     max-height: 100vh !important;
@@ -115,7 +115,7 @@ body {
 
 /* --- DEFINITIVE FULL SCREEN LAYOUT (WIDTH & HEIGHT FIX) --- */
 
-/* 1. Global Width/Height Reset for Gradio Roots */
+/* 1. Global Width/Height Reset for UI Roots */
 .gradio-container {
     height: 100vh !important;
     max-height: 100vh !important;

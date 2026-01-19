@@ -43,7 +43,7 @@ request_manager = None
 
 MAX_SEED = int(1e7)
 # Use robust cross-platform cache dir
-SAVE_DIR = str(get_user_cache_dir() / "gradio_cache")
+SAVE_DIR = str(get_user_cache_dir() / "archeon_cache")
 HAS_T2I = False
 TURBO_MODE = True
 HAS_TEXTUREGEN = True
@@ -178,7 +178,7 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
     progress_queue = queue.Queue()
     progress_lock = threading.Lock()
     
-    def gradio_progress_callback(percent, message):
+    def archeon_progress_callback(percent, message):
         progress_queue.put((percent, message))
 
     params = {
@@ -197,7 +197,7 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
         'tex_steps': int(tex_steps),
         'tex_guidance_scale': float(tex_guidance_scale),
         'tex_seed': int(tex_seed),
-        'progress_callback': gradio_progress_callback
+        'progress_callback': archeon_progress_callback
     }
     
     logger.info("ACTION: Generation Request Submitted")
@@ -276,12 +276,12 @@ async def generation_all(*args, progress=gr.Progress()):
     return await unified_generation(*args, do_texture=True, progress=progress)
 
 def build_app(example_is=None, example_ts=None, example_mvs=None):
-    # Gradio 6.3+: theme and css are handled in mount_gradio_app
+    # UI v2: theme and css are handled in mount call
     with gr.Blocks(
         title=i18n.get('app_title'),
         analytics_enabled=False,
         fill_height=True
-    ) as demo:
+    ) as archeon_ui:
         # State to track current model mode based on tab
         model_key_state = gr.State("Normal")
 
@@ -406,7 +406,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             cancels=[succ1_2]
         )
 
-    return demo
+    return archeon_ui
 
 def main():
     global request_manager, SAVE_DIR, HAS_T2I, HAS_TEXTUREGEN
@@ -449,7 +449,7 @@ def main():
     model_mgr.register_model("Multiview", get_loader("tencent/Hunyuan3D-2mv", "hunyuan3d-dit-v2-mv-turbo"))
     request_manager = PriorityRequestManager(model_mgr, max_concurrency=1)
     
-    # Define lifespan for FastAPI app (Gradio 6.3+ / FastAPI 0.93+)
+    # Define lifespan for FastAPI app
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # Startup
@@ -464,17 +464,16 @@ def main():
     
     static_dir = Path(SAVE_DIR).absolute()
     app.mount("/outputs", StaticFiles(directory=static_dir, html=True), name="outputs")
-    demo = build_app()
+    archeon_ui = build_app()
     
-    # Injeta CSS via head customizada (Gradio 6.3+)
+    # Inject CSS via customized head
     custom_head = f"<style>{CSS_STYLES}</style>"
     favicon_path = os.path.join(os.getcwd(), "app/src-tauri/icons/Square30x30Logo.png")
     app = gr.mount_gradio_app(
         app, 
-        demo, 
+        archeon_ui, 
         path="/",
         head=custom_head,
-        show_api=False,
         favicon_path=favicon_path if os.path.exists(favicon_path) else None,
         theme=gr.themes.Base(
             font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"],

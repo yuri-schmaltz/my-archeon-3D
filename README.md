@@ -149,7 +149,7 @@ Archeon 3D-2 Series
 Archeon 3D 2.0 supports MacOS, Windows, Linux. You may follow the next steps to use Archeon 3D 2.0 via:
 
 - [Code](#code-usage)
-- [Gradio App](#gradio-app)
+- [Archeon 3D UI](#archeon-3d-ui)
 - [API Server](#api-server)
 - [Docker Usage](docs/DOCKER.md)
 - [Blender Addon](#blender-addon)
@@ -190,7 +190,7 @@ mesh = pipeline(image='path/to/your/image.png')[0]
 ```
 
 The output mesh is a [trimesh object](https://trimesh.org/trimesh.html), which you could save to glb/obj (or other format) file.
-### Gradio App
+### Archeon 3D UI
 
 You can now launch a single unified app and select the model (Normal, Multiview) directly from the UI:
 
@@ -198,7 +198,7 @@ You can now launch a single unified app and select the model (Normal, Multiview)
 ```bash
 # Safe default (loads models on demand, opens browser automatically)
 # Safe default (loads models on demand, opens browser automatically)
-python3 my_hunyuan_3d.py
+python3 archeon_3d.py
 ```
 
 #### New Pro Features (v2.0)

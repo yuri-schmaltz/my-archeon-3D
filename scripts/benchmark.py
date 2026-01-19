@@ -142,7 +142,7 @@ class PerformanceBenchmark:
             results['app_build_time_ms'] = duration
             results['memory_used_mb'] = mem_after['rss_mb'] - mem_before['rss_mb']
             
-            logger.info(f"  ✓ Gradio app build:    {duration:8.2f} ms")
+            logger.info(f"  ✓ Archeon UI build:    {duration:8.2f} ms")
             logger.info(f"  ✓ Memory used:         {results['memory_used_mb']:8.2f} MB")
             logger.info(f"  ✓ App interface:       {len(app.blocks)} blocks")
             

@@ -293,7 +293,7 @@ class DeploymentVerifier:
     def run_all_checks(self):
         """Run all verification checks"""
         print("\n" + "╔" + "="*68 + "╗")
-        print("║" + " "*12 + "HUNYUAN3D-2 v2.2.0 DEPLOYMENT VERIFICATION" + " "*12 + "║")
+        print("║" + " "*12 + " ARCHEON 3D PRO DEPLOYMENT VERIFICATION " + " "*12 + "║")
         print("╚" + "="*68 + "╝")
         
         self.verify_version()

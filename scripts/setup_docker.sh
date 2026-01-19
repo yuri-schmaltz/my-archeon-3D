@@ -52,8 +52,8 @@ check_prerequisites() {
 # 2. Environment Setup
 setup_environment() {
     echo -e "\n${YELLOW}[2/3] Preparando ambiente...${NC}"
-    mkdir -p logs gradio_cache
-    chmod 777 logs gradio_cache
+    mkdir -p logs archeon_cache
+    chmod 777 logs archeon_cache
     echo -e "${GREEN}✔ Diretórios de cache e logs criados.${NC}"
 }
 
@@ -90,7 +90,7 @@ wait_and_open() {
 show_menu() {
     echo -e "\n${BLUE}--- Menu de Gerenciamento ---${NC}"
     echo -e "1) ${GREEN}Build${NC} (Construir/Atualizar Imagem)"
-    echo -e "2) ${GREEN}Start${NC} (Iniciar Interface Gradio)"
+    echo -e "2) ${GREEN}Start${NC} (Iniciar Interface Archeon)"
     echo -e "3) ${GREEN}Start API${NC} (Iniciar Servidor de API)"
     echo -e "4) ${YELLOW}Stop${NC} (Parar todos os containers)"
     echo -e "5) ${BLUE}Logs${NC} (Ver logs em tempo real)"
@@ -112,7 +112,7 @@ while true; do
             docker compose build
             ;;
         2)
-            echo -e "${YELLOW}Iniciando Archeon 3D (Gradio)...${NC}"
+            echo -e "${YELLOW}Iniciando Archeon 3D UI...${NC}"
             docker compose up -d
             echo -e "${GREEN}Aplicação disponível em http://localhost:7860${NC}"
             wait_and_open "http://localhost:7860"

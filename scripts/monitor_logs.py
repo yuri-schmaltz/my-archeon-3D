@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Monitor de logs em tempo real da interface Gradio"""
+"""Monitor de logs em tempo real da interface Archeon UI"""
 import time
 import subprocess
 import sys
@@ -19,7 +19,7 @@ last_lines = set()
 
 try:
     while True:
-        log_file = PROJECT_ROOT / "gradio_output.log"
+        log_file = PROJECT_ROOT / "archeon_ui.log"
         if not log_file.exists():
             time.sleep(2)
             continue

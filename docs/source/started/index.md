@@ -3,7 +3,7 @@
 ```{toctree}
 :hidden:
 
-gradio
+archeon_ui
 comfyui
 api
 blender

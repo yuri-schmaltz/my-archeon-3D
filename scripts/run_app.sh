@@ -5,7 +5,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-echo "Starting Archeon 3D Gradio Interface..."
+echo "Starting Archeon 3D UI..."
 
 # Activate Venv
 source "$PROJECT_ROOT/.venv/bin/activate"

@@ -136,7 +136,7 @@ class InferencePipeline:
              stats['time']['rembg'] = time.time() - t1
         elif isinstance(image, dict):
              # MV Mode: rembg is handled or images are already processed?
-             # Gradio app does rmbg loop.
+             # Archeon UI handles rembg.
              if params.get("do_rembg", True):
                  report_progress(10, "Removing Background (Multi-View)...")
                  t1 = time.time()

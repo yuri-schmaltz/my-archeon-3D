@@ -1,5 +1,7 @@
 import os
 import sys
+import shutil
+import time
 import logging
 import socket
 import platformdirs
@@ -82,3 +84,43 @@ def find_free_port(start_port: int = 8081, max_tries: int = 100) -> int:
             except OSError:
                 continue
     raise RuntimeError(f"Could not find a free port in range {start_port}-{start_port + max_tries}")
+
+    
+def cleanup_old_cache(max_age_days: int = 7):
+
+    """
+    Removes subdirectories in the user cache directory deeper than max_age_days.
+    This prevents the disk from filling up with old generated assets.
+    """
+    logger = logging.getLogger("archeon_system")
+    cache_dir = get_user_cache_dir() / "archeon_cache"
+    
+    if not cache_dir.exists():
+        return
+
+    now = time.time()
+    cutoff = now - (max_age_days * 86400)
+    
+    deleted_count = 0
+    reclaimed_bytes = 0
+    
+    try:
+        for item in cache_dir.iterdir():
+            if item.is_dir():
+                # Check modification time
+                mtime = item.stat().st_mtime
+                if mtime < cutoff:
+                    try:
+                        # Calculate size for logging
+                        size = sum(f.stat().st_size for f in item.glob('**/*') if f.is_file())
+                        reclaimed_bytes += size
+                        shutil.rmtree(item)
+                        deleted_count += 1
+                    except Exception as e:
+                        logger.warning(f"Failed to cleanup cache item {item}: {e}")
+    except Exception as e:
+        logger.error(f"Error during cache cleanup: {e}")
+
+    if deleted_count > 0:
+        logger.info(f"Cache Cleanup: Removed {deleted_count} old folders, reclaimed {reclaimed_bytes / 1024 / 1024:.2f} MB")
+

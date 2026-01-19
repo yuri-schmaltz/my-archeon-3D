@@ -21,8 +21,13 @@ def main():
     is_api = "--api" in sys.argv
     
     # Setup global logging
-    from hy3dgen.utils.system import setup_logging, find_free_port
+    # Setup global logging
+    from hy3dgen.utils.system import setup_logging, find_free_port, cleanup_old_cache
     setup_logging("archeon_launcher")
+    
+    # [DATA GOVERNANCE] Cleanup old files
+    cleanup_old_cache(max_age_days=7)
+
 
     # Find free port if default 8081 (API) or 7860 (UI) is taken
     # We will let the sub-apps handle the port argument if passed, 

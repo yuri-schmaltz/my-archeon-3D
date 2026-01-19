@@ -495,7 +495,9 @@ iframe {
 
 /* Prompt Container Standardization */
 .prompt-container {
-    height: 320px !important; /* Fixed height for consistency */
+    height: auto !important; /* Allow growing/shrinking */
+    min-height: 250px !important; /* Safety minimum */
+    flex: 1 1 auto !important; /* Flexibly fill space */
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;

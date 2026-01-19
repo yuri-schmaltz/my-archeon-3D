@@ -479,6 +479,19 @@ def main():
     parser.add_argument('--no-browser', action='store_true', help='Do not open the browser automatically')
     args = parser.parse_args()
     
+    # [OBSERVABILITY] Log Environment Info
+    import torch
+    logger.info(f"Archeon 3D Startup - Device: {args.device}")
+    if torch.cuda.is_available():
+        gpu_name = torch.cuda.get_device_name(0)
+        gpu_mem = torch.cuda.get_device_properties(0).total_memory / 1024**3
+        logger.info(f"GPU Detected: {gpu_name} ({gpu_mem:.2f} GB VRAM)")
+        if gpu_mem < 6.0 and not args.low_vram_mode:
+             logger.warning("VRAM is below 6GB. Forcing Low VRAM Mode recommended.")
+    else:
+        logger.warning("No CUDA GPU detected. Performance might be degraded.")
+
+    
     if args.cache_path:
         SAVE_DIR = args.cache_path
     # Else SAVE_DIR is already set to XDG location by global init

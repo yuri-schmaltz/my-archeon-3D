@@ -306,12 +306,24 @@ button.stop:hover {
 .footer-area {
     flex: 0 0 auto !important;
     padding: 12px 16px !important; 
-    border-top: 1px solid var(--surface-200) !important;
+    border-top: none !important; /* Removed border */
     background: var(--bg-app) !important;
     z-index: 50 !important;
     margin-top: auto !important; /* Force to bottom of flex container */
     width: 100% !important; /* Ensure full width */
     box-sizing: border-box !important;
+}
+
+/* Ensure no stray borders on output container */
+#gen_output_container, 
+#gen_output_container > .form,
+#gen_output_container > .block,
+#progress_bar_container {
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Panel Containers */

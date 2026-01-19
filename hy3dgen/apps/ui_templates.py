@@ -211,7 +211,7 @@ button.stop:hover {
 
 .right-col {
     height: 100% !important; /* Total parent height */
-    padding: 16px !important;
+    padding: 16px 0 !important; /* Keep vertical padding, remove horizontal */
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
@@ -252,6 +252,7 @@ button.stop:hover {
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
+    padding: 0 !important; /* Ensure no internal padding */
 }
 
 #gen_output_container > .form {
@@ -306,7 +307,7 @@ button.stop:hover {
 /* Footer Area: Docked via Flexbox */
 .footer-area {
     flex: 0 0 auto !important;
-    padding-top: 12px !important;
+    padding: 12px 16px 0 16px !important; /* Restore horizontal padding for items within footer */
     border-top: 1px solid var(--surface-200) !important;
     background: var(--bg-app) !important;
     z-index: 50 !important;
@@ -418,9 +419,8 @@ iframe {
 
 /* Custom Archeon Progress Bar */
 .archeon-progress-container {
-    width: 100%;
-    margin-top: 8px; /* Space from viewer */
-    margin-bottom: 8px; /* Space from footer */
+    width: calc(100% - 32px); /* Compensation for column horizontal padding removal */
+    margin: 8px 16px !important; /* Centering with restored horizontal padding */
     background: var(--surface-200);
     border-radius: 4px;
     height: 20px;

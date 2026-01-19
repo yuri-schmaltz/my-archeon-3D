@@ -23,7 +23,7 @@ rtree
 accelerate>=1.12.0
 
 # Demo and API Server
-gradio>=6.3.0
+
 fastapi>=0.128.0
 uvicorn>=0.40.0
 onnxruntime>=1.23.0

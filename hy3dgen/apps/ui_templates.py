@@ -522,19 +522,33 @@ iframe {
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    opacity: 0.3 !important;
+    opacity: 0.8 !important; /* Increased visibility */
     text-align: center !important;
     pointer-events: none !important; /* Let clicks pass through if needed */
+    z-index: 50 !important; /* Ensure visibility */
 }
 .empty-placeholder-icon svg {
     width: 64px;
     height: 64px;
     margin-bottom: 16px;
+    animation: floatIcon 3s ease-in-out infinite; /* Added Animation */
+    filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.3));
 }
 .empty-placeholder-title {
     font-size: 1.5em;
     font-weight: 600;
     margin-bottom: 8px;
+    color: var(--text-main);
+}
+.empty-placeholder-text {
+    font-size: 0.9em;
+    color: var(--text-main);
+    opacity: 0.7;
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
 }
 
 /* Custom Archeon Progress Bar */

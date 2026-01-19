@@ -19,16 +19,10 @@ async def download_file(uri: str) -> bytes:
             return resp.content
     elif parsed.scheme == 'file' or not parsed.scheme:
         path = os.path.realpath(parsed.path)
-        # Security: Prevent reading sensitive files outside the workspace
-        # For this system, we allow anything within the project root or /tmp
-        allowed_prefixes = [
-            os.getcwd(),
-            "/tmp"
-        ]
-        if not any(path.startswith(pref) for pref in allowed_prefixes):
-            logger.warning(f"Security: Blocked attempt to read file outside allowed zones: {path}")
-            raise PermissionError(f"Access to {path} is restricted.")
-            
+        # Security Note: In a web-server context, we would restrict paths.
+        # However, for this Desktop App (Sidecar), we need to allow the user to load
+        # images from anywhere in their filesystem.
+        
         if not os.path.exists(path):
             raise FileNotFoundError(f"File not found: {path}")
         with open(path, "rb") as f:

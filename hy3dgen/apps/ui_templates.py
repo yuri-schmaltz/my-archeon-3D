@@ -332,11 +332,20 @@ button.stop:hover {
 }
 .tab-nav {
     border-bottom: 1px solid var(--surface-200) !important;
+    display: flex !important;
+    width: 100% !important;
+}
+.tab-nav button {
+    flex: 1 !important;
+    font-size: 1.05em !important;
+    font-weight: 500 !important;
+    padding: 10px 4px !important;
+    transition: all 0.2s ease !important;
 }
 button.selected {
-    border-bottom: 2px solid var(--primary-500) !important;
+    border-bottom: 3px solid var(--primary-500) !important;
     color: var(--primary-500) !important;
-    background: transparent !important;
+    background: rgba(99, 102, 241, 0.05) !important;
 }
 
 /* Model Viewer Iframe Polish */

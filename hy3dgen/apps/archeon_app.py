@@ -308,6 +308,10 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                                 caption = gr.Textbox(label=i18n.get('tab_text_prompt'), placeholder=i18n.get('ph_text_prompt'), lines=5, max_lines=5)
                                 negative_prompt = gr.Textbox(label='Negative Prompt', placeholder=i18n.get('ph_negative_prompt'), lines=4, max_lines=4)
 
+                        with gr.Tab("Mesh Prompt", id='tab_mesh_prompt') as tab_mp:
+                            with gr.Column(elem_classes="prompt-container"):
+                                gr.Markdown("Mesh Prompt content coming soon...")
+
                 with gr.Column(visible=True, elem_classes="panel-container") as gen_settings_container:
                     with gr.Tabs(selected='tab_options' if TURBO_MODE else 'tab_export'):
                         with gr.Tab("Quality", id='tab_options', visible=TURBO_MODE):
@@ -354,7 +358,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                 with gr.Row(elem_classes="footer-area"):
                     btn = gr.Button(value=i18n.get('btn_generate'), variant='primary', scale=2)
                     btn_stop = gr.Button(value="Stop Generation", variant='stop', visible=False, scale=2)
-                    file_out = gr.DownloadButton(label="Download .glb", variant='primary', visible=True, scale=1)
+                    file_out = gr.DownloadButton(label="DOWNLOAD", variant='primary', visible=True, scale=1)
                 
                 
         # Helper to toggle buttons
@@ -480,7 +484,6 @@ def main():
             font_mono=[gr.themes.GoogleFont("JetBrains Mono"), "ui-monospace", "Consolas", "monospace"],
         )
     )
-    return app
     url = f"http://{args.host}:{args.port}"
     print(f"\nHunyuan3D-2 Pro Unified is running at: {url}\n")
     if not args.no_browser:

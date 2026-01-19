@@ -1,7 +1,0 @@
-INFO:api_server:Initializing Archeon 3D API Server on 0.0.0.0:8081
-INFO:meshops.engine:Starting MeshOps request tex_test_01
-INFO:meshops.tex_ops:Running auto_texture with {'steps': 10, 'guidance_scale': 5.0, 'seed': 0}
-INFO:httpx:HTTP Request: POST http://testserver/v1/jobs "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: GET http://testserver/v1/jobs/tex_test_01 "HTTP/1.1 200 OK"
-Auto-texture test passed!
-PASS

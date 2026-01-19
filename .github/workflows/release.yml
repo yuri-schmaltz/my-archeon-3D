@@ -29,7 +29,7 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        pyinstaller build_scripts/archeon3d.spec --clean --noconfirm
+        pyinstaller build/build_scripts/archeon3d.spec --clean --noconfirm
 
     - name: Upload Artifact (Dir)
       uses: actions/upload-artifact@v4
@@ -56,7 +56,7 @@ jobs:
 
     - name: Build with PyInstaller
       run: |
-        pyinstaller build_scripts/archeon3d.spec --clean --noconfirm
+        pyinstaller build/build_scripts/archeon3d.spec --clean --noconfirm
 
     - name: Upload Artifact (Dir)
       uses: actions/upload-artifact@v4

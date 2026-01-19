@@ -8,7 +8,7 @@ def check_root_cleanliness():
     """Checks if root directory contains files that should be in scripts/ or tests/."""
     allowed_root_files = {
         'README.md', 'LICENSE', 'CHANGELOG.md', 'CONTRIBUTING.md', 'NOTICE',
-        'requirements.txt', 'setup.py', 'pytest.ini', 'Dockerfile', '.dockerignore',
+        'requirements.txt', 'setup.py', 'pyproject.toml', 'pytest.ini', 'Dockerfile', '.dockerignore',
         '.gitignore', '.editorconfig', '.pre-commit-config.yaml', 'docker-compose.yml',
         '.readthedocs.yaml', 'archeon_3d.py'
     }

@@ -3,9 +3,15 @@
 import time
 import subprocess
 import sys
+import os
+from pathlib import Path
+
+# Resolve project root
+SCRIPT_DIR = Path(__file__).parent.resolve()
+PROJECT_ROOT = SCRIPT_DIR.parent
 
 print("=" * 70)
-print("MONITORAMENTO EM TEMPO REAL - Hunyuan3D Interface")
+print("MONITORAMENTO EM TEMPO REAL - Archeon 3D Interface")
 print("=" * 70)
 print("\nPressione Ctrl+C para parar\n")
 
@@ -13,8 +19,13 @@ last_lines = set()
 
 try:
     while True:
+        log_file = PROJECT_ROOT / "gradio_output.log"
+        if not log_file.exists():
+            time.sleep(2)
+            continue
+            
         result = subprocess.run(
-            ["tail", "-50", "/home/yurix/Documentos/my-hunyuan-3D/gradio_output.log"],
+            ["tail", "-50", str(log_file)],
             capture_output=True,
             text=True,
             errors='ignore'

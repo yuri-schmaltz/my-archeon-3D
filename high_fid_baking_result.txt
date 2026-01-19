@@ -1,6 +1,0 @@
-INFO:api_server:Initializing Archeon 3D API Server on 0.0.0.0:8081
-INFO:meshops.engine:Starting MeshOps request bake_test_01
-INFO:httpx:HTTP Request: POST http://testserver/v1/jobs "HTTP/1.1 200 OK"
-INFO:httpx:HTTP Request: GET http://testserver/v1/jobs/bake_test_01 "HTTP/1.1 200 OK"
-Baking test passed! Found maps: {'normal', 'ao'}
-PASS

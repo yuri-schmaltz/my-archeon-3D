@@ -600,6 +600,18 @@ button.secondary.flag {
     display: none !important;
 }
 
+/* Progress Bar Container Visibility */
+#progress_bar_container {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 24px !important;
+    width: 100% !important;
+    z-index: 500 !important;
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+    background: transparent !important;
+}
+
 /* Premium 3D Processing Animation */
 .processing-container {
     position: absolute;
@@ -607,11 +619,13 @@ button.secondary.flag {
     left: 0;
     width: 100%;
     height: 100%;
+    z-index: 1000 !important; /* Force on top of viewer */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     background: radial-gradient(circle at center, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    pointer-events: none; /* Allow clicks to pass if needed, though usually blocking is fine */
 }
 
 .cube-wrapper {

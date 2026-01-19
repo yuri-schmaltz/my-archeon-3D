@@ -273,7 +273,7 @@ async def unified_generation(model_key, caption, negative_prompt, image, mv_imag
         mesh, stats = result["mesh"], result["stats"]
     except asyncio.CancelledError:
         logger.info("Generation Calcelled by User")
-        yield (gr.skip(), gr.skip(), gr.skip(), gr.update(visible=False), gr.update(value="Stop Generation"))
+        yield (gr.skip(), gr.skip(), gr.skip(), gr.update(visible=False), gr.update(visible=False, value=i18n.get('btn_stop')))
         return
     except Exception as e:
         logger.error(f"Generation failed: {e}")
@@ -341,7 +341,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
                     with gr.Tabs(selected='tab_img_prompt') as tabs_prompt:
                         with gr.Tab(i18n.get('tab_img_prompt'), id='tab_img_prompt') as tab_ip:
                             with gr.Column(elem_classes="prompt-container"):
-                                image = gr.Image(label=i18n.get('lbl_image'), type='pil', image_mode='RGBA', height=300, sources=['upload', 'clipboard'])
+                                image = gr.Image(label=None, show_label=False, type='pil', image_mode='RGBA', height=300, sources=['upload', 'clipboard'])
                         
                         with gr.Tab(i18n.get('tab_mv_prompt'), id='tab_mv_prompt') as tab_mv_p:
                             with gr.Column(elem_classes="prompt-container"):
@@ -456,7 +456,7 @@ def build_app(example_is=None, example_ts=None, example_mvs=None):
             fn=on_gen_finish,
             outputs=[btn, btn_stop, progress_html],
             cancels=[succ1_2],
-            _js=f"() => {{ if (!confirm('{i18n.get('msg_stop_confirm')}')) throw new Error('Cancelled'); }}"
+            js=f"() => {{ if (!confirm('{i18n.get('msg_stop_confirm')}')) throw new Error('Cancelled'); }}"
         )
 
     return archeon_ui

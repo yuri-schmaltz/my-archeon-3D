@@ -86,14 +86,16 @@ def find_free_port(start_port: int = 8081, max_tries: int = 100) -> int:
     raise RuntimeError(f"Could not find a free port in range {start_port}-{start_port + max_tries}")
 
     
-def cleanup_old_cache(max_age_days: int = 7):
+def cleanup_old_cache(max_age_days: int = 7, cache_subdir: str = "archeon_cache"):
 
     """
     Removes subdirectories in the user cache directory deeper than max_age_days.
     This prevents the disk from filling up with old generated assets.
     """
     logger = logging.getLogger("archeon_system")
-    cache_dir = get_user_cache_dir() / "archeon_cache"
+    cache_dir = Path(cache_subdir)
+    if not cache_dir.is_absolute():
+        cache_dir = get_user_cache_dir() / cache_subdir
     
     if not cache_dir.exists():
         return
@@ -123,4 +125,3 @@ def cleanup_old_cache(max_age_days: int = 7):
 
     if deleted_count > 0:
         logger.info(f"Cache Cleanup: Removed {deleted_count} old folders, reclaimed {reclaimed_bytes / 1024 / 1024:.2f} MB")
-

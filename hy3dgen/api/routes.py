@@ -1,22 +1,41 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request
-from typing import Union, Dict, Any
+from typing import Union, Dict, Any, Optional
 from .schemas import JobRequest, JobResponse, JobStatus, Mode, Artifact, ArtifactType, Batch, MeshOpsRequest
 import uuid
 import asyncio
 import traceback
 import os
 from .utils import download_image_as_pil
-from hy3dgen.meshops.engine import MeshOpsEngine
+try:
+    from hy3dgen.meshops.engine import MeshOpsEngine
+    _MESHOPS_IMPORT_ERROR = None
+except Exception as exc:
+    MeshOpsEngine = None
+    _MESHOPS_IMPORT_ERROR = exc
 
 router = APIRouter()
+
+def _extract_token(request: Request) -> Optional[str]:
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        return auth_header.split(" ", 1)[1].strip()
+    return request.headers.get("x-api-key") or request.query_params.get("token")
+
+def _require_auth(request: Request) -> None:
+    token = os.getenv("ARCHEON_API_TOKEN")
+    if not token:
+        return
+    if _extract_token(request) != token:
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 @router.get("/v1/system/health")
 async def health_check():
     return {"status": "online", "version": "1.0.0"}
 
 @router.post("/v1/system/shutdown")
-async def shutdown_server():
+async def shutdown_server(request: Request):
     """Gracefully shutdown the server - useful for Tauri sidecar cleanup"""
+    _require_auth(request)
     import os, signal, time
     # Schedule kill in a separate task to allow response to return
     def kill_self():
@@ -29,7 +48,7 @@ async def shutdown_server():
 
 request_manager = None
 jobs_db = {} 
-meshops_engine = MeshOpsEngine()
+meshops_engine = MeshOpsEngine() if MeshOpsEngine is not None else None
 
 def get_manager():
     if request_manager is None:
@@ -76,6 +95,15 @@ async def background_job_wrapper(job_id: str, params: Union[dict, MeshOpsRequest
     try:
         # MeshOps Path
         if isinstance(params, MeshOpsRequest):
+            if meshops_engine is None:
+                jobs_db[job_id]["status"] = JobStatus.FAILED
+                jobs_db[job_id]["error"] = {
+                    "code": "DEPENDENCY_MISSING",
+                    "message": "MeshOps engine unavailable (missing optional dependency).",
+                    "details": [],
+                    "retryable": False
+                }
+                return
             artifacts = await meshops_engine.process_async(params)
             jobs_db[job_id]["status"] = JobStatus.COMPLETED
             jobs_db[job_id]["artifacts"] = artifacts
@@ -168,11 +196,13 @@ async def _process_request_and_queue(body: Dict[str, Any], background_tasks: Bac
 
 @router.post("/v1/jobs", response_model=JobResponse)
 async def create_job(request: Request, background_tasks: BackgroundTasks):
+    _require_auth(request)
     body = await request.json()
     return await _process_request_and_queue(body, background_tasks)
 
 @router.post("/v1/batches")
 async def create_batch(request: Request, background_tasks: BackgroundTasks):
+    _require_auth(request)
     body = await request.json()
     
     # Check for batch structure
@@ -210,7 +240,8 @@ async def create_batch(request: Request, background_tasks: BackgroundTasks):
     return responses
 
 @router.get("/v1/jobs/{job_id}", response_model=JobResponse)
-async def get_job(job_id: str):
+async def get_job(job_id: str, request: Request):
+    _require_auth(request)
     if job_id not in jobs_db:
         raise HTTPException(status_code=404, detail="Job not found")
         

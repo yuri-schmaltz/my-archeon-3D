@@ -9,6 +9,9 @@ import sys
 sys.modules["hy3dgen.manager"] = MagicMock()
 sys.modules["hy3dgen.inference"] = MagicMock()
 
+if "hy3dgen.api.utils" in sys.modules:
+    del sys.modules["hy3dgen.api.utils"]
+
 from hy3dgen.api.utils import download_file
 
 class TestSecurityHardening(unittest.IsolatedAsyncioTestCase):

@@ -6,6 +6,9 @@ import gradio as gr
 import torch
 import numpy as np
 import asyncio
+import threading
+import time
+import webbrowser
 from pathlib import Path
 from PIL import Image
 from fastapi import FastAPI
@@ -16,7 +19,7 @@ from contextlib import asynccontextmanager
 from hy3dgen.manager import ModelManager, PriorityRequestManager
 from hy3dgen.inference import InferencePipeline
 from hy3dgen.apps.ui_templates import CSS_STYLES, HTML_TEMPLATE_MODEL_VIEWER, HTML_PLACEHOLDER, HTML_ERROR_TEMPLATE
-from hy3dgen.utils.system import setup_logging, get_user_cache_dir
+from hy3dgen.utils.system import setup_logging, get_user_cache_dir, find_free_port
 
 # Setup Logger
 logger = setup_logging("archeon_app")
@@ -36,6 +39,13 @@ class SafeStaticFiles(StaticFiles):
         full_path, stat_result = super().lookup_path(path)
         # Add any extra security checks here if needed
         return full_path, stat_result
+
+MAX_IMAGE_BYTES = 100 * 1024 * 1024
+
+def check_size(image, max_bytes: int = MAX_IMAGE_BYTES):
+    width, height = image.size
+    if width * height * 4 > max_bytes:
+        raise ValueError("Image too large.")
 
 def gen_save_folder():
     import uuid
@@ -266,6 +276,26 @@ def build_app():
 
     return demo
 
+def _maybe_open_browser(host: str, port: int, open_browser: bool) -> None:
+    display_host = "127.0.0.1" if host in ("0.0.0.0", "::") else host
+    url = f"http://{display_host}:{port}/"
+    logger.info(f"UI available at {url}")
+
+    if not open_browser:
+        return
+    if display_host not in ("127.0.0.1", "localhost"):
+        logger.info("Auto-open disabled for non-loopback host. Use the URL above.")
+        return
+
+    def _open():
+        time.sleep(1.0)
+        try:
+            webbrowser.open(url)
+        except Exception as exc:
+            logger.warning(f"Could not open browser automatically: {exc}")
+
+    threading.Thread(target=_open, daemon=True).start()
+
 # --- Main Entry Point ---
 
 def main():
@@ -282,6 +312,7 @@ def main():
     parser.add_argument('--enable_t23d', action='store_true')
     parser.add_argument('--disable_tex', action='store_true')
     parser.add_argument('--low_vram_mode', action='store_true', default=True)
+    parser.add_argument('--no_open_browser', action='store_true', help='Disable auto-opening the browser')
     args = parser.parse_args()
 
     # Config Globals
@@ -294,6 +325,15 @@ def main():
 
     # Environment Log
     logger.info(f"Archeon 3D Legacy UI Startup. Device: {args.device}")
+
+    # Port fallback if occupied
+    requested_port = args.port
+    try:
+        args.port = find_free_port(args.port)
+        if args.port != requested_port:
+            logger.warning(f"Port {requested_port} is busy; using {args.port} instead.")
+    except Exception as e:
+        logger.warning(f"Could not find free port from {requested_port}: {e}. Using requested port.")
     
     # Init Manager
     model_mgr = ModelManager(capacity=1 if args.low_vram_mode else 3, device=args.device)
@@ -319,6 +359,10 @@ def main():
         await request_manager.stop()
 
     app = FastAPI(lifespan=lifespan)
+
+    @app.get("/health")
+    async def health():
+        return {"status": "online", "version": "1.0.0"}
     
     # Static Mount for outputs (Crucial for Download)
     static_dir = Path(SAVE_DIR).absolute()
@@ -334,6 +378,8 @@ def main():
         path="/", 
         allowed_paths=[SAVE_DIR] # <--- Essential Fix
     )
+
+    _maybe_open_browser(args.host, args.port, open_browser=not args.no_open_browser)
 
     import uvicorn
     uvicorn.run(app, host=args.host, port=args.port)

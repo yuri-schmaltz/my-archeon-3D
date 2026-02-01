@@ -25,7 +25,8 @@ def main():
     logger = setup_logging("archeon_launcher")
     
     # [DATA GOVERNANCE] Cleanup old files
-    cleanup_old_cache(max_age_days=7)
+    cleanup_old_cache(max_age_days=7, cache_subdir="archeon_cache")
+    cleanup_old_cache(max_age_days=7, cache_subdir="gradio_cache")
 
     if is_api:
         sys.argv.remove("--api")

@@ -1,4 +1,5 @@
 import argparse
+import os
 import uvicorn
 import sys
 import logging
@@ -40,6 +41,8 @@ def create_app(args=None):
          args, _ = parser.parse_known_args()
 
     logger.info(f"Initializing Archeon 3D API Server on {args.host}:{args.port}")
+    if os.getenv("ARCHEON_API_TOKEN"):
+        logger.info("API auth enabled via ARCHEON_API_TOKEN.")
     
     # 1. Setup Backend Managers
     model_mgr = ModelManager(capacity=1 if args.low_vram_mode else 3, device=args.device)
